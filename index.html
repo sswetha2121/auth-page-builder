@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Auth Page Builder</title>
+
+    <!-- Application styles -->
+    <link rel="stylesheet" href="./css/main.css" />
+    <link rel="stylesheet" href="./css/app.css" />
+    <link rel="stylesheet" href="./css/layout.css" />
+    <link rel="stylesheet" href="./css/sidebar.css" />
+    <link rel="stylesheet" href="./css/components.css" />
+    <link rel="stylesheet" href="./css/forms.css" />
+    <link rel="stylesheet" href="./css/customization.css" />
+    <link rel="stylesheet" href="./css/preview.css" />
+    <link rel="stylesheet" href="./css/responsive.css" />
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+       APPLICATION
+  ====================================================== -->
+
+    <div class="app-shell">
+
+
+        <!-- ===================================================
+         HEADER
+    ==================================================== -->
+
+        <header class="app-header">
+
+            <div class="app-brand">
+
+                <div class="app-brand-icon">
+                    A
+                </div>
+
+                <div class="app-brand-content">
+                    <h1>Auth Page Builder</h1>
+                    <p>
+                        Design your authentication experience
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <span class="save-indicator" data-unsaved-indicator>
+                    All changes saved
+                </span>
+
+
+                <button type="button" class="header-button secondary" data-action="fullscreen-preview">
+                    ⛶
+                    <span>Full Preview</span>
+                </button>
+
+
+                <button type="button" class="header-button primary" id="downloadButton">
+                    ↓
+                    <span>Download Package</span>
+                </button>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- ===================================================
+         MAIN BUILDER
+    ==================================================== -->
+
+        <main class="builder-layout">
+
+
+            <!-- ===============================================
+           LEFT CUSTOMIZATION SIDEBAR
+      ================================================ -->
+
+            <aside class="customization-sidebar">
+
+
+                <!-- =============================================
+             PAGE SELECTOR
+        ============================================== -->
+
+                <div class="sidebar-page-tabs">
+
+                    <button type="button" class="sidebar-page-tab active" data-builder-page="login">
+                        Login
+                    </button>
+
+
+                    <button type="button" class="sidebar-page-tab" data-builder-page="signup">
+                        Sign Up
+                    </button>
+
+
+                    <button type="button" class="sidebar-page-tab" data-builder-page="forgot">
+                        Forgot
+                    </button>
+
+
+                    <button type="button" class="sidebar-page-tab" data-builder-page="otp">
+                        OTP
+                    </button>
+
+                </div>
+
+
+
+                <!-- =============================================
+             CUSTOMIZATION CONTENT
+        ============================================== -->
+
+                <div class="customization-scroll">
+
+
+                    <!-- ===========================================
+               LAYOUT
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion open">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="true">
+
+                            <span class="accordion-title">
+                                Layout
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Page Layout
+                                </label>
+
+                                <select data-config-path="layout.type">
+
+                                    <option value="split-left-image">
+                                        Split — Image Left
+                                    </option>
+
+                                    <option value="split-right-image">
+                                        Split — Image Right
+                                    </option>
+
+                                    <option value="centered">
+                                        Centered Card
+                                    </option>
+
+                                    <option value="full-background">
+                                        Full Background
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Image Width
+                                    </label>
+
+                                    <span id="imageWidthValue">
+                                        50%
+                                    </span>
+
+                                </div>
+
+
+                                <input type="range" min="20" max="80" value="50" data-config-path="layout.imageWidth"
+                                    data-value-target="#imageWidthValue" data-value-suffix="%" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Form Horizontal Position
+                                </label>
+
+                                <select data-config-path="layout.formHorizontalAlignment">
+                                    <option value="left">
+                                        Left
+                                    </option>
+
+                                    <option value="center" selected>
+                                        Center
+                                    </option>
+
+                                    <option value="right">
+                                        Right
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Form Vertical Position
+                                </label>
+
+                                <select data-config-path="layout.formVerticalAlignment">
+                                    <option value="top">
+                                        Top
+                                    </option>
+
+                                    <option value="center" selected>
+                                        Center
+                                    </option>
+
+                                    <option value="bottom">
+                                        Bottom
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               BACKGROUND
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Background
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Background Image
+                                </label>
+
+                                <div class="asset-grid">
+
+                                    <button type="button" class="asset-option"
+                                        data-background="assets/backgrounds/background-1.jpg">
+                                        Default 1
+                                    </button>
+
+                                    <button type="button" class="asset-option"
+                                        data-background="assets/backgrounds/background-2.jpg">
+                                        Default 2
+                                    </button>
+
+                                    <button type="button" class="asset-option"
+                                        data-background="assets/backgrounds/background-3.jpg">
+                                        Default 3
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label class="upload-label">
+
+                                    <span>
+                                        Upload Background
+                                    </span>
+
+                                    <input type="file" accept="image/*" data-upload-type="background"
+                                        data-upload-preview="#backgroundUploadPreview"
+                                        data-file-name-target="#backgroundFileName" />
+
+                                </label>
+
+                                <img id="backgroundUploadPreview" class="upload-preview" hidden
+                                    alt="Background preview" />
+
+                                <span id="backgroundFileName" class="file-name">
+                                </span>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Background Color
+                                </label>
+
+                                <input type="color" value="#0f172a" data-config-path="background.color" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Background Position
+                                </label>
+
+                                <select data-config-path="background.position">
+                                    <option value="center">
+                                        Center
+                                    </option>
+
+                                    <option value="top">
+                                        Top
+                                    </option>
+
+                                    <option value="bottom">
+                                        Bottom
+                                    </option>
+
+                                    <option value="left">
+                                        Left
+                                    </option>
+
+                                    <option value="right">
+                                        Right
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Background Size
+                                </label>
+
+                                <select data-config-path="background.size">
+                                    <option value="cover">
+                                        Cover
+                                    </option>
+
+                                    <option value="contain">
+                                        Contain
+                                    </option>
+
+                                    <option value="auto">
+                                        Original
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Overlay
+                                </label>
+
+                                <input type="checkbox" data-config-path="background.overlayEnabled" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Overlay Color
+                                </label>
+
+                                <input type="color" value="#000000" data-config-path="background.overlayColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Overlay Opacity
+                                    </label>
+
+                                    <span id="overlayOpacityValue">
+                                        40%
+                                    </span>
+
+                                </div>
+
+
+                                <input type="range" min="0" max="100" value="40"
+                                    data-config-path="background.overlayOpacity"
+                                    data-value-target="#overlayOpacityValue" data-value-suffix="%" />
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               BRANDING
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Branding & Logo
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Logo
+                                </label>
+
+                                <div class="asset-grid">
+
+                                    <button type="button" class="asset-option" data-logo="assets/logos/logo-1.png">
+                                        Logo 1
+                                    </button>
+
+                                    <button type="button" class="asset-option" data-logo="assets/logos/logo-2.png">
+                                        Logo 2
+                                    </button>
+
+                                    <button type="button" class="asset-option" data-logo="assets/logos/logo-3.png">
+                                        Logo 3
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label class="upload-label">
+
+                                    <span>
+                                        Upload Logo
+                                    </span>
+
+                                    <input type="file" accept="image/*" data-upload-type="logo"
+                                        data-upload-preview="#logoUploadPreview"
+                                        data-file-name-target="#logoFileName" />
+
+                                </label>
+
+
+                                <img id="logoUploadPreview" class="upload-preview logo-upload-preview" hidden
+                                    alt="Logo preview" />
+
+                                <span id="logoFileName" class="file-name">
+                                </span>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Logo Size
+                                    </label>
+
+                                    <span id="logoSizeValue">
+                                        64px
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="24" max="160" value="64" data-config-path="branding.logoSize"
+                                    data-value-target="#logoSizeValue" data-value-suffix="px" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Logo Shape
+                                </label>
+
+                                <select data-config-path="branding.logoShape">
+                                    <option value="square">
+                                        Square
+                                    </option>
+
+                                    <option value="rounded">
+                                        Rounded
+                                    </option>
+
+                                    <option value="circle">
+                                        Circle
+                                    </option>
+
+                                    <option value="ellipse">
+                                        Ellipse
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Logo Position
+                                </label>
+
+                                <select data-config-path="branding.logoPosition">
+                                    <option value="left">
+                                        Left
+                                    </option>
+
+                                    <option value="center">
+                                        Center
+                                    </option>
+
+                                    <option value="right">
+                                        Right
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Logo Background
+                                </label>
+
+                                <input type="checkbox" data-config-path="branding.logoBackgroundEnabled" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Logo Background Color
+                                </label>
+
+                                <input type="color" data-config-path="branding.logoBackgroundColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Brand Name
+                                </label>
+
+                                <input type="text" placeholder="Your Brand" data-config-path="branding.brandName" />
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               LOGIN SETTINGS
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Authentication
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Email Login
+                                </label>
+
+                                <input type="checkbox" data-config-path="login.emailEnabled" />
+
+                            </div>
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Mobile Login
+                                </label>
+
+                                <input type="checkbox" data-config-path="login.mobileEnabled" />
+
+                            </div>
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Password
+                                </label>
+
+                                <input type="checkbox" data-config-path="login.passwordEnabled" />
+
+                            </div>
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable OTP
+                                </label>
+
+                                <input type="checkbox" data-config-path="login.otpEnabled" />
+
+                            </div>
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Remember Me
+                                </label>
+
+                                <input type="checkbox" data-config-path="login.rememberMeEnabled" />
+
+                            </div>
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Forgot Password
+                                </label>
+
+                                <input type="checkbox" data-config-path="login.forgotPasswordEnabled" />
+
+                            </div>
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Sign Up
+                                </label>
+
+                                <input type="checkbox" data-config-path="login.signupEnabled" />
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               CARD
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Login Card
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Card
+                                </label>
+
+                                <input type="checkbox" data-config-path="card.enabled" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Card Background
+                                </label>
+
+                                <input type="color" data-config-path="card.backgroundColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Transparency
+                                    </label>
+
+                                    <span id="cardOpacityValue">
+                                        100%
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="0" max="100" value="100" data-config-path="card.opacity"
+                                    data-value-target="#cardOpacityValue" data-value-suffix="%" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Card Width
+                                    </label>
+
+                                    <span id="cardWidthValue">
+                                        460px
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="280" max="700" value="460" data-config-path="card.width"
+                                    data-value-target="#cardWidthValue" data-value-suffix="px" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Border Radius
+                                    </label>
+
+                                    <span id="cardRadiusValue">
+                                        20px
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="0" max="50" value="20" data-config-path="card.borderRadius"
+                                    data-value-target="#cardRadiusValue" data-value-suffix="px" />
+
+                            </div>
+
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Shadow
+                                </label>
+
+                                <input type="checkbox" data-config-path="card.shadowEnabled" />
+
+                            </div>
+
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Glass Blur
+                                </label>
+
+                                <input type="checkbox" data-config-path="card.blurEnabled" />
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               TYPOGRAPHY
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Typography
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Font Family
+                                </label>
+
+                                <select data-config-path="typography.fontFamily">
+                                    <option value="Inter, sans-serif">
+                                        Inter
+                                    </option>
+
+                                    <option value="Arial, sans-serif">
+                                        Arial
+                                    </option>
+
+                                    <option value="'Segoe UI', sans-serif">
+                                        Segoe UI
+                                    </option>
+
+                                    <option value="Georgia, serif">
+                                        Georgia
+                                    </option>
+
+                                    <option value="'Courier New', monospace">
+                                        Monospace
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Title Color
+                                </label>
+
+                                <input type="color" data-config-path="typography.titleColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Subtitle Color
+                                </label>
+
+                                <input type="color" data-config-path="typography.subtitleColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Title Size
+                                    </label>
+
+                                    <span id="titleSizeValue">
+                                        32px
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="18" max="56" value="32" data-config-path="typography.titleSize"
+                                    data-value-target="#titleSizeValue" data-value-suffix="px" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Subtitle Size
+                                    </label>
+
+                                    <span id="subtitleSizeValue">
+                                        15px
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="10" max="28" value="15"
+                                    data-config-path="typography.subtitleSize" data-value-target="#subtitleSizeValue"
+                                    data-value-suffix="px" />
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               BUTTON
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Login Button
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Button Text
+                                </label>
+
+                                <input type="text" data-config-path="button.text" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Background Type
+                                </label>
+
+                                <select data-config-path="button.backgroundType">
+                                    <option value="solid">
+                                        Solid
+                                    </option>
+
+                                    <option value="gradient">
+                                        Gradient
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Button Background
+                                </label>
+
+                                <input type="color" data-config-path="button.backgroundColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Text Color
+                                </label>
+
+                                <input type="color" data-config-path="button.textColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Button Radius
+                                    </label>
+
+                                    <span id="buttonRadiusValue">
+                                        10px
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="0" max="50" value="10" data-config-path="button.borderRadius"
+                                    data-value-target="#buttonRadiusValue" data-value-suffix="px" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <div class="range-label-row">
+
+                                    <label>
+                                        Button Height
+                                    </label>
+
+                                    <span id="buttonHeightValue">
+                                        48px
+                                    </span>
+
+                                </div>
+
+                                <input type="range" min="36" max="70" value="48" data-config-path="button.height"
+                                    data-value-target="#buttonHeightValue" data-value-suffix="px" />
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               SOCIAL LOGIN
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Social Login
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Enable Social Login
+                                </label>
+
+                                <input type="checkbox" data-config-path="social.enabled" />
+
+                            </div>
+
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Google
+                                </label>
+
+                                <input type="checkbox" data-config-path="social.google" />
+
+                            </div>
+
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    LinkedIn
+                                </label>
+
+                                <input type="checkbox" data-config-path="social.linkedin" />
+
+                            </div>
+
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Facebook
+                                </label>
+
+                                <input type="checkbox" data-config-path="social.facebook" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Social Button Layout
+                                </label>
+
+                                <select data-config-path="social.layout">
+                                    <option value="vertical">
+                                        Vertical
+                                    </option>
+
+                                    <option value="horizontal">
+                                        Horizontal
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               IMAGE TEXT
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Background Text
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="switch-control">
+
+                                <label>
+                                    Show Text
+                                </label>
+
+                                <input type="checkbox" data-config-path="imageSection.showText" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Text
+                                </label>
+
+                                <textarea rows="3" data-config-path="imageSection.text"></textarea>
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Text Color
+                                </label>
+
+                                <input type="color" data-config-path="imageSection.textColor" />
+
+                            </div>
+
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Text Position
+                                </label>
+
+                                <select data-config-path="imageSection.textPosition">
+                                    <option value="top-left">
+                                        Top Left
+                                    </option>
+
+                                    <option value="top-center">
+                                        Top Center
+                                    </option>
+
+                                    <option value="top-right">
+                                        Top Right
+                                    </option>
+
+                                    <option value="center-left">
+                                        Center Left
+                                    </option>
+
+                                    <option value="center">
+                                        Center
+                                    </option>
+
+                                    <option value="center-right">
+                                        Center Right
+                                    </option>
+
+                                    <option value="bottom-left">
+                                        Bottom Left
+                                    </option>
+
+                                    <option value="bottom-center">
+                                        Bottom Center
+                                    </option>
+
+                                    <option value="bottom-right">
+                                        Bottom Right
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               ADVANCED
+          ============================================ -->
+
+                    <section class="customization-section customization-accordion">
+
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+
+                            <span class="accordion-title">
+                                Advanced CSS
+                            </span>
+
+                            <span class="accordion-arrow">
+                                ▾
+                            </span>
+
+                        </button>
+
+
+                        <div class="accordion-content">
+
+
+                            <div class="control-group">
+
+                                <label>
+                                    Custom CSS
+                                </label>
+
+                                <textarea class="code-textarea" rows="8" placeholder=".auth-card { ... }"
+                                    data-config-path="customCSS"></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- ===========================================
+               RESET
+          ============================================ -->
+
+                    <div class="sidebar-footer">
+
+                        <button type="button" class="reset-button"
+                            onclick="authCustomization.resetCompleteConfiguration()">
+                            Reset All Customizations
+                        </button>
+
+                    </div>
+
+
+                </div>
+
+            </aside>
+
+
+
+            <!-- ===============================================
+           RIGHT PREVIEW WORKSPACE
+      ================================================ -->
+
+            <section class="preview-workspace">
+
+
+                <!-- =============================================
+             PREVIEW TOOLBAR
+        ============================================== -->
+
+                <div class="preview-toolbar">
+
+                    <div class="preview-toolbar-title">
+
+                        <div>
+                            <span class="preview-eyebrow">
+                                LIVE PREVIEW
+                            </span>
+
+                            <h2>
+                                Authentication Page
+                            </h2>
+                        </div>
+
+                    </div>
+
+
+                    <div class="preview-device-controls">
+
+                        <button type="button" class="device-button active" data-preview-device="desktop"
+                            title="Desktop Preview">
+                            🖥
+                        </button>
+
+
+                        <button type="button" class="device-button" data-preview-device="tablet" title="Tablet Preview">
+                            ▣
+                        </button>
+
+
+                        <button type="button" class="device-button" data-preview-device="mobile" title="Mobile Preview">
+                            ▯
+                        </button>
+
+                    </div>
+
+
+                    <button type="button" class="preview-expand-button" data-action="fullscreen-preview">
+                        ⛶
+                        Fullscreen
+                    </button>
+
+                </div>
+
+
+
+                <!-- =============================================
+             PREVIEW CANVAS
+        ============================================== -->
+
+                <div class="preview-canvas">
+
+                    <div id="previewRoot" class="preview-device-desktop"></div>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+       FULLSCREEN PREVIEW
+  ====================================================== -->
+
+    <div class="auth-fullscreen-preview" role="dialog" aria-modal="true" aria-label="Fullscreen authentication preview">
+
+        <button type="button" class="fullscreen-close-button" data-action="close-fullscreen-preview"
+            aria-label="Close fullscreen preview">
+            ×
+        </button>
+
+
+        <div id="fullscreenPreviewRoot" class="preview-device-desktop"></div>
+
+    </div>
+
+    <!-- =====================================================
+         JAVASCRIPT FILES
+    ====================================================== -->
+
+    <!-- External dependency used by download.js -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <!-- Core application data -->
+    <script src="./js/constants.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/state.js"></script>
+    <script src="./js/utils.js"></script>
+
+    <!-- Page and UI rendering -->
+    <script src="./js/templates.js"></script>
+    <script src="./js/auth-pages.js"></script>
+    <script src="./js/renderer.js"></script>
+
+    <!-- Builder interactions -->
+    <script src="./js/controls.js"></script>
+    <script src="./js/customization.js"></script>
+    <script src="./js/preview.js"></script>
+
+    <!-- Package generation and application startup -->
+    <script src="./js/download.js"></script>
+    <script src="./js/app.js"></script>
+
+</body>
+
+</html>

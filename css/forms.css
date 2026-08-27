@@ -1,0 +1,1253 @@
+/* =========================================================
+   AUTH PAGE BUILDER
+   File: css/forms.css
+
+   Authentication forms and customizer form controls
+========================================================= */
+
+
+/* =========================================================
+   FORM BASE
+========================================================= */
+
+.form {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+
+.form-row {
+  width: 100%;
+
+  display: flex;
+
+  gap: 14px;
+}
+
+
+.form-row > .form-group {
+  flex: 1;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.form-group {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.form-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  color: #334155;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  line-height: 1.4;
+}
+
+
+.form-label-required::after {
+  content: " *";
+
+  color: #ef4444;
+}
+
+
+.form-help-text {
+  margin: 0;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   FORM INPUT
+========================================================= */
+
+.form-input {
+  width: 100%;
+  height: 48px;
+
+  padding: 0 14px;
+
+  color: #0f172a;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.form-input:hover {
+  border-color: #cbd5e1;
+}
+
+
+.form-input:focus {
+  border-color: #2563eb;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(37, 99, 235, 0.1);
+}
+
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+
+/* =========================================================
+   INPUT WITH ICON
+========================================================= */
+
+.form-input-container {
+  width: 100%;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+}
+
+
+.form-input-container .form-input {
+  padding-left: 46px;
+}
+
+
+.form-input-container.has-right-action .form-input {
+  padding-right: 46px;
+}
+
+
+.form-input-icon {
+  width: 44px;
+
+  position: absolute;
+
+  left: 0;
+
+  display: grid;
+  place-items: center;
+
+  color: #94a3b8;
+
+  pointer-events: none;
+}
+
+
+.form-input-action {
+  width: 42px;
+  height: 42px;
+
+  position: absolute;
+
+  right: 3px;
+
+  display: grid;
+  place-items: center;
+
+  color: #64748b;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.form-input-action:hover {
+  color: #2563eb;
+
+  background: #eff6ff;
+}
+
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+.form-select {
+  width: 100%;
+  height: 48px;
+
+  padding: 0 38px 0 14px;
+
+  color: #0f172a;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+
+  outline: none;
+
+  background-color: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.form-select:hover {
+  border-color: #cbd5e1;
+}
+
+
+.form-select:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(37, 99, 235, 0.1);
+}
+
+
+/* =========================================================
+   TEXTAREA
+========================================================= */
+
+.form-textarea {
+  width: 100%;
+
+  min-height: 110px;
+
+  padding: 12px 14px;
+
+  resize: vertical;
+
+  color: #0f172a;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  line-height: 1.6;
+
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.form-textarea:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(37, 99, 235, 0.1);
+}
+
+
+/* =========================================================
+   FORM ERROR STATE
+========================================================= */
+
+.form-group.has-error .form-input,
+.form-group.has-error .form-select,
+.form-group.has-error .form-textarea {
+  border-color: #ef4444;
+
+  background: #fffafa;
+}
+
+
+.form-group.has-error .form-input:focus,
+.form-group.has-error .form-select:focus,
+.form-group.has-error .form-textarea:focus {
+  box-shadow:
+    0 0 0 4px
+    rgba(239, 68, 68, 0.1);
+}
+
+
+.form-error-message {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-top: 1px;
+
+  color: #dc2626;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SUCCESS STATE
+========================================================= */
+
+.form-group.has-success .form-input {
+  border-color: #22c55e;
+
+  background: #f7fff9;
+}
+
+
+.form-success-message {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: #16a34a;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   CHECKBOX
+========================================================= */
+
+.form-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  color: #64748b;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+
+  cursor: pointer;
+}
+
+
+.form-checkbox {
+  width: 16px;
+  height: 16px;
+
+  flex-shrink: 0;
+
+  margin-top: 1px;
+
+  accent-color: #2563eb;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   RADIO GROUP
+========================================================= */
+
+.form-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 10px;
+}
+
+
+.form-radio-option {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 38px;
+
+  padding: 0 12px;
+
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.form-radio-option:hover {
+  border-color: #bfdbfe;
+
+  background: #eff6ff;
+}
+
+
+.form-radio-option input {
+  accent-color: #2563eb;
+}
+
+
+/* =========================================================
+   LOGIN IDENTIFIER TABS
+========================================================= */
+
+.identifier-selector {
+  width: 100%;
+
+  display: flex;
+
+  gap: 4px;
+
+  padding: 4px;
+
+  border-radius: 10px;
+
+  background: #f1f5f9;
+}
+
+
+.identifier-option {
+  flex: 1;
+
+  min-height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 10px;
+
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  border: none;
+  border-radius: 7px;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.identifier-option:hover {
+  color: #2563eb;
+}
+
+
+.identifier-option.active {
+  color: #2563eb;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 3px 9px
+    rgba(15, 23, 42, 0.08);
+}
+
+
+/* =========================================================
+   GET KEY FROM
+========================================================= */
+
+.get-key-section {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.get-key-title {
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+.get-key-options {
+  display: flex;
+
+  gap: 8px;
+}
+
+
+.get-key-button {
+  flex: 1;
+
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 10px;
+
+  color: #64748b;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.get-key-button:hover {
+  color: #2563eb;
+
+  border-color: #93c5fd;
+
+  background: #eff6ff;
+}
+
+
+.get-key-button.active {
+  color: #2563eb;
+
+  border-color: #60a5fa;
+
+  background: #eff6ff;
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(37, 99, 235, 0.05);
+}
+
+
+/* =========================================================
+   OTP INPUT
+========================================================= */
+
+.otp-container {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(6, minmax(0, 1fr));
+
+  gap: 9px;
+}
+
+
+.otp-input {
+  width: 100%;
+  aspect-ratio: 1;
+
+  min-width: 0;
+
+  padding: 0;
+
+  text-align: center;
+
+  color: #0f172a;
+
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 750;
+
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.otp-input:hover {
+  border-color: #cbd5e1;
+}
+
+
+.otp-input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.1);
+}
+
+
+/* =========================================================
+   OTP ACTIONS
+========================================================= */
+
+.otp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+
+.resend-otp {
+  padding: 0;
+
+  color: #2563eb;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+
+.resend-otp:hover {
+  color: #1d4ed8;
+
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   PASSWORD STRENGTH
+========================================================= */
+
+.password-strength {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  margin-top: 3px;
+}
+
+
+.password-strength-bars {
+  width: 100%;
+
+  display: flex;
+
+  gap: 4px;
+}
+
+
+.password-strength-bar {
+  flex: 1;
+
+  height: 4px;
+
+  border-radius: 999px;
+
+  background: #e2e8f0;
+
+  transition:
+    background 0.2s ease;
+}
+
+
+.password-strength.weak
+.password-strength-bar:nth-child(1) {
+  background: #ef4444;
+}
+
+
+.password-strength.medium
+.password-strength-bar:nth-child(-n+2) {
+  background: #f59e0b;
+}
+
+
+.password-strength.strong
+.password-strength-bar:nth-child(-n+3) {
+  background: #22c55e;
+}
+
+
+.password-strength-label {
+  color: #94a3b8;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   PASSWORD REQUIREMENTS
+========================================================= */
+
+.password-requirements {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  padding: 10px 12px;
+
+  border-radius: 9px;
+
+  background: #f8fafc;
+}
+
+
+.password-requirement {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+}
+
+
+.password-requirement.valid {
+  color: #16a34a;
+}
+
+
+/* =========================================================
+   FORM ACTIONS
+========================================================= */
+
+.form-actions {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 4px;
+}
+
+
+.form-actions .btn {
+  flex: 1;
+}
+
+
+/* =========================================================
+   AUTH SUBMIT BUTTON
+========================================================= */
+
+.form-submit {
+  width: 100%;
+  min-height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 20px;
+
+  color: var(--auth-button-text-color, #ffffff);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 750;
+
+  border: none;
+
+  border-radius:
+    var(--auth-button-radius, 10px);
+
+  background:
+    var(--auth-button-background, #2563eb);
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 20px
+    rgba(37, 99, 235, 0.2);
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.form-submit:hover {
+  transform: translateY(-1px);
+
+  filter: brightness(1.04);
+
+  box-shadow:
+    0 12px 25px
+    rgba(37, 99, 235, 0.28);
+}
+
+
+.form-submit:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   SOCIAL LOGIN
+========================================================= */
+
+.social-login-section {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+.social-login-section.horizontal {
+  flex-direction: row;
+}
+
+
+.social-login-button {
+  flex: 1;
+
+  min-height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 0 16px;
+
+  color: #334155;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.social-login-button:hover {
+  border-color: #cbd5e1;
+
+  background: #f8fafc;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 14px
+    rgba(15, 23, 42, 0.06);
+}
+
+
+.social-login-icon {
+  width: 19px;
+  height: 19px;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  font-size: 15px;
+}
+
+
+/* =========================================================
+   AUTH DIVIDER
+========================================================= */
+
+.form-divider {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-align: center;
+}
+
+
+.form-divider::before,
+.form-divider::after {
+  content: "";
+
+  flex: 1;
+
+  height: 1px;
+
+  background: #e2e8f0;
+}
+
+
+/* =========================================================
+   FORM FOOTER
+========================================================= */
+
+.form-footer {
+  width: 100%;
+
+  margin-top: 4px;
+
+  color: #64748b;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+
+  text-align: center;
+}
+
+
+.form-footer a,
+.form-footer button {
+  color: #2563eb;
+
+  font: inherit;
+  font-weight: 700;
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+
+.form-footer a:hover,
+.form-footer button:hover {
+  color: #1d4ed8;
+
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   FORGOT PASSWORD PAGE
+========================================================= */
+
+.forgot-password-info {
+  margin: -8px 0 8px;
+
+  color: #64748b;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   SUCCESS / CONFIRMATION
+========================================================= */
+
+.form-success-state {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 20px 0;
+
+  text-align: center;
+}
+
+
+.form-success-icon {
+  width: 64px;
+  height: 64px;
+
+  display: grid;
+  place-items: center;
+
+  color: #16a34a;
+
+  font-size: 28px;
+
+  border-radius: 50%;
+
+  background: #f0fdf4;
+}
+
+
+.form-success-title {
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 20px;
+  font-weight: 750;
+}
+
+
+.form-success-description {
+  max-width: 360px;
+
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   LOADING SUBMIT STATE
+========================================================= */
+
+.form-submit.is-loading {
+  pointer-events: none;
+
+  opacity: 0.85;
+}
+
+
+.form-submit-loader {
+  width: 16px;
+  height: 16px;
+
+  border: 2px solid
+    rgba(255, 255, 255, 0.35);
+
+  border-top-color:
+    #ffffff;
+
+  border-radius: 50%;
+
+  animation:
+    form-spin 0.7s linear infinite;
+}
+
+
+@keyframes form-spin {
+
+  to {
+    transform: rotate(360deg);
+  }
+
+}
+
+
+/* =========================================================
+   HIDDEN FORM ELEMENT
+========================================================= */
+
+.form-hidden {
+  display: none !important;
+}
+
+
+/* =========================================================
+   SIGNUP FORM SPECIFIC
+========================================================= */
+
+.signup-form {
+  gap: 15px;
+}
+
+
+.signup-form .form-row {
+  gap: 12px;
+}
+
+
+/* =========================================================
+   LOGIN FORM SPECIFIC
+========================================================= */
+
+.login-form {
+  gap: 16px;
+}
+
+
+/* =========================================================
+   FORGOT PASSWORD FORM SPECIFIC
+========================================================= */
+
+.forgot-password-form {
+  gap: 18px;
+}
+
+
+/* =========================================================
+   RESET PASSWORD FORM
+========================================================= */
+
+.reset-password-form {
+  gap: 16px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .form-row {
+    flex-direction: column;
+
+    gap: 16px;
+  }
+
+
+  .get-key-options {
+    flex-direction: column;
+  }
+
+
+  .social-login-section.horizontal {
+    flex-direction: column;
+  }
+
+
+  .otp-container {
+    gap: 6px;
+  }
+
+
+  .form-input {
+    height: 46px;
+  }
+
+
+  .form-select {
+    height: 46px;
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL SCREENS
+========================================================= */
+
+@media (max-width: 380px) {
+
+  .otp-container {
+    gap: 4px;
+  }
+
+
+  .otp-input {
+    border-radius: 8px;
+
+    font-size: 15px;
+  }
+
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+}
