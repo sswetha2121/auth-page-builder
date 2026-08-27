@@ -16,6 +16,7 @@
 })(typeof window !== "undefined" ? window : globalThis, function (Templates, Utils) {
 
   let otpCountdownInterval = null;
+  let otpInlineCountdownInterval = null;
 
   /* =======================================================
      COMPUTE DYNAMIC CSS VARIABLES
@@ -28,6 +29,7 @@
     const typography = config.typography || {};
     const button = config.button || {};
     const imageSection = config.imageSection || {};
+    const otpPage = config.pages?.otp || {};
 
     const imageWidth = Number(layout.imageWidth) || 50;
 
@@ -58,14 +60,32 @@
     const cardBgColor = card.backgroundColor || "#ffffff";
     const cardEnabled = card.enabled !== false;
 
-    // Logo shape radius
+    // Logo shape clipping and radius
     let logoRadius = "50%";
-    if (branding.logoShape === "square") logoRadius = "0px";
-    else if (branding.logoShape === "rounded") logoRadius = "14px";
-    else if (branding.logoShape === "ellipse") logoRadius = "50% / 35%";
+    let logoClip = "none";
+    if (branding.logoShape === "square") {
+      logoRadius = "0px";
+      logoClip = "none";
+    } else if (branding.logoShape === "rounded") {
+      logoRadius = "14px";
+      logoClip = "none";
+    } else if (branding.logoShape === "circle") {
+      logoRadius = "50%";
+      logoClip = "circle(50% at 50% 50%)";
+    } else if (branding.logoShape === "ellipse") {
+      logoRadius = "50% / 35%";
+      logoClip = "ellipse(50% 38% at 50% 50%)";
+    }
+
+    // OTP Dynamic Box Variables
+    const otpBoxWidth = Number(otpPage.boxWidth) || (otpPage.length === 8 ? 38 : 48);
+    const otpBoxHeight = Number(otpPage.boxHeight) || (otpPage.length === 8 ? 46 : 54);
+    const otpBoxGap = Number(otpPage.gap) || (otpPage.length === 8 ? 6 : 10);
+    const otpBoxRadius = Number(otpPage.borderRadius) || (otpPage.length === 8 ? 8 : 12);
+    const otpFontSize = Number(otpPage.fontSize) || (otpPage.length === 8 ? 20 : 24);
 
     return `
-      :root, .auth-preview-root {
+      :root, .preview-root, .fullscreen-preview-root, .auth-preview-root {
         /* Layout */
         --auth-image-width: ${imageWidth}%;
         --auth-form-width: ${Number(layout.formWidth) || 460}px;
@@ -76,12 +96,14 @@
         --auth-background-color: ${background.color || "#0f172a"};
         --auth-background-position: ${background.position || "center"};
         --auth-background-size: ${background.size || "cover"};
+        --auth-background-repeat: ${background.repeat || "no-repeat"};
         --auth-overlay-color: ${background.overlayColor || "#000000"};
         --auth-overlay-opacity: ${overlayOpacity};
 
         /* Branding & Logo */
         --auth-logo-size: ${Number(branding.logoSize) || 64}px;
         --auth-logo-radius: ${logoRadius};
+        --auth-logo-clip: ${logoClip};
         --auth-logo-bg: ${branding.logoBackgroundEnabled ? (branding.logoBackgroundColor || "#ffffff") : "transparent"};
 
         /* Card */
@@ -115,6 +137,13 @@
 
         /* Image Section Text */
         --auth-image-text-color: ${imageSection.textColor || "#ffffff"};
+
+        /* OTP Box Sizing */
+        --otp-box-width: ${otpBoxWidth}px;
+        --otp-box-height: ${otpBoxHeight}px;
+        --otp-box-gap: ${otpBoxGap}px;
+        --otp-box-radius: ${otpBoxRadius}px;
+        --otp-font-size: ${otpFontSize}px;
       }
     `;
   }
@@ -184,8 +213,11 @@
         deliveryPills.forEach(p => p.classList.remove("active"));
         pill.classList.add("active");
         const method = pill.dataset.otpDelivery;
+        if (window.state && typeof window.state.set === "function") {
+          window.state.set("authentication.otp.defaultMethod", method, { notify: false });
+        }
         if (Utils.showToast) {
-          Utils.showToast(`Verification code delivery set to: ${method.toUpperCase()}`, "info", 2000);
+          Utils.showToast(`Verification delivery method set to: ${method.toUpperCase()}`, "info", 2000);
         }
       });
     });
@@ -193,7 +225,7 @@
     // 4. OTP Digit Inputs Auto-Advance & Navigation
     const otpBoxes = container.querySelectorAll(".otp-digit-box");
     otpBoxes.forEach((box, idx) => {
-      box.addEventListener("input", (e) => {
+      box.addEventListener("input", () => {
         const val = box.value.replace(/\D/g, "");
         box.value = val ? val[0] : "";
         if (box.value && idx < otpBoxes.length - 1) {
@@ -222,11 +254,13 @@
           }
         });
         const nextFocus = Math.min(idx + digits.length, otpBoxes.length - 1);
-        otpBoxes[nextFocus].focus();
+        if (otpBoxes[nextFocus]) {
+          otpBoxes[nextFocus].focus();
+        }
       });
     });
 
-    // 5. OTP Resend Timer
+    // 5. OTP Resend Timer (Standalone OTP Page)
     const resendBtn = container.querySelector("#otpResendButton");
     if (resendBtn) {
       if (otpCountdownInterval) {
@@ -256,7 +290,6 @@
           if (Utils.showToast) {
             Utils.showToast("New verification code sent!", "success");
           }
-          // Restart countdown
           remaining = Number(config.pages?.otp?.resendSeconds) || 30;
           resendBtn.disabled = true;
           if (countdownSpan) countdownSpan.textContent = `(${remaining}s)`;
@@ -274,21 +307,68 @@
       });
     }
 
-    // 6. Form Submission Simulation & Redirect
+    // 6. Inline OTP Resend Timer
+    const inlineResendBtn = container.querySelector("#otpResendButtonInline");
+    if (inlineResendBtn) {
+      if (otpInlineCountdownInterval) {
+        clearInterval(otpInlineCountdownInterval);
+        otpInlineCountdownInterval = null;
+      }
+
+      let remainingInline = Number(config.pages?.otp?.resendSeconds) || 30;
+      const countdownSpan = inlineResendBtn.querySelector(".otp-countdown-timer");
+      inlineResendBtn.disabled = true;
+
+      otpInlineCountdownInterval = setInterval(() => {
+        remainingInline -= 1;
+        if (countdownSpan) {
+          countdownSpan.textContent = `(${remainingInline}s)`;
+        }
+        if (remainingInline <= 0) {
+          clearInterval(otpInlineCountdownInterval);
+          otpInlineCountdownInterval = null;
+          inlineResendBtn.disabled = false;
+          if (countdownSpan) countdownSpan.textContent = "";
+        }
+      }, 1000);
+
+      inlineResendBtn.addEventListener("click", () => {
+        if (remainingInline <= 0) {
+          if (Utils.showToast) {
+            Utils.showToast("New verification code sent!", "success");
+          }
+          remainingInline = Number(config.pages?.otp?.resendSeconds) || 30;
+          inlineResendBtn.disabled = true;
+          if (countdownSpan) countdownSpan.textContent = `(${remainingInline}s)`;
+          otpInlineCountdownInterval = setInterval(() => {
+            remainingInline -= 1;
+            if (countdownSpan) countdownSpan.textContent = `(${remainingInline}s)`;
+            if (remainingInline <= 0) {
+              clearInterval(otpInlineCountdownInterval);
+              otpInlineCountdownInterval = null;
+              inlineResendBtn.disabled = false;
+              if (countdownSpan) countdownSpan.textContent = "";
+            }
+          }, 1000);
+        }
+      });
+    }
+
+    // 7. Form Submission Simulation & Feedback
     const forms = container.querySelectorAll(".auth-main-form");
     forms.forEach(form => {
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         const redirectUrl = config.urls?.redirectUrl || "https://customerwebsite.com/dashboard";
         if (Utils.showToast) {
-          Utils.showToast(`Authentication simulated! Redirecting to: ${redirectUrl}`, "success", 4000);
+          Utils.showToast(`Authentication simulated! Redirect destination: ${redirectUrl}`, "success", 4000);
         }
       });
     });
   }
 
   /* =======================================================
-     MAIN RENDER FUNCTION
+     MAIN RENDER FUNCTION (Non-Destructive Class Updates)
   ======================================================= */
   function renderPreview(targetElement, options = {}) {
     const root = typeof targetElement === "string" 
@@ -302,19 +382,56 @@
 
     const config = options.config || (window.state ? window.state.getState() : window.config) || {};
     const pageName = options.page || config.activePage || "login";
+    const device = options.device || config.previewMode || "desktop";
 
     // Inject CSS variables
     injectStyles(config);
 
-    // Generate complete HTML
+    // Layout options
+    const layout = config.layout || {};
+    const layoutType = layout.type || "split-left-image";
+    const formHPos = layout.formHorizontalAlignment || "center";
+    const formVPos = layout.formVerticalAlignment || "center";
+
+    // Update classes on target root non-destructively using classList
+    const validDevices = ["desktop", "tablet", "mobile"];
+    validDevices.forEach(d => {
+      root.classList.toggle(`preview-device-${d}`, d === device);
+    });
+
+    // Update parent .preview-canvas device class as well
+    if (root.parentElement && root.parentElement.classList.contains("preview-canvas")) {
+      validDevices.forEach(d => {
+        root.parentElement.classList.toggle(`device-${d}`, d === device);
+      });
+    }
+
+    const allLayouts = [
+      "split-left-image",
+      "split-right-image",
+      "centered",
+      "full-background",
+      "minimal",
+      "card-left",
+      "card-right"
+    ];
+    allLayouts.forEach(l => {
+      root.classList.toggle(`layout-${l}`, l === layoutType);
+    });
+
+    ["left", "center", "right"].forEach(h => {
+      root.classList.toggle(`form-horizontal-${h}`, h === formHPos);
+    });
+
+    ["top", "center", "bottom"].forEach(v => {
+      root.classList.toggle(`form-vertical-${v}`, v === formVPos);
+    });
+
+    // Generate complete HTML (auth-preview-shell)
     const html = Templates.generateAuthShell(config, pageName);
     root.innerHTML = html;
 
-    // Apply preview device class to parent wrapper if present
-    const device = options.device || config.previewMode || "desktop";
-    root.className = `preview-root preview-device-${device}`;
-
-    // Attach behaviors
+    // Attach interactive behaviors
     attachInteractiveBehaviors(root, config);
 
     // Trigger completion event

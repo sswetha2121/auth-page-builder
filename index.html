@@ -95,17 +95,17 @@
                 <div class="customization-scroll">
 
                     <!-- =====================================
-                         1. URL CONFIGURATION (CRITICAL FEATURE)
+                         1. URL CONFIGURATION & INTEGRATION
                     ====================================== -->
                     <section class="customization-section customization-accordion open">
                         <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="true">
-                            <span class="accordion-title">Application URLs</span>
+                            <span class="accordion-title">Application URLs & Integration</span>
                             <span class="accordion-arrow">▾</span>
                         </button>
                         <div class="accordion-content">
                             <div class="control-group">
-                                <label for="landingPageUrlInput">Customer Landing Page URL</label>
-                                <p class="control-help">Your main application entry point (adds a "Back to Website" link).</p>
+                                <label for="landingPageUrlInput">Customer Landing / Source URL</label>
+                                <p class="control-help">Your main application entry point (e.g., https://customerwebsite.com).</p>
                                 <input type="url" id="landingPageUrlInput" data-config-path="urls.landingPageUrl" placeholder="https://customerwebsite.com">
                             </div>
 
@@ -113,6 +113,13 @@
                                 <label for="redirectUrlInput">Post-Authentication Redirect URL</label>
                                 <p class="control-help">Where authenticated users will be redirected upon successful login.</p>
                                 <input type="url" id="redirectUrlInput" data-config-path="urls.redirectUrl" placeholder="https://customerwebsite.com/dashboard">
+                            </div>
+
+                            <div class="control-group">
+                                <label>Landing Page Integration Snippet</label>
+                                <p class="control-help">Add this snippet or link to your website's Login button:</p>
+                                <textarea class="code-textarea" id="integrationSnippetText" rows="3" readonly>&lt;!-- Integration on your landing page --&gt;
+&lt;a href="./auth/index.html" class="auth-login-btn"&gt;Sign In&lt;/a&gt;</textarea>
                             </div>
                         </div>
                     </section>
@@ -243,7 +250,7 @@
                     </section>
 
                     <!-- =====================================
-                         4. BACKGROUND CUSTOMIZATION
+                         4. BACKGROUND & VISUAL THUMBNAILS
                     ====================================== -->
                     <section class="customization-section customization-accordion">
                         <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
@@ -255,19 +262,24 @@
                                 <label>Default Background Images</label>
                                 <div class="asset-grid">
                                     <button type="button" class="asset-option active" data-background="assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
-                                        Dark Geometric
+                                        <img src="./assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg" alt="Dark Geometric">
+                                        <span>Dark Geometric</span>
                                     </button>
                                     <button type="button" class="asset-option" data-background="assets/backgrounds/idea-6900632_1280.png">
-                                        Creative Graphic
+                                        <img src="./assets/backgrounds/idea-6900632_1280.png" alt="Creative Graphic">
+                                        <span>Creative Graphic</span>
                                     </button>
                                     <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (3).webp">
-                                        Gradient Glow
+                                        <img src="./assets/backgrounds/OIP (3).webp" alt="Gradient Glow">
+                                        <span>Gradient Glow</span>
                                     </button>
                                     <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (4).webp">
-                                        Deep Azure
+                                        <img src="./assets/backgrounds/OIP (4).webp" alt="Deep Azure">
+                                        <span>Deep Azure</span>
                                     </button>
                                     <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (5).webp">
-                                        Modern Mesh
+                                        <img src="./assets/backgrounds/OIP (5).webp" alt="Modern Mesh">
+                                        <span>Modern Mesh</span>
                                     </button>
                                 </div>
                             </div>
@@ -306,6 +318,16 @@
                                 </select>
                             </div>
 
+                            <div class="control-group">
+                                <label>Background Repeat</label>
+                                <select data-config-path="background.repeat">
+                                    <option value="no-repeat" selected>No Repeat</option>
+                                    <option value="repeat">Repeat</option>
+                                    <option value="repeat-x">Repeat X</option>
+                                    <option value="repeat-y">Repeat Y</option>
+                                </select>
+                            </div>
+
                             <div class="switch-control">
                                 <label>Enable Overlay</label>
                                 <input type="checkbox" data-config-path="background.overlayEnabled" checked>
@@ -327,7 +349,7 @@
                     </section>
 
                     <!-- =====================================
-                         5. BRANDING & LOGO
+                         5. BRANDING, LOGOS & TRUE SHAPES
                     ====================================== -->
                     <section class="customization-section customization-accordion">
                         <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
@@ -348,20 +370,25 @@
                             <div class="control-group">
                                 <label>Select Default Logo</label>
                                 <div class="asset-grid">
-                                    <button type="button" class="asset-option" data-logo="assets/logos/brand-shield.svg">
-                                        Shield Mark
+                                    <button type="button" class="asset-option active" data-logo="assets/logos/brand-shield.svg">
+                                        <img src="./assets/logos/brand-shield.svg" alt="Shield Mark">
+                                        <span>Shield Mark</span>
                                     </button>
                                     <button type="button" class="asset-option" data-logo="assets/logos/brand-prism.svg">
-                                        Prism Emblem
+                                        <img src="./assets/logos/brand-prism.svg" alt="Prism Emblem">
+                                        <span>Prism Emblem</span>
                                     </button>
-                                    <button type="button" class="asset-option active" data-logo="assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
-                                        Geometric
+                                    <button type="button" class="asset-option" data-logo="assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
+                                        <img src="./assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg" alt="Geometric">
+                                        <span>Geometric</span>
                                     </button>
                                     <button type="button" class="asset-option" data-logo="assets/logos/idea-6900632_1280.png">
-                                        Idea Spark
+                                        <img src="./assets/logos/idea-6900632_1280.png" alt="Idea Spark">
+                                        <span>Idea Spark</span>
                                     </button>
                                     <button type="button" class="asset-option" data-logo="assets/logos/OIP (4).webp">
-                                        Crest
+                                        <img src="./assets/logos/OIP (4).webp" alt="Crest">
+                                        <span>Crest</span>
                                     </button>
                                 </div>
                             </div>
@@ -384,12 +411,12 @@
                             </div>
 
                             <div class="control-group">
-                                <label>Logo Shape</label>
+                                <label>Logo Shape (Visible Clipping)</label>
                                 <select data-config-path="branding.logoShape">
-                                    <option value="circle" selected>Circle</option>
-                                    <option value="rounded">Rounded</option>
-                                    <option value="square">Square</option>
-                                    <option value="ellipse">Ellipse</option>
+                                    <option value="circle" selected>Circle (50% Round)</option>
+                                    <option value="rounded">Rounded Corners</option>
+                                    <option value="square">Square (Sharp)</option>
+                                    <option value="ellipse">Ellipse (Wide Oval)</option>
                                 </select>
                             </div>
 
@@ -507,7 +534,7 @@
                     </section>
 
                     <!-- =====================================
-                         8. OTP CONFIGURATION (4, 6, 8 Digits & Resend)
+                         8. OTP CONFIGURATION (4, 6, 8 Digits & Display Modes)
                     ====================================== -->
                     <section class="customization-section customization-accordion">
                         <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
@@ -515,6 +542,14 @@
                             <span class="accordion-arrow">▾</span>
                         </button>
                         <div class="accordion-content">
+                            <div class="control-group">
+                                <label>OTP Display Mode</label>
+                                <select data-config-path="pages.otp.displayMode">
+                                    <option value="separate" selected>Separate OTP Page</option>
+                                    <option value="inline">Inline OTP on Login Page</option>
+                                </select>
+                            </div>
+
                             <div class="control-group">
                                 <label>OTP Digits Count</label>
                                 <select data-config-path="pages.otp.length">
@@ -524,19 +559,13 @@
                                 </select>
                             </div>
 
-                            <div class="switch-control">
-                                <label>Enable Resend OTP</label>
-                                <input type="checkbox" data-config-path="pages.otp.resendEnabled" checked>
-                            </div>
-
                             <div class="control-group">
-                                <label>Resend Button Text</label>
-                                <input type="text" data-config-path="pages.otp.resendText" placeholder="Resend OTP" value="Resend OTP">
-                            </div>
-
-                            <div class="control-group">
-                                <label>Resend Countdown Delay (seconds)</label>
-                                <input type="number" min="5" max="300" step="1" data-config-path="pages.otp.resendSeconds" value="30">
+                                <label>Default Delivery Method</label>
+                                <select data-config-path="authentication.otp.defaultMethod">
+                                    <option value="email" selected>Email</option>
+                                    <option value="sms">SMS</option>
+                                    <option value="whatsapp">WhatsApp</option>
+                                </select>
                             </div>
 
                             <div class="switch-control">
@@ -552,6 +581,21 @@
                             <div class="switch-control">
                                 <label>WhatsApp OTP Delivery</label>
                                 <input type="checkbox" data-config-path="authentication.otp.whatsappEnabled" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Enable Resend OTP</label>
+                                <input type="checkbox" data-config-path="pages.otp.resendEnabled" checked>
+                            </div>
+
+                            <div class="control-group">
+                                <label>Resend Button Text</label>
+                                <input type="text" data-config-path="pages.otp.resendText" placeholder="Resend OTP" value="Resend OTP">
+                            </div>
+
+                            <div class="control-group">
+                                <label>Resend Countdown Delay (seconds)</label>
+                                <input type="number" min="5" max="300" step="1" data-config-path="pages.otp.resendSeconds" value="30">
                             </div>
                         </div>
                     </section>
@@ -886,7 +930,7 @@
                 </div>
 
                 <!-- PREVIEW CANVAS -->
-                <div class="preview-canvas">
+                <div class="preview-canvas device-desktop">
                     <div id="previewRoot" class="preview-root preview-device-desktop">
                         <!-- Rendered dynamically by renderer.js -->
                     </div>

@@ -36,12 +36,11 @@
     sms: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
     eye: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
     eyeOff: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`,
-    shieldCheck: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>`,
     arrowLeft: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`
   };
 
   /* =======================================================
-     BRANDING & LOGO
+     BRANDING & LOGO (True Shapes: square, rounded, circle, ellipse)
   ======================================================= */
   function generateLogo(config) {
     const branding = config.branding || {};
@@ -67,7 +66,7 @@
       logoMarkup = `
         <div class="auth-logo-box auth-logo-shape-${shape}">
           <img src="${escapeHtml(logoSrc)}" alt="${brandName}" class="auth-logo-img"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+               onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
           <div class="auth-logo-fallback" style="display: none;">
             <span>${initials}</span>
           </div>
@@ -131,7 +130,88 @@
   }
 
   /* =======================================================
-     PAGE: LOGIN
+     OTP DELIVERY METHODS BUILDER
+  ======================================================= */
+  function generateDeliveryMethodsHTML(config) {
+    const otpAuth = config.authentication?.otp || {};
+    const emailDelivery = otpAuth.emailEnabled !== false;
+    const smsDelivery = Boolean(otpAuth.smsEnabled);
+    const whatsappDelivery = Boolean(otpAuth.whatsappEnabled);
+    const defaultMethod = otpAuth.defaultMethod || "email";
+
+    const enabledMethods = [];
+    if (emailDelivery) enabledMethods.push({ id: "email", label: "Email", icon: ICONS.email });
+    if (smsDelivery) enabledMethods.push({ id: "sms", label: "SMS", icon: ICONS.sms });
+    if (whatsappDelivery) enabledMethods.push({ id: "whatsapp", label: "WhatsApp", icon: ICONS.whatsapp });
+
+    if (enabledMethods.length === 0) {
+      // Default to email if none selected
+      enabledMethods.push({ id: "email", label: "Email", icon: ICONS.email });
+    }
+
+    if (enabledMethods.length === 1) {
+      const single = enabledMethods[0];
+      return `
+        <div class="otp-delivery-methods otp-delivery-single">
+          <span class="otp-delivery-badge">
+            ${single.icon}
+            <span>Code sent via ${single.label}</span>
+          </span>
+        </div>
+      `;
+    }
+
+    const pills = enabledMethods.map(item => {
+      const isDefault = (item.id === defaultMethod) || (enabledMethods.length > 0 && item === enabledMethods[0] && !enabledMethods.some(m => m.id === defaultMethod));
+      return `
+        <button type="button" class="otp-delivery-pill ${isDefault ? 'active' : ''}" data-otp-delivery="${item.id}">
+          ${item.icon}
+          <span>${item.label}</span>
+        </button>
+      `;
+    }).join("");
+
+    return `
+      <div class="otp-delivery-methods">
+        <span class="otp-delivery-label">Get code via:</span>
+        <div class="otp-delivery-group">
+          ${pills}
+        </div>
+      </div>
+    `;
+  }
+
+  /* =======================================================
+     DYNAMIC OTP DIGIT BOXES BUILDER (4, 6, or 8)
+  ======================================================= */
+  function generateOtpBoxesHTML(config) {
+    const pageConfig = config.pages?.otp || {};
+    const length = Number(pageConfig.length) || 6;
+
+    const boxes = [];
+    for (let i = 0; i < length; i++) {
+      boxes.push(`
+        <input type="text" 
+               class="otp-digit-box" 
+               data-otp-index="${i}" 
+               maxlength="1" 
+               inputmode="numeric" 
+               pattern="[0-9]*" 
+               autocomplete="one-time-code" 
+               aria-label="Digit ${i + 1}"
+               required />
+      `);
+    }
+
+    return `
+      <div class="otp-boxes-container" data-otp-count="${length}">
+        ${boxes.join("")}
+      </div>
+    `;
+  }
+
+  /* =======================================================
+     PAGE: LOGIN (Supports Standard & Inline OTP Modes)
   ======================================================= */
   function generateLoginPage(config) {
     const pageConfig = config.pages?.login || {};
@@ -149,7 +229,9 @@
     const signupEnabled = pageConfig.signupEnabled !== false;
     const whatsappEnabled = Boolean(config.authentication?.otp?.whatsappEnabled);
 
-    // Identifier placeholder logic
+    // Check OTP Display Mode (Separate Page vs Inline on Login)
+    const isInlineOtp = config.pages?.otp?.displayMode === "inline";
+
     const identifierParts = [];
     if (emailEnabled) identifierParts.push("Email");
     if (usernameEnabled) identifierParts.push("Username");
@@ -177,7 +259,7 @@
             </div>
           </div>
 
-          ${passwordEnabled ? `
+          ${passwordEnabled && !isInlineOtp ? `
           <div class="auth-field-group">
             <div class="auth-label-row">
               <label class="auth-label" for="loginPassword">Password</label>
@@ -199,6 +281,29 @@
           </div>
           ` : ""}
 
+          ${isInlineOtp ? `
+          <!-- INLINE OTP FLOW ON LOGIN PAGE -->
+          <div class="auth-inline-otp-section">
+            <div class="auth-label-row">
+              <label class="auth-label">Enter Verification Code</label>
+              ${forgotPasswordEnabled ? `
+                <a href="#forgot" class="auth-link auth-link-forgot" data-auth-nav="forgotPassword">Forgot password?</a>
+              ` : ""}
+            </div>
+            ${generateDeliveryMethodsHTML(config)}
+            ${generateOtpBoxesHTML(config)}
+            ${config.pages?.otp?.resendEnabled !== false ? `
+              <div class="otp-resend-row">
+                <span>Didn't get code?</span>
+                <button type="button" class="otp-resend-btn" id="otpResendButtonInline" data-countdown="${config.pages?.otp?.resendSeconds || 30}">
+                  <span>${escapeHtml(config.pages?.otp?.resendText || "Resend OTP")}</span>
+                  <span class="otp-countdown-timer">(${config.pages?.otp?.resendSeconds || 30}s)</span>
+                </button>
+              </div>
+            ` : ""}
+          </div>
+          ` : ""}
+
           ${rememberMeEnabled ? `
           <div class="auth-checkbox-group">
             <label class="auth-checkbox-label">
@@ -210,11 +315,11 @@
 
           <div class="auth-button-group">
             <button type="submit" class="auth-primary-btn" id="loginSubmitBtn">
-              <span>${buttonText}</span>
+              <span>${isInlineOtp ? (config.pages?.otp?.buttonText || "Verify & Sign In") : buttonText}</span>
             </button>
           </div>
 
-          ${otpEnabled ? `
+          ${otpEnabled && !isInlineOtp ? `
           <div class="auth-alt-auth-group">
             <button type="button" class="auth-secondary-btn" data-auth-nav="otp">
               ${ICONS.sms}
@@ -223,7 +328,7 @@
           </div>
           ` : ""}
 
-          ${whatsappEnabled ? `
+          ${whatsappEnabled && !isInlineOtp ? `
           <div class="auth-whatsapp-badge-row">
             <button type="button" class="auth-whatsapp-btn" data-auth-nav="otp" data-otp-method="whatsapp">
               ${ICONS.whatsapp}
@@ -384,7 +489,7 @@
   }
 
   /* =======================================================
-     PAGE: OTP VERIFICATION
+     PAGE: OTP VERIFICATION (Standalone Page)
   ======================================================= */
   function generateOtpPage(config) {
     const pageConfig = config.pages?.otp || {};
@@ -392,57 +497,9 @@
     const subtitle = escapeHtml(pageConfig.subtitle || "Enter the verification code sent to your device");
     const buttonText = escapeHtml(pageConfig.buttonText || "Verify OTP");
 
-    const length = Number(pageConfig.length) || 6;
     const resendEnabled = pageConfig.resendEnabled !== false;
     const resendText = escapeHtml(pageConfig.resendText || "Resend OTP");
     const resendSeconds = Number(pageConfig.resendSeconds) || 30;
-
-    const otpAuth = config.authentication?.otp || {};
-    const emailDelivery = otpAuth.emailEnabled !== false;
-    const smsDelivery = otpAuth.smsEnabled !== false;
-    const whatsappDelivery = Boolean(otpAuth.whatsappEnabled);
-
-    // Delivery Options Pills
-    const deliveryPills = [];
-    if (emailDelivery) {
-      deliveryPills.push(`
-        <button type="button" class="otp-delivery-pill active" data-otp-delivery="email">
-          ${ICONS.email}
-          <span>Email</span>
-        </button>
-      `);
-    }
-    if (smsDelivery) {
-      deliveryPills.push(`
-        <button type="button" class="otp-delivery-pill ${!emailDelivery ? 'active' : ''}" data-otp-delivery="sms">
-          ${ICONS.sms}
-          <span>SMS</span>
-        </button>
-      `);
-    }
-    if (whatsappDelivery) {
-      deliveryPills.push(`
-        <button type="button" class="otp-delivery-pill ${!emailDelivery && !smsDelivery ? 'active' : ''}" data-otp-delivery="whatsapp">
-          ${ICONS.whatsapp}
-          <span>WhatsApp</span>
-        </button>
-      `);
-    }
-
-    // Dynamic OTP input boxes
-    const boxes = [];
-    for (let i = 0; i < length; i++) {
-      boxes.push(`
-        <input type="text" 
-               class="otp-digit-box" 
-               data-otp-index="${i}" 
-               maxlength="1" 
-               inputmode="numeric" 
-               pattern="[0-9]*" 
-               autocomplete="one-time-code" 
-               required />
-      `);
-    }
 
     return `
       <div class="auth-page-form-wrapper" data-page="otp">
@@ -451,20 +508,11 @@
           ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
         </div>
 
-        ${deliveryPills.length > 1 ? `
-        <div class="otp-delivery-methods">
-          <span class="otp-delivery-label">Get code via:</span>
-          <div class="otp-delivery-group">
-            ${deliveryPills.join("")}
-          </div>
-        </div>
-        ` : ""}
+        ${generateDeliveryMethodsHTML(config)}
 
         <form class="auth-main-form" id="authOtpForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'otp') : null;">
           
-          <div class="otp-boxes-container" data-otp-count="${length}">
-            ${boxes.join("")}
-          </div>
+          ${generateOtpBoxesHTML(config)}
 
           ${resendEnabled ? `
           <div class="otp-resend-row">
@@ -516,11 +564,6 @@
         break;
     }
 
-    const layout = config.layout || {};
-    const layoutType = layout.type || "split-left-image";
-    const formHPos = layout.formHorizontalAlignment || "center";
-    const formVPos = layout.formVerticalAlignment || "center";
-
     const imageSection = config.imageSection || {};
     const showBackgroundText = imageSection.showText !== false;
     const bgHeading = escapeHtml(imageSection.text || "Experience the next generation of authentication.");
@@ -530,43 +573,39 @@
     const landingUrl = config.urls?.landingPageUrl || "";
 
     return `
-      <div class="auth-preview-root layout-${layoutType} form-horizontal-${formHPos} form-vertical-${formVPos}">
+      <div class="auth-preview-shell">
         
-        <div class="auth-preview-shell">
-          
-          <!-- Background / Visual Section -->
-          <div class="auth-image-section">
-            <div class="auth-image-overlay"></div>
-            ${showBackgroundText ? `
-              <div class="auth-image-content ${bgPosClass}">
-                <div class="auth-image-text-block">
-                  <h2 class="auth-image-text">${bgHeading}</h2>
-                  ${bgSubtext ? `<p class="auth-image-subtext">${bgSubtext}</p>` : ""}
-                </div>
-              </div>
-            ` : ""}
-          </div>
-
-          <!-- Form & Content Section -->
-          <div class="auth-form-section">
-            <div class="auth-card">
-              ${landingUrl ? `
-                <div class="auth-landing-link-bar">
-                  <a href="${escapeHtml(landingUrl)}" target="_blank" rel="noopener noreferrer" class="auth-landing-link">
-                    ${ICONS.arrowLeft}
-                    <span>Back to Website</span>
-                  </a>
-                </div>
-              ` : ""}
-              
-              ${generateLogo(config)}
-
-              <div class="auth-page-container">
-                ${pageHTML}
+        <!-- Background / Visual Section -->
+        <div class="auth-image-section">
+          <div class="auth-image-overlay"></div>
+          ${showBackgroundText ? `
+            <div class="auth-image-content ${bgPosClass}">
+              <div class="auth-image-text-block">
+                <h2 class="auth-image-text">${bgHeading}</h2>
+                ${bgSubtext ? `<p class="auth-image-subtext">${bgSubtext}</p>` : ""}
               </div>
             </div>
-          </div>
+          ` : ""}
+        </div>
 
+        <!-- Form & Content Section -->
+        <div class="auth-form-section">
+          <div class="auth-card">
+            ${landingUrl ? `
+              <div class="auth-landing-link-bar">
+                <a href="${escapeHtml(landingUrl)}" target="_blank" rel="noopener noreferrer" class="auth-landing-link">
+                  ${ICONS.arrowLeft}
+                  <span>Back to Website</span>
+                </a>
+              </div>
+            ` : ""}
+            
+            ${generateLogo(config)}
+
+            <div class="auth-page-container">
+              ${pageHTML}
+            </div>
+          </div>
         </div>
 
       </div>
@@ -577,6 +616,8 @@
     ICONS,
     generateLogo,
     generateSocialLogin,
+    generateDeliveryMethodsHTML,
+    generateOtpBoxesHTML,
     generateLoginPage,
     generateSignupPage,
     generateForgotPasswordPage,

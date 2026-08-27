@@ -47,7 +47,7 @@
         const path = input.dataset.configPath;
         if (!path) return;
 
-        const eventType = (input.type === "range" || input.type === "text" || input.type === "url" || input.type === "number" || input.tagName === "TEXTAREA") 
+        const eventType = (input.type === "range" || input.type === "color" || input.type === "text" || input.type === "url" || input.type === "number" || input.tagName === "TEXTAREA") 
           ? "input" 
           : "change";
 
@@ -109,8 +109,8 @@
       const bgButtons = document.querySelectorAll("[data-background]");
       bgButtons.forEach(btn => {
         btn.addEventListener("click", () => {
-          bgButtons.forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
+          bgButtons.forEach(b => b.classList.remove("active", "selected"));
+          btn.classList.add("active", "selected");
           const bgPath = btn.dataset.background;
           if (window.state && typeof window.state.set === "function") {
             window.state.set("background.selected", bgPath, { notify: false });
@@ -124,8 +124,8 @@
       const logoButtons = document.querySelectorAll("[data-logo]");
       logoButtons.forEach(btn => {
         btn.addEventListener("click", () => {
-          logoButtons.forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
+          logoButtons.forEach(b => b.classList.remove("active", "selected"));
+          btn.classList.add("active", "selected");
           const logoPath = btn.dataset.logo;
           if (window.state && typeof window.state.set === "function") {
             window.state.set("branding.selectedLogo", logoPath, { notify: false });
@@ -166,14 +166,12 @@
 
             if (window.state && typeof window.state.set === "function") {
               if (type === "background") {
-                // Clear active states on default buttons
-                document.querySelectorAll("[data-background]").forEach(b => b.classList.remove("active"));
+                document.querySelectorAll("[data-background]").forEach(b => b.classList.remove("active", "selected"));
                 window.state.setUploadedAsset("backgrounds", file.name, dataUrl);
                 window.state.set("background.uploadedImage", dataUrl, { notify: false });
                 window.state.set("background.image", dataUrl, { notify: true });
               } else if (type === "logo") {
-                // Clear active states on default buttons
-                document.querySelectorAll("[data-logo]").forEach(b => b.classList.remove("active"));
+                document.querySelectorAll("[data-logo]").forEach(b => b.classList.remove("active", "selected"));
                 window.state.setUploadedAsset("logos", file.name, dataUrl);
                 window.state.set("branding.uploadedLogo", dataUrl, { notify: false });
                 window.state.set("branding.logo", dataUrl, { notify: true });
@@ -278,7 +276,7 @@
       this.isUpdatingFromState = true;
 
       try {
-        // Sync inputs with [data-config-path]
+        // 1. Sync inputs with [data-config-path]
         const inputs = document.querySelectorAll("[data-config-path]");
         inputs.forEach(input => {
           const path = input.dataset.configPath;
@@ -294,7 +292,7 @@
           }
         });
 
-        // Update range badges
+        // 2. Update range badges
         const rangeInputs = document.querySelectorAll('input[type="range"][data-value-target]');
         rangeInputs.forEach(range => {
           const targetEl = document.querySelector(range.dataset.valueTarget);
@@ -304,18 +302,40 @@
           }
         });
 
-        // Sync active page tab
+        // 3. Sync active page tab
         const activePage = state.activePage || "login";
         document.querySelectorAll("[data-builder-page]").forEach(tab => {
           tab.classList.toggle("active", tab.dataset.builderPage === activePage);
         });
 
-        // Sync page specific section
+        // 4. Sync page specific section
         document.querySelectorAll("[data-control-page]").forEach(ctrl => {
           ctrl.hidden = ctrl.dataset.controlPage !== activePage;
         });
 
-        // Update toolbar title
+        // 5. Sync default asset buttons active state
+        const currentBg = state.background?.uploadedImage ? "" : (state.background?.selected || state.background?.image || "");
+        document.querySelectorAll("[data-background]").forEach(btn => {
+          const match = btn.dataset.background === currentBg;
+          btn.classList.toggle("active", match);
+          btn.classList.toggle("selected", match);
+        });
+
+        const currentLogo = state.branding?.uploadedLogo ? "" : (state.branding?.selectedLogo || state.branding?.logo || "");
+        document.querySelectorAll("[data-logo]").forEach(btn => {
+          const match = btn.dataset.logo === currentLogo;
+          btn.classList.toggle("active", match);
+          btn.classList.toggle("selected", match);
+        });
+
+        // 6. Update Integration Snippet text
+        const snippetEl = document.getElementById("integrationSnippetText");
+        if (snippetEl) {
+          const siteUrl = state.urls?.landingPageUrl || "https://customerwebsite.com";
+          snippetEl.value = `<!-- Embed on your landing page (${siteUrl}) -->\n<a href="./auth/index.html" class="auth-login-btn">Sign In</a>`;
+        }
+
+        // 7. Update toolbar title
         const titleEl = document.getElementById("previewPageTitle");
         if (titleEl) {
           const names = {

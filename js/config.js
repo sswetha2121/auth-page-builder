@@ -55,8 +55,8 @@ const defaultConfig = {
   ======================================================= */
   branding: {
     showLogo: true,
-    selectedLogo: "assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg",
-    logo: "assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg",
+    selectedLogo: "assets/logos/brand-shield.svg",
+    logo: "assets/logos/brand-shield.svg",
     uploadedLogo: "",
     logoSize: 64,
     logoShape: "circle",
@@ -149,7 +149,8 @@ const defaultConfig = {
       emailEnabled: true,
       smsEnabled: true,
       whatsappEnabled: true,
-      authenticatorEnabled: false
+      authenticatorEnabled: false,
+      defaultMethod: "email"
     }
   },
 
@@ -203,12 +204,16 @@ const defaultConfig = {
       title: "Verify your identity",
       subtitle: "Enter the verification code sent to your device",
       buttonText: "Verify OTP",
+      displayMode: "separate", // "separate" or "inline"
       length: 6,
       resendEnabled: true,
       resendText: "Resend OTP",
       resendSeconds: 30,
-      boxSize: 50,
-      boxGap: 10
+      boxWidth: 48,
+      boxHeight: 54,
+      gap: 10,
+      borderRadius: 12,
+      fontSize: 24
     }
   }
 };

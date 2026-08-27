@@ -6,8 +6,10 @@
 ========================================================= */
 
 /* =========================================================
-   PREVIEW ROOT
+   PREVIEW ROOT CONTAINER
 ========================================================= */
+.preview-root,
+.fullscreen-preview-root,
 .auth-preview-root {
     width: 100%;
     height: 100%;
@@ -21,8 +23,14 @@
     box-sizing: border-box;
 }
 
+.preview-root *,
+.fullscreen-preview-root *,
 .auth-preview-root *,
+.preview-root *::before,
+.fullscreen-preview-root *::before,
 .auth-preview-root *::before,
+.preview-root *::after,
+.fullscreen-preview-root *::after,
 .auth-preview-root *::after {
     box-sizing: border-box;
 }
@@ -42,37 +50,53 @@
 ========================================================= */
 
 /* 1. Split Image Left */
+.preview-root.layout-split-left-image .auth-preview-shell,
+.fullscreen-preview-root.layout-split-left-image .auth-preview-shell,
 .auth-preview-root.layout-split-left-image .auth-preview-shell {
     flex-direction: row;
 }
 
 /* 2. Split Image Right */
+.preview-root.layout-split-right-image .auth-preview-shell,
+.fullscreen-preview-root.layout-split-right-image .auth-preview-shell,
 .auth-preview-root.layout-split-right-image .auth-preview-shell {
     flex-direction: row-reverse;
 }
 
 /* 3. Centered */
+.preview-root.layout-centered,
+.fullscreen-preview-root.layout-centered,
 .auth-preview-root.layout-centered {
     background-color: var(--auth-background-color, #f8fafc);
 }
+.preview-root.layout-centered .auth-preview-shell,
+.fullscreen-preview-root.layout-centered .auth-preview-shell,
 .auth-preview-root.layout-centered .auth-preview-shell {
     flex-direction: column;
 }
+.preview-root.layout-centered .auth-image-section,
+.fullscreen-preview-root.layout-centered .auth-image-section,
 .auth-preview-root.layout-centered .auth-image-section {
     display: none !important;
 }
+.preview-root.layout-centered .auth-form-section,
+.fullscreen-preview-root.layout-centered .auth-form-section,
 .auth-preview-root.layout-centered .auth-form-section {
     width: 100%;
     background: transparent;
 }
 
 /* 4. Full Background */
+.preview-root.layout-full-background,
+.fullscreen-preview-root.layout-full-background,
 .auth-preview-root.layout-full-background {
     background-image: var(--auth-background-image, none);
     background-size: var(--auth-background-size, cover);
     background-position: var(--auth-background-position, center);
-    background-repeat: no-repeat;
+    background-repeat: var(--auth-background-repeat, no-repeat);
 }
+.preview-root.layout-full-background::before,
+.fullscreen-preview-root.layout-full-background::before,
 .auth-preview-root.layout-full-background::before {
     content: "";
     position: absolute;
@@ -82,9 +106,13 @@
     opacity: var(--auth-overlay-opacity, 0.35);
     pointer-events: none;
 }
+.preview-root.layout-full-background .auth-image-section,
+.fullscreen-preview-root.layout-full-background .auth-image-section,
 .auth-preview-root.layout-full-background .auth-image-section {
     display: none !important;
 }
+.preview-root.layout-full-background .auth-form-section,
+.fullscreen-preview-root.layout-full-background .auth-form-section,
 .auth-preview-root.layout-full-background .auth-form-section {
     width: 100%;
     z-index: 2;
@@ -92,16 +120,24 @@
 }
 
 /* 5. Minimal Layout */
+.preview-root.layout-minimal,
+.fullscreen-preview-root.layout-minimal,
 .auth-preview-root.layout-minimal {
     background-color: #ffffff;
 }
+.preview-root.layout-minimal .auth-image-section,
+.fullscreen-preview-root.layout-minimal .auth-image-section,
 .auth-preview-root.layout-minimal .auth-image-section {
     display: none !important;
 }
+.preview-root.layout-minimal .auth-form-section,
+.fullscreen-preview-root.layout-minimal .auth-form-section,
 .auth-preview-root.layout-minimal .auth-form-section {
     width: 100%;
     background: #ffffff;
 }
+.preview-root.layout-minimal .auth-card,
+.fullscreen-preview-root.layout-minimal .auth-card,
 .auth-preview-root.layout-minimal .auth-card {
     border: none !important;
     box-shadow: none !important;
@@ -111,11 +147,16 @@
 }
 
 /* 6. Card Left */
+.preview-root.layout-card-left,
+.fullscreen-preview-root.layout-card-left,
 .auth-preview-root.layout-card-left {
     background-image: var(--auth-background-image, none);
     background-size: var(--auth-background-size, cover);
     background-position: var(--auth-background-position, center);
+    background-repeat: var(--auth-background-repeat, no-repeat);
 }
+.preview-root.layout-card-left::before,
+.fullscreen-preview-root.layout-card-left::before,
 .auth-preview-root.layout-card-left::before {
     content: "";
     position: absolute;
@@ -125,23 +166,32 @@
     opacity: var(--auth-overlay-opacity, 0.35);
     pointer-events: none;
 }
+.preview-root.layout-card-left .auth-image-section,
+.fullscreen-preview-root.layout-card-left .auth-image-section,
 .auth-preview-root.layout-card-left .auth-image-section {
     display: none !important;
 }
+.preview-root.layout-card-left .auth-form-section,
+.fullscreen-preview-root.layout-card-left .auth-form-section,
 .auth-preview-root.layout-card-left .auth-form-section {
     width: 100%;
     z-index: 2;
     background: transparent;
     justify-content: flex-start;
-    padding-left: clamp(32px, 8vw, 120px);
+    padding-left: clamp(24px, 6vw, 100px);
 }
 
 /* 7. Card Right */
+.preview-root.layout-card-right,
+.fullscreen-preview-root.layout-card-right,
 .auth-preview-root.layout-card-right {
     background-image: var(--auth-background-image, none);
     background-size: var(--auth-background-size, cover);
     background-position: var(--auth-background-position, center);
+    background-repeat: var(--auth-background-repeat, no-repeat);
 }
+.preview-root.layout-card-right::before,
+.fullscreen-preview-root.layout-card-right::before,
 .auth-preview-root.layout-card-right::before {
     content: "";
     position: absolute;
@@ -151,15 +201,19 @@
     opacity: var(--auth-overlay-opacity, 0.35);
     pointer-events: none;
 }
+.preview-root.layout-card-right .auth-image-section,
+.fullscreen-preview-root.layout-card-right .auth-image-section,
 .auth-preview-root.layout-card-right .auth-image-section {
     display: none !important;
 }
+.preview-root.layout-card-right .auth-form-section,
+.fullscreen-preview-root.layout-card-right .auth-form-section,
 .auth-preview-root.layout-card-right .auth-form-section {
     width: 100%;
     z-index: 2;
     background: transparent;
     justify-content: flex-end;
-    padding-right: clamp(32px, 8vw, 120px);
+    padding-right: clamp(24px, 6vw, 100px);
 }
 
 /* =========================================================
@@ -176,7 +230,7 @@
     background-image: var(--auth-background-image, none);
     background-size: var(--auth-background-size, cover);
     background-position: var(--auth-background-position, center);
-    background-repeat: no-repeat;
+    background-repeat: var(--auth-background-repeat, no-repeat);
     transition: flex 0.2s ease, width 0.2s ease;
 }
 
@@ -240,19 +294,35 @@
     display: flex;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: clamp(24px, 4vw, 64px);
+    padding: clamp(20px, 3.5vw, 56px);
     background-color: #f8fafc;
     transition: all 0.2s ease;
 }
 
 /* Horizontal Alignments */
+.preview-root.form-horizontal-left .auth-form-section,
+.fullscreen-preview-root.form-horizontal-left .auth-form-section,
 .auth-preview-root.form-horizontal-left .auth-form-section { justify-content: flex-start; }
+
+.preview-root.form-horizontal-center .auth-form-section,
+.fullscreen-preview-root.form-horizontal-center .auth-form-section,
 .auth-preview-root.form-horizontal-center .auth-form-section { justify-content: center; }
+
+.preview-root.form-horizontal-right .auth-form-section,
+.fullscreen-preview-root.form-horizontal-right .auth-form-section,
 .auth-preview-root.form-horizontal-right .auth-form-section { justify-content: flex-end; }
 
 /* Vertical Alignments */
+.preview-root.form-vertical-top .auth-form-section,
+.fullscreen-preview-root.form-vertical-top .auth-form-section,
 .auth-preview-root.form-vertical-top .auth-form-section { align-items: flex-start; }
+
+.preview-root.form-vertical-center .auth-form-section,
+.fullscreen-preview-root.form-vertical-center .auth-form-section,
 .auth-preview-root.form-vertical-center .auth-form-section { align-items: center; }
+
+.preview-root.form-vertical-bottom .auth-form-section,
+.fullscreen-preview-root.form-vertical-bottom .auth-form-section,
 .auth-preview-root.form-vertical-bottom .auth-form-section { align-items: flex-end; }
 
 /* =========================================================
@@ -276,7 +346,7 @@
 
 /* Back to Website Link */
 .auth-landing-link-bar {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 .auth-landing-link {
     display: inline-flex;
@@ -293,12 +363,12 @@
 }
 
 /* =========================================================
-   BRANDING & LOGO
+   BRANDING & LOGO (VISUAL SHAPES)
 ========================================================= */
 .auth-branding-header {
     display: flex;
     flex-direction: column;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 .auth-branding-header.auth-logo-pos-left { align-items: flex-start; text-align: left; }
 .auth-branding-header.auth-logo-pos-center { align-items: center; text-align: center; }
@@ -311,16 +381,43 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     background-color: var(--auth-logo-bg, transparent);
     border-radius: var(--auth-logo-radius, 50%);
+    clip-path: var(--auth-logo-clip, none);
+    -webkit-clip-path: var(--auth-logo-clip, none);
     flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.auth-logo-shape-square {
+    border-radius: 0px !important;
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+}
+
+.auth-logo-shape-rounded {
+    border-radius: 14px !important;
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+}
+
+.auth-logo-shape-circle {
+    border-radius: 50% !important;
+    clip-path: circle(50% at 50% 50%) !important;
+    -webkit-clip-path: circle(50% at 50% 50%) !important;
+}
+
+.auth-logo-shape-ellipse {
+    border-radius: 50% / 35% !important;
+    clip-path: ellipse(50% 38% at 50% 50%) !important;
+    -webkit-clip-path: ellipse(50% 38% at 50% 50%) !important;
 }
 
 .auth-logo-img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
 }
 
@@ -333,7 +430,7 @@
     background: linear-gradient(135deg, #2563eb, #4f46e5);
     color: #ffffff;
     font-weight: 800;
-    font-size: calc(var(--auth-logo-size, 64px) * 0.4);
+    font-size: calc(var(--auth-logo-size, 64px) * 0.38);
     letter-spacing: -0.02em;
     user-select: none;
 }
@@ -349,7 +446,7 @@
    PAGE HEADER & TYPOGRAPHY
 ========================================================= */
 .auth-form-header {
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
 .auth-heading {
@@ -374,7 +471,7 @@
 .auth-main-form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
 }
 
 .auth-field-group {
@@ -466,7 +563,7 @@
 .auth-checkbox-group {
     display: flex;
     align-items: center;
-    margin-top: -4px;
+    margin-top: -2px;
 }
 .auth-checkbox-label {
     display: inline-flex;
@@ -582,7 +679,7 @@
     gap: 6px;
     font-size: 14px;
     color: #64748b;
-    margin-top: 6px;
+    margin-top: 4px;
 }
 .auth-back-center {
     justify-content: center;
@@ -597,13 +694,13 @@
    SOCIAL LOGIN
 ========================================================= */
 .auth-social-section {
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .auth-divider {
     position: relative;
     text-align: center;
-    margin: 18px 0 14px;
+    margin: 16px 0 12px;
 }
 .auth-divider::before {
     content: "";
@@ -665,11 +762,31 @@
 }
 
 /* =========================================================
-   OTP INTERACTIVE BOXES & DELIVERY
+   INLINE OTP & STANDALONE OTP STYLING
 ========================================================= */
+.auth-inline-otp-section {
+    padding: 12px 0 4px;
+    border-top: 1px dashed #e2e8f0;
+    margin-top: 4px;
+}
+
 .otp-delivery-methods {
-    margin-bottom: 20px;
+    margin-bottom: 14px;
     text-align: center;
+}
+.otp-delivery-single {
+    margin-bottom: 12px;
+}
+.otp-delivery-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
 }
 .otp-delivery-label {
     display: block;
@@ -714,30 +831,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: var(--otp-box-gap, 10px);
     margin: 8px 0 12px;
+    width: 100%;
 }
 
 .otp-digit-box {
-    width: 48px;
-    height: 54px;
-    border-radius: 12px;
+    width: var(--otp-box-width, 48px);
+    height: var(--otp-box-height, 54px);
+    border-radius: var(--otp-box-radius, 12px);
     border: 2px solid #cbd5e1;
     background-color: #ffffff;
     text-align: center;
     font-family: inherit;
-    font-size: 24px;
+    font-size: var(--otp-font-size, 24px);
     font-weight: 700;
     color: #0f172a;
     outline: none;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
-}
-
-.otp-boxes-container[data-otp-count="8"] .otp-digit-box {
-    width: 38px;
-    height: 46px;
-    font-size: 20px;
-    border-radius: 9px;
+    flex-shrink: 1;
+    min-width: 28px;
 }
 
 .otp-digit-box:focus {
@@ -773,29 +886,34 @@
 /* =========================================================
    RESPONSIVE PREVIEW DEVICE BREAKPOINTS
 ========================================================= */
-.preview-root.preview-device-mobile .auth-preview-shell {
+.preview-root.preview-device-mobile .auth-preview-shell,
+.preview-canvas.device-mobile .auth-preview-shell {
     flex-direction: column !important;
 }
-.preview-root.preview-device-mobile .auth-image-section {
+.preview-root.preview-device-mobile .auth-image-section,
+.preview-canvas.device-mobile .auth-image-section {
     display: none !important;
 }
-.preview-root.preview-device-mobile .auth-form-section {
+.preview-root.preview-device-mobile .auth-form-section,
+.preview-canvas.device-mobile .auth-form-section {
     width: 100% !important;
-    padding: 20px 16px !important;
+    padding: 20px 14px !important;
 }
-.preview-root.preview-device-mobile .auth-card {
-    padding: 24px 18px !important;
+.preview-root.preview-device-mobile .auth-card,
+.preview-canvas.device-mobile .auth-card {
+    padding: 24px 16px !important;
     max-width: 100% !important;
 }
-.preview-root.preview-device-mobile .otp-boxes-container[data-otp-count="8"] .otp-digit-box {
-    width: 32px;
-    height: 40px;
+.preview-root.preview-device-mobile .otp-digit-box,
+.preview-canvas.device-mobile .otp-digit-box {
+    max-width: 38px;
+    height: 44px;
     font-size: 18px;
-    gap: 4px;
 }
 
-.preview-root.preview-device-tablet .auth-card {
-    padding: 32px 28px !important;
+.preview-root.preview-device-tablet .auth-card,
+.preview-canvas.device-tablet .auth-card {
+    padding: 32px 26px !important;
 }
 
 @media (max-width: 768px) {
