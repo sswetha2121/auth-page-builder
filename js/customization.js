@@ -3,87 +3,40 @@
    File: js/customization.js
 ========================================================= */
 
-
 /* =========================================================
    INITIALIZE CUSTOMIZATION ENGINE
 ========================================================= */
 
 function initializeCustomization() {
   initializeCustomizationControls();
-
   initializeRangeValueDisplays();
-
   initializeColorControls();
-
   initializeFileUploads();
-
   initializePageControls();
-
+  initializePageSpecificCustomization();
   initializePreviewDeviceControls();
-
   initializeFullscreenPreview();
-
   initializeResetControls();
-
   initializePanelAccordions();
 }
-
 
 /* =========================================================
    CUSTOMIZATION CONTROLS
 ========================================================= */
 
-/*
-HTML convention:
-
-<input
-  data-config-path="branding.logoSize"
-  type="range"
-  value="64"
-/>
-
-<select
-  data-config-path="layout.type"
->
-  ...
-</select>
-
-<input
-  data-config-path="background.overlayEnabled"
-  type="checkbox"
-/>
-
-When a user changes a control, the value is written directly
-to the corresponding location inside window.config.
-*/
-
-
 function initializeCustomizationControls() {
-  const controls =
-    document.querySelectorAll(
-      "[data-config-path]"
-    );
+  const controls = document.querySelectorAll("[data-config-path]");
 
   controls.forEach((control) => {
-    const eventName =
-      getControlEvent(control);
+    const eventName = getControlEvent(control);
 
-    control.addEventListener(
-      eventName,
-      handleCustomizationChange
-    );
+    control.addEventListener(eventName, handleCustomizationChange);
 
-    if (
-      eventName !== "change"
-    ) {
-      control.addEventListener(
-        "change",
-        handleCustomizationChange
-      );
+    if (eventName !== "change") {
+      control.addEventListener("change", handleCustomizationChange);
     }
   });
 }
-
 
 /* =========================================================
    GET CONTROL EVENT
@@ -98,30 +51,549 @@ function getControlEvent(control) {
     return "input";
   }
 
-  if (
-    control.tagName === "TEXTAREA"
-  ) {
+  if (control.tagName === "TEXTAREA") {
     return "input";
   }
 
   return "change";
 }
 
-
 /* =========================================================
    HANDLE CUSTOMIZATION CHANGE
 ========================================================= */
 
 function handleCustomizationChange(event) {
+  const control = event.currentTarget;
+  const path = control.dataset.configPath;
+
+  if (!path) return;
+
+  const value = getControlValue(control);
+
+  setConfigValue(path, value);
+
+  syncRelatedControls(control, value);
+
+  saveConfig();
+  refreshPreview();
+}
+
+/* =========================================================
+   GET CONTROL VALUE
+========================================================= */
+
+function getControlValue(control) {
+  if (control.type === "checkbox") {
+    return control.checked;
+  }
+
+  if (control.type === "number" || control.type === "range") {
+    const number = Number(control.value);
+    return Number.isNaN(number) ? 0 : number;
+  }
+
+  if (control.type === "radio") {
+    if (!control.checked) {
+      return getConfigValue(control.dataset.configPath);
+    }
+
+    return control.value;
+  }
+
+  return control.value;
+}
+
+/* =========================================================
+   SET CONFIG VALUE
+========================================================= */
+
+function setConfigValue(path, value) {
+  if (!path) return;
+
+  if (typeof window.setConfigByPath === "function") {
+    window.setConfigByPath(path, value);
+    return;
+  }
+
+  const keys = path.split(".");
+  let target = window.config;
+
+  for (let index = 0; index < keys.length - 1; index++) {
+    const key = keys[index];
+
+    if (
+      !target[key] ||
+      typeof target[key] !== "object" ||
+      Array.isArray(target[key])
+    ) {
+      target[key] = {};
+    }
+
+    target = target[key];
+  }
+
+  target[keys[keys.length - 1]] = value;
+}
+
+/* =========================================================
+   GET CONFIG VALUE
+========================================================= */
+
+function getConfigValue(path) {
+  if (!path) return undefined;
+
+  if (typeof window.getConfigByPath === "function") {
+    return window.getConfigByPath(path);
+  }
+
+  const keys = path.split(".");
+  let value = window.config;
+
+  for (const key of keys) {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    value = value[key];
+  }
+
+  return value;
+}
+
+/* =========================================================
+   REFRESH PREVIEW
+========================================================= */
+
+function refreshPreview() {
+  if (typeof window.renderPreviewRoot === "function") {
+    window.renderPreviewRoot();
+  } else if (typeof window.renderPreview === "function") {
+    const previewRoot = document.getElementById("previewRoot");
+
+    if (previewRoot) {
+      window.renderPreview(previewRoot);
+    }
+  }
+
+  updateConfigurationIndicators();
+}
+
+/* =========================================================
+   RANGE VALUE DISPLAYS
+========================================================= */
+
+function initializeRangeValueDisplays() {
+  document
+    .querySelectorAll("input[type='range'][data-value-target]")
+    .forEach((range) => {
+      updateRangeDisplay(range);
+
+      range.addEventListener("input", () => {
+        updateRangeDisplay(range);
+      });
+    });
+}
+
+function updateRangeDisplay(range) {
+  if (!range || !range.dataset) return;
+
+  const targetSelector = range.dataset.valueTarget;
+
+  if (!targetSelector) return;
+
+  const target = document.querySelector(targetSelector);
+
+  if (!target) return;
+
+  const suffix = range.dataset.valueSuffix || "";
+
+  target.textContent = `${range.value}${suffix}`;
+}
+
+/* =========================================================
+   COLOR CONTROLS
+========================================================= */
+
+function initializeColorControls() {
+  document
+    .querySelectorAll("[data-color-target]")
+    .forEach((control) => {
+      control.addEventListener("input", () => {
+        syncColorControl(control);
+      });
+
+      control.addEventListener("change", () => {
+        syncColorControl(control);
+      });
+    });
+}
+
+function syncColorControl(control) {
+  const targetSelector = control.dataset.colorTarget;
+
+  if (!targetSelector) return;
+
+  const target = document.querySelector(targetSelector);
+
+  if (!target) return;
+
+  target.value = control.value;
+
+  target.dispatchEvent(
+    new Event("input", {
+      bubbles: true
+    })
+  );
+}
+
+/* =========================================================
+   SYNC RELATED CONTROLS
+========================================================= */
+
+function syncRelatedControls(control, value) {
+  const targetSelector = control.dataset.syncTarget;
+
+  if (!targetSelector) return;
+
+  const targets = document.querySelectorAll(targetSelector);
+
+  targets.forEach((target) => {
+    if (target === control) return;
+
+    if (target.type === "checkbox") {
+      target.checked = Boolean(value);
+    } else {
+      target.value = value;
+    }
+  });
+}
+
+/* =========================================================
+   FILE UPLOADS
+========================================================= */
+
+function initializeFileUploads() {
+  document
+    .querySelectorAll("[data-upload-type]")
+    .forEach((input) => {
+      input.addEventListener("change", handleFileUpload);
+    });
+}
+
+function handleFileUpload(event) {
+  const input = event.currentTarget;
+  const file = input.files?.[0];
+
+  if (!file) return;
+
+  const uploadType = input.dataset.uploadType;
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const result = reader.result;
+
+    applyUploadedFile(uploadType, result, file);
+
+    saveConfig();
+    refreshPreview();
+
+    updateUploadPreview(input, result, file);
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function applyUploadedFile(uploadType, data, file) {
+  if (!window.config) return;
+
+  if (uploadType === "background") {
+    window.config.background.uploadedImage = data;
+    window.config.background.image = data;
+    window.config.background.imageUrl = data;
+    window.config.background.fileName = file.name;
+    window.config.background.imageFileName = file.name;
+    window.config.background.imageSource = "upload";
+    window.config.background.type = "upload";
+    return;
+  }
+
+  if (uploadType === "logo") {
+    window.config.branding.logo = data;
+    window.config.branding.logoUrl = data;
+    window.config.branding.uploadedLogo = data;
+    window.config.branding.logoFileName = file.name;
+    window.config.branding.logoSource = "upload";
+    window.config.branding.logoType = "upload";
+    return;
+  }
+
+  if (uploadType === "favicon") {
+    window.config.branding.favicon = data;
+    window.config.branding.faviconFileName = file.name;
+    return;
+  }
+
+  if (uploadType === "social") {
+    const provider =
+      eventTargetProvider(uploadType);
+
+    if (!provider) return;
+
+    window.config.social =
+      window.config.social || {};
+
+    window.config.social.customIcons =
+      window.config.social.customIcons || {};
+
+    window.config.social.customIcons[provider] = data;
+  }
+}
+
+function eventTargetProvider() {
+  const activeInput = document.activeElement;
+
+  if (activeInput?.dataset?.socialProvider) {
+    return activeInput.dataset.socialProvider;
+  }
+
+  return null;
+}
+
+function updateUploadPreview(input, source, file) {
+  const previewSelector = input.dataset.uploadPreview;
+
+  if (previewSelector) {
+    const preview = document.querySelector(previewSelector);
+
+    if (preview) {
+      if (preview.tagName === "IMG") {
+        preview.src = source;
+      } else {
+        preview.style.backgroundImage = `url("${source}")`;
+      }
+    }
+  }
+
+  const nameTargetSelector = input.dataset.fileNameTarget;
+
+  if (nameTargetSelector) {
+    const target = document.querySelector(nameTargetSelector);
+
+    if (target) {
+      target.textContent = file.name;
+    }
+  }
+}
+
+/* =========================================================
+   PAGE CONTROLS
+========================================================= */
+
+function initializePageControls() {
+  const pageButtons = document.querySelectorAll(
+    "[data-page]"
+  );
+
+  pageButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const page = normalizePageName(
+        button.dataset.page
+      );
+
+      setActivePage(page);
+    });
+  });
+}
+
+/* =========================================================
+   NORMALIZE PAGE NAME
+========================================================= */
+
+function normalizePageName(page) {
+  const value = String(page || "")
+    .trim()
+    .toLowerCase();
+
+  const aliases = {
+    login: "login",
+    signin: "login",
+    "sign-in": "login",
+
+    signup: "signup",
+    "sign-up": "signup",
+    register: "signup",
+
+    forgot: "forgotPassword",
+    forgotpassword: "forgotPassword",
+    "forgot-password": "forgotPassword",
+    "forgot password": "forgotPassword",
+
+    otp: "otp",
+    verification: "otp",
+    verify: "otp"
+  };
+
+  return aliases[value] || "login";
+}
+
+/* =========================================================
+   GET ACTIVE PAGE
+========================================================= */
+
+function getActivePage() {
+  if (window.config?.currentPage) {
+    return normalizePageName(
+      window.config.currentPage
+    );
+  }
+
+  const activeButton =
+    document.querySelector(
+      "[data-page].active, [data-page][aria-selected='true']"
+    );
+
+  if (activeButton) {
+    return normalizePageName(
+      activeButton.dataset.page
+    );
+  }
+
+  return "login";
+}
+
+/* =========================================================
+   GET ACTIVE PAGE CONFIG
+========================================================= */
+
+function getActivePageConfig() {
+  const activePage = getActivePage();
+
+  return (
+    window.config?.pages?.[activePage] ||
+    null
+  );
+}
+
+/* =========================================================
+   SET ACTIVE PAGE
+========================================================= */
+
+function setActivePage(page) {
+  const normalizedPage =
+    normalizePageName(page);
+
+  if (!window.config) return;
+
+  window.config.currentPage =
+    normalizedPage;
+
+  updateActivePageButton(
+    normalizedPage
+  );
+
+  updatePageSpecificCustomization(
+    normalizedPage
+  );
+
+  syncPageSpecificControlsFromConfig(
+    normalizedPage
+  );
+
+  saveConfig();
+  refreshPreview();
+}
+
+/* =========================================================
+   UPDATE ACTIVE PAGE BUTTON
+========================================================= */
+
+function updateActivePageButton(page) {
+  document
+    .querySelectorAll("[data-page]")
+    .forEach((button) => {
+      const buttonPage =
+        normalizePageName(
+          button.dataset.page
+        );
+
+      const isActive =
+        buttonPage === page;
+
+      button.classList.toggle(
+        "active",
+        isActive
+      );
+
+      button.setAttribute(
+        "aria-selected",
+        String(isActive)
+      );
+    });
+}
+
+/* =========================================================
+   PAGE-SPECIFIC CUSTOMIZATION
+========================================================= */
+
+function initializePageSpecificCustomization() {
+  document
+    .querySelectorAll(
+      "[data-page-customization], [data-customization-page]"
+    )
+    .forEach((panel) => {
+      panel.setAttribute(
+        "data-page-customization-ready",
+        "true"
+      );
+    });
+
+  updatePageSpecificCustomization(
+    getActivePage()
+  );
+
+  initializePageSpecificControls();
+}
+
+/* =========================================================
+   INITIALIZE PAGE-SPECIFIC CONTROLS
+========================================================= */
+
+function initializePageSpecificControls() {
+  const controls =
+    document.querySelectorAll(
+      "[data-page-config-path]"
+    );
+
+  controls.forEach((control) => {
+    const eventName =
+      getControlEvent(control);
+
+    control.addEventListener(
+      eventName,
+      handlePageSpecificCustomizationChange
+    );
+
+    if (eventName !== "change") {
+      control.addEventListener(
+        "change",
+        handlePageSpecificCustomizationChange
+      );
+    }
+  });
+}
+
+/* =========================================================
+   HANDLE PAGE-SPECIFIC CHANGE
+========================================================= */
+
+function handlePageSpecificCustomizationChange(event) {
   const control =
     event.currentTarget;
 
   const path =
-    control.dataset.configPath;
+    control.dataset.pageConfigPath;
 
-  if (!path) {
-    return;
-  }
+  if (!path) return;
 
   const value =
     getControlValue(control);
@@ -131,574 +603,278 @@ function handleCustomizationChange(event) {
     value
   );
 
-  syncRelatedControls(
-    control,
-    value
+  handlePageSpecificControlEffects(
+    path,
+    value,
+    control
   );
 
   saveConfig();
-
   refreshPreview();
 }
 
-
 /* =========================================================
-   GET CONTROL VALUE
+   HANDLE SPECIAL PAGE EFFECTS
 ========================================================= */
 
-function getControlValue(control) {
-  if (
-    control.type === "checkbox"
-  ) {
-    return control.checked;
-  }
-
-  if (
-    control.type === "number"
-  ) {
-    const number =
-      Number(control.value);
-
-    return Number.isNaN(number)
-      ? 0
-      : number;
-  }
-
-  if (
-    control.type === "range"
-  ) {
-    const number =
-      Number(control.value);
-
-    return Number.isNaN(number)
-      ? 0
-      : number;
-  }
-
-  if (
-    control.type === "radio"
-  ) {
-    return control.checked
-      ? control.value
-      : getConfigValue(
-          control.dataset.configPath
-        );
-  }
-
-  return control.value;
-}
-
-
-/* =========================================================
-   SET NESTED CONFIG VALUE
-========================================================= */
-
-function setConfigValue(
+function handlePageSpecificControlEffects(
   path,
-  value
+  value,
+  control
 ) {
-  if (!path) {
-    return;
-  }
-
-  const keys =
-    path.split(".");
-
-  let target =
-    window.config;
-
-  for (
-    let index = 0;
-    index < keys.length - 1;
-    index++
-  ) {
-    const key =
-      keys[index];
-
-    if (
-      typeof target[key] !==
-      "object"
-    ) {
-      target[key] = {};
-    }
-
-    target =
-      target[key];
-  }
-
-  const finalKey =
-    keys[keys.length - 1];
-
-  target[finalKey] =
-    value;
-}
-
-
-/* =========================================================
-   GET NESTED CONFIG VALUE
-========================================================= */
-
-function getConfigValue(path) {
-  if (!path) {
-    return undefined;
-  }
-
-  const keys =
-    path.split(".");
-
-  let value =
-    window.config;
-
-  for (
-    const key of keys
-  ) {
-    if (
-      value === undefined ||
-      value === null
-    ) {
-      return undefined;
-    }
-
-    value =
-      value[key];
-  }
-
-  return value;
-}
-
-
-/* =========================================================
-   REFRESH PREVIEW
-========================================================= */
-
-function refreshPreview() {
   if (
-    typeof window.renderPreviewRoot ===
-    "function"
+    path ===
+    "pages.otp.input.length"
   ) {
-    window.renderPreviewRoot();
+    const length =
+      Number(value);
+
+    if (
+      ![4, 6, 8].includes(length)
+    ) {
+      setConfigValue(
+        path,
+        6
+      );
+    }
   }
 
-  updateConfigurationIndicators();
+  if (
+    path ===
+    "pages.otp.delivery.defaultMethod"
+  ) {
+    const methods =
+      getConfigValue(
+        "pages.otp.delivery.methods"
+      ) || {};
+
+    if (
+      !methods[value]
+    ) {
+      methods[value] = true;
+
+      setConfigValue(
+        "pages.otp.delivery.methods",
+        methods
+      );
+    }
+  }
+
+  if (
+    path ===
+    "pages.login.identifier.type"
+  ) {
+    updateLoginIdentifierControls(
+      value
+    );
+  }
+
+  if (
+    path ===
+    "pages.forgotPassword.identifier.type"
+  ) {
+    updateForgotIdentifierControls(
+      value
+    );
+  }
+
+  if (
+    control?.dataset?.toggleTarget
+  ) {
+    const target =
+      document.querySelector(
+        control.dataset.toggleTarget
+      );
+
+    if (target) {
+      target.hidden =
+        !Boolean(value);
+
+      target.classList.toggle(
+        "is-hidden",
+        !Boolean(value)
+      );
+    }
+  }
 }
 
-
 /* =========================================================
-   RANGE VALUE DISPLAYS
+   UPDATE LOGIN IDENTIFIER CONTROLS
 ========================================================= */
 
-function initializeRangeValueDisplays() {
+function updateLoginIdentifierControls(type) {
   document
     .querySelectorAll(
-      "input[type='range'][data-value-target]"
+      "[data-login-identifier-control]"
     )
-    .forEach((range) => {
-      updateRangeDisplay(range);
+    .forEach((element) => {
+      const allowed =
+        element.dataset
+          .loginIdentifierControl;
 
-      range.addEventListener(
-        "input",
-        () => {
-          updateRangeDisplay(range);
-        }
-      );
+      element.hidden =
+        allowed !== type;
     });
 }
 
-
-function updateRangeDisplay(range) {
-  const targetSelector =
-    range.dataset.valueTarget;
-
-  if (!targetSelector) {
-    return;
-  }
-
-  const target =
-    document.querySelector(
-      targetSelector
-    );
-
-  if (!target) {
-    return;
-  }
-
-  const suffix =
-    range.dataset.valueSuffix || "";
-
-  target.textContent =
-    `${range.value}${suffix}`;
-}
-
-
 /* =========================================================
-   COLOR CONTROLS
+   UPDATE FORGOT IDENTIFIER CONTROLS
 ========================================================= */
 
-function initializeColorControls() {
+function updateForgotIdentifierControls(type) {
   document
     .querySelectorAll(
-      "[data-color-target]"
+      "[data-forgot-identifier-control]"
+    )
+    .forEach((element) => {
+      const allowed =
+        element.dataset
+          .forgotIdentifierControl;
+
+      element.hidden =
+        allowed !== type;
+    });
+}
+
+/* =========================================================
+   UPDATE PAGE-SPECIFIC PANELS
+========================================================= */
+
+function updatePageSpecificCustomization(page) {
+  const normalizedPage =
+    normalizePageName(page);
+
+  const panels =
+    document.querySelectorAll(
+      "[data-page-customization], [data-customization-page]"
+    );
+
+  panels.forEach((panel) => {
+    const panelPage =
+      normalizePageName(
+        panel.dataset.pageCustomization ||
+        panel.dataset.customizationPage
+      );
+
+    const isActive =
+      panelPage === normalizedPage;
+
+    panel.hidden =
+      !isActive;
+
+    panel.classList.toggle(
+      "active",
+      isActive
+    );
+
+    panel.classList.toggle(
+      "is-active",
+      isActive
+    );
+
+    panel.setAttribute(
+      "aria-hidden",
+      String(!isActive)
+    );
+  });
+
+  document
+    .querySelectorAll(
+      "[data-page-customization-label]"
+    )
+    .forEach((element) => {
+      const pageName =
+        normalizePageName(
+          element.dataset
+            .pageCustomizationLabel
+        );
+
+      element.hidden =
+        pageName !== normalizedPage;
+    });
+}
+
+/* =========================================================
+   SYNC PAGE CONTROLS FROM CONFIG
+========================================================= */
+
+function syncPageSpecificControlsFromConfig(page) {
+  const normalizedPage =
+    normalizePageName(page);
+
+  document
+    .querySelectorAll(
+      "[data-page-config-path]"
     )
     .forEach((control) => {
-      control.addEventListener(
-        "input",
-        () => {
-          syncColorControl(control);
-        }
-      );
+      const path =
+        control.dataset.pageConfigPath;
 
-      control.addEventListener(
-        "change",
-        () => {
-          syncColorControl(control);
-        }
-      );
-    });
-}
-
-
-function syncColorControl(control) {
-  const targetSelector =
-    control.dataset.colorTarget;
-
-  if (!targetSelector) {
-    return;
-  }
-
-  const target =
-    document.querySelector(
-      targetSelector
-    );
-
-  if (!target) {
-    return;
-  }
-
-  target.value =
-    control.value;
-
-  target.dispatchEvent(
-    new Event(
-      "input",
-      {
-        bubbles: true
+      if (
+        !path.startsWith(
+          `pages.${normalizedPage}.`
+        )
+      ) {
+        return;
       }
-    )
-  );
-}
 
+      const value =
+        getConfigValue(path);
 
-/* =========================================================
-   SYNC RELATED CONTROLS
-========================================================= */
+      if (
+        value === undefined
+      ) {
+        return;
+      }
 
-function syncRelatedControls(
-  control,
-  value
-) {
-  const targetSelector =
-    control.dataset.syncTarget;
+      if (
+        control.type === "checkbox"
+      ) {
+        control.checked =
+          Boolean(value);
+      } else if (
+        control.type === "radio"
+      ) {
+        control.checked =
+          String(control.value) ===
+          String(value);
+      } else {
+        control.value =
+          value;
+      }
 
-  if (!targetSelector) {
-    return;
-  }
+      updateRangeDisplay(
+        control
+      );
+    });
 
-  const targets =
-    document.querySelectorAll(
-      targetSelector
+  if (
+    normalizedPage === "login"
+  ) {
+    const type =
+      getConfigValue(
+        "pages.login.identifier.type"
+      );
+
+    updateLoginIdentifierControls(
+      type
     );
-
-  targets.forEach((target) => {
-    if (
-      target === control
-    ) {
-      return;
-    }
-
-    if (
-      target.type === "checkbox"
-    ) {
-      target.checked =
-        Boolean(value);
-    } else {
-      target.value =
-        value;
-    }
-  });
-}
-
-
-/* =========================================================
-   FILE UPLOAD INITIALIZATION
-========================================================= */
-
-function initializeFileUploads() {
-  document
-    .querySelectorAll(
-      "[data-upload-type]"
-    )
-    .forEach((input) => {
-      input.addEventListener(
-        "change",
-        handleFileUpload
-      );
-    });
-}
-
-
-/* =========================================================
-   HANDLE FILE UPLOAD
-========================================================= */
-
-function handleFileUpload(event) {
-  const input =
-    event.currentTarget;
-
-  const file =
-    input.files?.[0];
-
-  if (!file) {
-    return;
-  }
-
-  const uploadType =
-    input.dataset.uploadType;
-
-  const reader =
-    new FileReader();
-
-  reader.onload =
-    () => {
-      const result =
-        reader.result;
-
-      applyUploadedFile(
-        uploadType,
-        result,
-        file
-      );
-
-      saveConfig();
-
-      refreshPreview();
-
-      updateUploadPreview(
-        input,
-        result,
-        file
-      );
-    };
-
-  reader.readAsDataURL(file);
-}
-
-
-/* =========================================================
-   APPLY UPLOADED FILE
-========================================================= */
-
-function applyUploadedFile(
-  uploadType,
-  data,
-  file
-) {
-  if (
-    uploadType ===
-    "background"
-  ) {
-    config.background.uploadedImage =
-      data;
-
-    config.background.image =
-      data;
-
-    config.background.fileName =
-      file.name;
-
-    return;
   }
 
   if (
-    uploadType ===
-    "logo"
+    normalizedPage ===
+    "forgotPassword"
   ) {
-    config.branding.logo =
-      data;
-
-    config.branding.uploadedLogo =
-      data;
-
-    config.branding.logoFileName =
-      file.name;
-
-    return;
-  }
-
-  if (
-    uploadType ===
-    "favicon"
-  ) {
-    config.branding.favicon =
-      data;
-
-    config.branding.faviconFileName =
-      file.name;
-
-    return;
-  }
-
-  if (
-    uploadType ===
-    "social"
-  ) {
-    const provider =
-      fileInputProvider(
-        file
+    const type =
+      getConfigValue(
+        "pages.forgotPassword.identifier.type"
       );
 
-    if (
-      provider
-    ) {
-      config.social.customIcons =
-        config.social.customIcons || {};
-
-      config.social.customIcons[
-        provider
-      ] = data;
-    }
+    updateForgotIdentifierControls(
+      type
+    );
   }
 }
-
-
-/* =========================================================
-   GET SOCIAL PROVIDER
-========================================================= */
-
-function fileInputProvider(file) {
-  const activeInput =
-    document.activeElement;
-
-  if (
-    activeInput?.dataset
-      ?.socialProvider
-  ) {
-    return activeInput.dataset
-      .socialProvider;
-  }
-
-  return null;
-}
-
-
-/* =========================================================
-   UPDATE UPLOAD PREVIEW
-========================================================= */
-
-function updateUploadPreview(
-  input,
-  source,
-  file
-) {
-  const previewSelector =
-    input.dataset.uploadPreview;
-
-  if (
-    previewSelector
-  ) {
-    const preview =
-      document.querySelector(
-        previewSelector
-      );
-
-    if (
-      preview &&
-      preview.tagName === "IMG"
-    ) {
-      preview.src =
-        source;
-
-      preview.hidden =
-        false;
-    }
-  }
-
-  const fileNameSelector =
-    input.dataset.fileNameTarget;
-
-  if (
-    fileNameSelector
-  ) {
-    const nameTarget =
-      document.querySelector(
-        fileNameSelector
-      );
-
-    if (
-      nameTarget
-    ) {
-      nameTarget.textContent =
-        file.name;
-    }
-  }
-}
-
-
-/* =========================================================
-   PAGE CONTROLS
-========================================================= */
-
-function initializePageControls() {
-  document
-    .querySelectorAll(
-      "[data-builder-page]"
-    )
-    .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          const page =
-            button.dataset.builderPage;
-
-          if (!page) {
-            return;
-          }
-
-          config.currentPage =
-            page;
-
-          updateActivePageButton(
-            page
-          );
-
-          saveConfig();
-
-          refreshPreview();
-        }
-      );
-    });
-}
-
-
-/* =========================================================
-   UPDATE ACTIVE PAGE BUTTON
-========================================================= */
-
-function updateActivePageButton(
-  page
-) {
-  document
-    .querySelectorAll(
-      "[data-builder-page]"
-    )
-    .forEach((button) => {
-      button.classList.toggle(
-        "active",
-        button.dataset.builderPage ===
-          page
-      );
-    });
-}
-
 
 /* =========================================================
    PREVIEW DEVICE CONTROLS
@@ -724,140 +900,112 @@ function initializePreviewDeviceControls() {
     });
 }
 
-
 /* =========================================================
    SET PREVIEW DEVICE
 ========================================================= */
 
-function setPreviewDevice(
-  device
-) {
+function setPreviewDevice(device) {
+  if (!window.config) return;
+
+  const allowedDevices = [
+    "desktop",
+    "tablet",
+    "mobile"
+  ];
+
+  const selected =
+    allowedDevices.includes(device)
+      ? device
+      : "desktop";
+
+  window.config.previewDevice =
+    selected;
+
+  updateActiveDeviceButton(
+    selected
+  );
+
   const previewRoot =
     document.getElementById(
       "previewRoot"
+    ) ||
+    document.querySelector(
+      ".preview-root"
     );
 
-  if (
-    previewRoot
-  ) {
+  if (previewRoot) {
+    previewRoot.dataset.device =
+      selected;
+
     previewRoot.classList.remove(
-      "preview-device-desktop",
-      "preview-device-tablet",
-      "preview-device-mobile"
+      "preview-desktop",
+      "preview-tablet",
+      "preview-mobile"
     );
 
     previewRoot.classList.add(
-      `preview-device-${device}`
+      `preview-${selected}`
     );
   }
-
-  const fullscreenRoot =
-    document.getElementById(
-      "fullscreenPreviewRoot"
-    );
-
-  if (
-    fullscreenRoot
-  ) {
-    fullscreenRoot.classList.remove(
-      "preview-device-desktop",
-      "preview-device-tablet",
-      "preview-device-mobile"
-    );
-
-    fullscreenRoot.classList.add(
-      `preview-device-${device}`
-    );
-  }
-
-  config.previewDevice =
-    device;
-
-  updateActiveDeviceButton(
-    device
-  );
 
   saveConfig();
+
+  refreshPreview();
 }
 
-
 /* =========================================================
-   ACTIVE DEVICE BUTTON
+   UPDATE ACTIVE DEVICE BUTTON
 ========================================================= */
 
-function updateActiveDeviceButton(
-  device
-) {
+function updateActiveDeviceButton(device) {
   document
     .querySelectorAll(
       "[data-preview-device]"
     )
     .forEach((button) => {
+      const isActive =
+        button.dataset.previewDevice ===
+        device;
+
       button.classList.toggle(
         "active",
-        button.dataset.previewDevice ===
-          device
+        isActive
+      );
+
+      button.setAttribute(
+        "aria-pressed",
+        String(isActive)
       );
     });
 }
-
 
 /* =========================================================
    FULLSCREEN PREVIEW
 ========================================================= */
 
 function initializeFullscreenPreview() {
-  const openButton =
-    document.querySelector(
-      "[data-action='fullscreen-preview']"
-    );
+  document
+    .querySelectorAll(
+      "[data-fullscreen-preview]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        openFullscreenPreview
+      );
+    });
 
-  const fullscreenContainer =
-    document.querySelector(
-      ".auth-fullscreen-preview"
-    );
-
-  const closeButton =
-    document.querySelector(
-      "[data-action='close-fullscreen-preview']"
-    );
-
-  if (
-    openButton &&
-    fullscreenContainer
-  ) {
-    openButton.addEventListener(
-      "click",
-      () => {
-        openFullscreenPreview();
-      }
-    );
-  }
-
-  if (
-    closeButton &&
-    fullscreenContainer
-  ) {
-    closeButton.addEventListener(
-      "click",
-      () => {
-        closeFullscreenPreview();
-      }
-    );
-  }
-
-  document.addEventListener(
-    "keydown",
-    (event) => {
-      if (
-        event.key === "Escape"
-      ) {
-        closeFullscreenPreview();
-      }
-    }
-  );
+  document
+    .querySelectorAll(
+      "[data-close-fullscreen]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        closeFullscreenPreview
+      );
+    });
 }
-
 
 /* =========================================================
    OPEN FULLSCREEN
@@ -870,8 +1018,15 @@ function openFullscreenPreview() {
     );
 
   if (!container) {
+    console.warn(
+      "Fullscreen preview container not found."
+    );
+
     return;
   }
+
+  window.config.fullscreen =
+    true;
 
   container.classList.add(
     "auth-fullscreen-open"
@@ -896,11 +1051,10 @@ function openFullscreenPreview() {
   }
 
   setPreviewDevice(
-    config.previewDevice ||
+    window.config.previewDevice ||
     "desktop"
   );
 }
-
 
 /* =========================================================
    CLOSE FULLSCREEN
@@ -912,9 +1066,10 @@ function closeFullscreenPreview() {
       ".auth-fullscreen-preview"
     );
 
-  if (!container) {
-    return;
-  }
+  if (!container) return;
+
+  window.config.fullscreen =
+    false;
 
   container.classList.remove(
     "auth-fullscreen-open"
@@ -923,7 +1078,6 @@ function closeFullscreenPreview() {
   document.body.style.overflow =
     "";
 }
-
 
 /* =========================================================
    RESET CONTROLS
@@ -938,17 +1092,13 @@ function initializeResetControls() {
       button.addEventListener(
         "click",
         () => {
-          const path =
-            button.dataset.resetPath;
-
           resetConfigPath(
-            path
+            button.dataset.resetPath
           );
         }
       );
     });
 }
-
 
 /* =========================================================
    RESET CONFIG PATH
@@ -982,43 +1132,40 @@ function resetConfigPath(path) {
   syncControlsFromConfig();
 
   saveConfig();
-
   refreshPreview();
 }
-
 
 /* =========================================================
    RESET COMPLETE CONFIG
 ========================================================= */
 
 function resetCompleteConfiguration() {
-  if (
-    !window.defaultConfig
-  ) {
-    return;
-  }
+  if (!window.defaultConfig) return;
 
   const confirmation =
     window.confirm(
       "Reset all customization settings?"
     );
 
-  if (!confirmation) {
-    return;
-  }
+  if (!confirmation) return;
 
-  window.config =
-    deepClone(
-      window.defaultConfig
-    );
+  if (
+    typeof window.resetConfig ===
+    "function"
+  ) {
+    window.resetConfig();
+  } else {
+    window.config =
+      deepClone(
+        window.defaultConfig
+      );
+  }
 
   syncControlsFromConfig();
 
   saveConfig();
-
   refreshPreview();
 }
-
 
 /* =========================================================
    GET OBJECT VALUE
@@ -1028,15 +1175,17 @@ function getObjectValue(
   object,
   path
 ) {
+  if (!object || !path) {
+    return undefined;
+  }
+
   const keys =
     path.split(".");
 
   let value =
     object;
 
-  for (
-    const key of keys
-  ) {
+  for (const key of keys) {
     if (
       value === undefined ||
       value === null
@@ -1051,17 +1200,21 @@ function getObjectValue(
   return value;
 }
 
-
 /* =========================================================
    DEEP CLONE
 ========================================================= */
 
 function deepClone(value) {
+  if (
+    value === undefined
+  ) {
+    return undefined;
+  }
+
   return JSON.parse(
     JSON.stringify(value)
   );
 }
-
 
 /* =========================================================
    SYNC CONTROLS FROM CONFIG
@@ -1107,15 +1260,22 @@ function syncControlsFromConfig() {
     });
 
   updateActivePageButton(
-    config.currentPage
+    getActivePage()
+  );
+
+  updatePageSpecificCustomization(
+    getActivePage()
+  );
+
+  syncPageSpecificControlsFromConfig(
+    getActivePage()
   );
 
   updateActiveDeviceButton(
-    config.previewDevice ||
+    window.config?.previewDevice ||
     "desktop"
   );
 }
-
 
 /* =========================================================
    PANEL ACCORDIONS
@@ -1135,9 +1295,7 @@ function initializePanelAccordions() {
               ".customization-accordion"
             );
 
-          if (!accordion) {
-            return;
-          }
+          if (!accordion) return;
 
           accordion.classList.toggle(
             "open"
@@ -1157,26 +1315,24 @@ function initializePanelAccordions() {
     });
 }
 
-
 /* =========================================================
    CONFIGURATION INDICATORS
 ========================================================= */
 
 function updateConfigurationIndicators() {
   updateActiveCustomizationIndicators();
-
   updateUnsavedState();
 }
-
 
 function updateActiveCustomizationIndicators() {
   document
     .querySelectorAll(
-      "[data-config-path]"
+      "[data-config-path], [data-page-config-path]"
     )
     .forEach((control) => {
       const path =
-        control.dataset.configPath;
+        control.dataset.configPath ||
+        control.dataset.pageConfigPath;
 
       const currentValue =
         getConfigValue(path);
@@ -1194,9 +1350,7 @@ function updateActiveCustomizationIndicators() {
           ".customization-section"
         );
 
-      if (!section) {
-        return;
-      }
+      if (!section) return;
 
       const isCustomized =
         JSON.stringify(
@@ -1213,7 +1367,6 @@ function updateActiveCustomizationIndicators() {
     });
 }
 
-
 function updateUnsavedState() {
   document
     .querySelectorAll(
@@ -1228,7 +1381,6 @@ function updateUnsavedState() {
       );
     });
 }
-
 
 /* =========================================================
    SAVE CONFIG
@@ -1249,7 +1401,6 @@ function saveConfig() {
     );
   }
 }
-
 
 /* =========================================================
    LOAD SAVED CONFIG
@@ -1277,13 +1428,25 @@ function loadSavedConfig() {
       return false;
     }
 
-    window.config =
+    const merged =
       mergeConfig(
         deepClone(
           window.defaultConfig
         ),
         savedConfig
       );
+
+    if (
+      typeof window.setConfig ===
+      "function"
+    ) {
+      window.setConfig(
+        merged
+      );
+    } else {
+      window.config =
+        merged;
+    }
 
     return true;
   } catch (error) {
@@ -1296,7 +1459,6 @@ function loadSavedConfig() {
   }
 }
 
-
 /* =========================================================
    MERGE CONFIG
 ========================================================= */
@@ -1305,6 +1467,13 @@ function mergeConfig(
   target,
   source
 ) {
+  if (
+    !source ||
+    typeof source !== "object"
+  ) {
+    return target;
+  }
+
   Object.keys(source).forEach(
     (key) => {
       if (
@@ -1318,7 +1487,10 @@ function mergeConfig(
         if (
           !target[key] ||
           typeof target[key] !==
-            "object"
+            "object" ||
+          Array.isArray(
+            target[key]
+          )
         ) {
           target[key] = {};
         }
@@ -1329,14 +1501,15 @@ function mergeConfig(
         );
       } else {
         target[key] =
-          source[key];
+          deepClone(
+            source[key]
+          );
       }
     }
   );
 
   return target;
 }
-
 
 /* =========================================================
    CLEAR SAVED CONFIG
@@ -1347,20 +1520,25 @@ function clearSavedConfiguration() {
     "authPageBuilderConfig"
   );
 
+  if (!window.defaultConfig) {
+    return;
+  }
+
   if (
-    window.defaultConfig
+    typeof window.resetConfig ===
+    "function"
   ) {
+    window.resetConfig();
+  } else {
     window.config =
       deepClone(
         window.defaultConfig
       );
-
-    syncControlsFromConfig();
-
-    refreshPreview();
   }
-}
 
+  syncControlsFromConfig();
+  refreshPreview();
+}
 
 /* =========================================================
    START APPLICATION
@@ -1381,11 +1559,10 @@ function initializeAuthPageBuilder() {
   }
 
   setPreviewDevice(
-    config.previewDevice ||
+    window.config?.previewDevice ||
     "desktop"
   );
 }
-
 
 /* =========================================================
    DOM READY
@@ -1403,13 +1580,11 @@ if (
   initializeAuthPageBuilder();
 }
 
-
 /* =========================================================
    EXPOSE FUNCTIONS
 ========================================================= */
 
 window.authCustomization = {
-
   initializeCustomization,
 
   initializeAuthPageBuilder,
@@ -1438,8 +1613,17 @@ window.authCustomization = {
 
   closeFullscreenPreview,
 
+  getActivePage,
+
+  getActivePageConfig,
+
+  setActivePage,
+
+  updatePageSpecificCustomization,
+
+  syncPageSpecificControlsFromConfig,
+
   getActiveConfig() {
     return window.config;
   }
-
 };

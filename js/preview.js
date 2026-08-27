@@ -1,1687 +1,3055 @@
 /* =========================================================
-   AUTH PAGE BUILDER - LIVE PREVIEW ENGINE
+   AUTH PAGE BUILDER
    File: js/preview.js
+
+   Live Preview Manager
 ========================================================= */
 
+class PreviewManager {
+  constructor(options = {}) {
+    this.previewSelector =
+      options.previewSelector ||
+      "#preview-content";
 
-/* =========================================================
-   RENDER PREVIEW
-========================================================= */
+    this.deviceSelector =
+      options.deviceSelector ||
+      "[data-preview-device]";
 
-function renderPreview(root) {
-  if (!root || !window.config || !window.authTemplates) {
-    return;
+    this.pageSelector =
+      options.pageSelector ||
+      "[data-preview-page]";
+
+    this.container = null;
+
+    this.currentDevice = "desktop";
+
+    this.currentPage = "login";
+
+    this.otpTimer = null;
+
+    this.resendSeconds = 30;
+
+    this.init();
   }
 
-  root.innerHTML = "";
 
-  const previewApp = document.createElement("div");
+  /* =======================================================
+     INITIALIZATION
+  ======================================================= */
 
-  previewApp.className = "auth-preview-app";
+  init() {
+    this.container =
+      document.querySelector(
+        this.previewSelector
+      );
 
-  previewApp.dataset.page =
-    config.currentPage;
+    if (!this.container) {
+      console.warn(
+        "Preview container not found:",
+        this.previewSelector
+      );
 
-  previewApp.dataset.layout =
-    config.layout.type;
+      return;
+    }
 
-  previewApp.innerHTML = createPreviewShell();
+    this.currentPage =
+      this.getCurrentPage();
 
-  root.appendChild(previewApp);
+    this.bindEvents();
 
-  applyPreviewStyles(previewApp);
-
-  initializePreviewInteractions(previewApp);
-}
+    this.render();
+  }
 
 
-/* =========================================================
-   CREATE MAIN PREVIEW SHELL
-========================================================= */
+  /* =======================================================
+     EVENTS
+  ======================================================= */
 
-function createPreviewShell() {
-  const imageSection = createImageSection();
+  bindEvents() {
+    document.addEventListener(
+      "click",
+      (event) => {
 
-  const formSection = createFormSection();
+        const deviceButton =
+          event.target.closest(
+            this.deviceSelector
+          );
 
-  const layoutType =
-    config.layout.type;
+        if (deviceButton) {
+          event.preventDefault();
 
-  if (layoutType === "split-right-image") {
+          const device =
+            deviceButton.dataset.previewDevice;
+
+          if (device) {
+            this.setDevice(device);
+          }
+
+          return;
+        }
+
+
+        const pageButton =
+          event.target.closest(
+            this.pageSelector
+          );
+
+        if (pageButton) {
+          event.preventDefault();
+
+          const page =
+            pageButton.dataset.previewPage;
+
+          if (page) {
+            this.setPage(page);
+          }
+
+          return;
+        }
+
+
+        const previewAction =
+          event.target.closest(
+            "[data-preview-action]"
+          );
+
+        if (!previewAction) {
+          return;
+        }
+
+        event.preventDefault();
+
+        const action =
+          previewAction.dataset.previewAction;
+
+        this.handlePreviewAction(
+          action,
+          previewAction
+        );
+      }
+    );
+
+
+    document.addEventListener(
+      "change",
+      (event) => {
+        const target =
+          event.target;
+
+        if (
+          target.closest(
+            this.previewSelector
+          )
+        ) {
+          this.emitPreviewUpdated();
+        }
+      }
+    );
+
+
+    document.addEventListener(
+      "input",
+      (event) => {
+        const target =
+          event.target;
+
+        if (
+          target.closest(
+            this.previewSelector
+          )
+        ) {
+          this.emitPreviewUpdated();
+        }
+      }
+    );
+
+
+    document.addEventListener(
+      "auth-builder:config-updated",
+      () => {
+        this.render();
+      }
+    );
+
+
+    document.addEventListener(
+      "auth-builder:customization-updated",
+      () => {
+        this.render();
+      }
+    );
+
+
+    document.addEventListener(
+      "auth-builder:rerender-preview",
+      () => {
+        this.render();
+      }
+    );
+
+
+    window.addEventListener(
+      "resize",
+      () => {
+        this.applyDeviceMode();
+      }
+    );
+  }
+
+
+  /* =======================================================
+     CONFIG
+  ======================================================= */
+
+  getConfig() {
+    if (
+      window.state &&
+      typeof window.state.getConfig ===
+        "function"
+    ) {
+      return (
+        window.state.getConfig() ||
+        window.state.config ||
+        window.config ||
+        {}
+      );
+    }
+
+    if (
+      window.state &&
+      window.state.config
+    ) {
+      return window.state.config;
+    }
+
+    if (
+      window.authBuilderState &&
+      typeof window.authBuilderState.getConfig ===
+        "function"
+    ) {
+      return (
+        window.authBuilderState.getConfig() ||
+        {}
+      );
+    }
+
+    if (window.authBuilderConfig) {
+      return window.authBuilderConfig;
+    }
+
+    return (
+      window.config ||
+      {}
+    );
+  }
+
+
+  getCurrentPage() {
+    const config =
+      this.getConfig();
+
+    const page =
+      config?.currentPage ||
+      config?.page?.activePage ||
+      "login";
+
+    return this.normalizePageName(
+      page
+    );
+  }
+
+
+  normalizePageName(page) {
+    const value =
+      String(page || "")
+        .toLowerCase()
+        .trim()
+        .replace(
+          /[\s_-]+/g,
+          ""
+        );
+
+    const aliases = {
+      login: "login",
+      signin: "login",
+
+      signup: "signup",
+      register: "signup",
+
+      forgot: "forgotPassword",
+      forgotpassword:
+        "forgotPassword",
+
+      otp: "otp",
+      verification: "otp",
+      verify: "otp"
+    };
+
+    return (
+      aliases[value] ||
+      "login"
+    );
+  }
+
+
+  getPageConfig(
+    config,
+    pageName
+  ) {
+    const page =
+      this.normalizePageName(
+        pageName
+      );
+
+    const pages =
+      config?.pages || {};
+
+    if (pages[page]) {
+      return pages[page];
+    }
+
+    if (config?.[page]) {
+      return config[page];
+    }
+
+    if (
+      page === "forgotPassword" &&
+      config?.forgot
+    ) {
+      return config.forgot;
+    }
+
+    return {};
+  }
+
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
+  render() {
+    if (!this.container) {
+      return;
+    }
+
+    this.stopOtpTimer();
+
+    const config =
+      this.getConfig();
+
+    this.currentPage =
+      this.getCurrentPage();
+
+    this.container.innerHTML =
+      this.generatePreview(
+        config
+      );
+
+    this.applyDeviceMode();
+
+    this.updateActivePageButtons();
+
+    this.emitPreviewUpdated();
+  }
+
+
+  refresh() {
+    this.render();
+  }
+
+
+  generatePreview(config) {
+    const pageConfig =
+      this.getPageConfig(
+        config,
+        this.currentPage
+      );
+
+    const previewStyle =
+      this.getPreviewStyle(
+        config
+      );
+
+    const background =
+      this.getBackground(
+        config
+      );
+
+    const layout =
+      this.getLayout(
+        config
+      );
+
+    const logo =
+      this.getLogo(
+        config
+      );
+
+    const branding =
+      this.getBranding(
+        config
+      );
+
+    const formHTML =
+      this.generatePage(
+        config,
+        pageConfig
+      );
+
+    const backgroundContent =
+      this.generateBackgroundContent(
+        config,
+        branding
+      );
+
+    const backgroundStyle =
+      background.image
+        ? `
+          background-image:
+            linear-gradient(
+              ${background.overlay},
+              ${background.overlay}
+            ),
+            url("${this.escapeAttribute(
+              background.image
+            )}");
+        `
+        : `
+          background:
+            ${background.color};
+        `;
+
+    const formPositionClass =
+      `preview-form-position-${layout.formPosition}`;
+
+    const layoutClass =
+      `preview-layout-${layout.type}`;
+
+    const imageWidthClass =
+      `preview-image-width-${layout.imageWidth}`;
+
     return `
-      <div class="auth-preview-layout auth-preview-split">
+      <div
+        class="
+          auth-preview-root
+          ${layoutClass}
+          ${imageWidthClass}
+          ${formPositionClass}
+        "
+        style="
+          ${previewStyle}
+        "
+      >
 
-        ${formSection}
+        <div
+          class="auth-preview-shell"
+        >
 
-        ${imageSection}
+          <section
+            class="auth-preview-background"
+            style="
+              ${backgroundStyle}
+            "
+          >
+            ${backgroundContent}
+          </section>
 
-      </div>
-    `;
-  }
+          <section
+            class="auth-preview-form-area"
+          >
 
-  if (layoutType === "centered") {
-    return `
-      <div class="auth-preview-layout auth-preview-centered">
-
-        ${formSection}
-
-      </div>
-    `;
-  }
-
-  if (layoutType === "full-background") {
-    return `
-      <div class="auth-preview-layout auth-preview-full-background">
-
-        ${formSection}
-
-      </div>
-    `;
-  }
-
-  return `
-    <div class="auth-preview-layout auth-preview-split">
-
-      ${imageSection}
-
-      ${formSection}
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   CREATE IMAGE SECTION
-========================================================= */
-
-function createImageSection() {
-  const image =
-    getActiveBackgroundImage();
-
-  return `
-    <section
-      class="auth-image-section"
-      aria-label="Authentication background"
-    >
-
-      <div class="auth-image-overlay"></div>
-
-      ${
-        config.imageSection.showText
-          ? `
             <div
-              class="auth-image-content"
-              data-image-text-position="${escapeAttribute(
-                config.imageSection.textPosition
-              )}"
+              class="auth-preview-card"
             >
 
-              <h2 class="auth-image-title">
-                ${escapeHTML(
-                  config.imageSection.text
-                )}
-              </h2>
+              ${this.generateLogo(
+                logo,
+                branding
+              )}
+
+              <div
+                class="auth-preview-page"
+              >
+                ${formHTML}
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  /* =======================================================
+     PREVIEW STYLE
+  ======================================================= */
+
+  getPreviewStyle(config) {
+    const colors =
+      config?.colors || {};
+
+    const customization =
+      config?.customization || {};
+
+    const card =
+      config?.card ||
+      customization?.card ||
+      {};
+
+    const typography =
+      config?.typography || {};
+
+    const primary =
+      colors.primary ||
+      config?.primaryColor ||
+      "#2563eb";
+
+    const primaryHover =
+      colors.primaryHover ||
+      config?.primaryHoverColor ||
+      "#1d4ed8";
+
+    const text =
+      colors.text ||
+      colors.textColor ||
+      "#0f172a";
+
+    const muted =
+      colors.muted ||
+      colors.secondaryText ||
+      "#64748b";
+
+    const border =
+      colors.border ||
+      colors.inputBorder ||
+      "#dbe3ee";
+
+    const inputBackground =
+      colors.inputBackground ||
+      "#ffffff";
+
+    const cardBackground =
+      card.background ||
+      card.backgroundColor ||
+      "#ffffff";
+
+    const cardRadius =
+      card.borderRadius ||
+      card.radius ||
+      20;
+
+    const cardPadding =
+      card.padding ||
+      36;
+
+    const titleSize =
+      typography.titleSize ||
+      30;
+
+    const subtitleSize =
+      typography.subtitleSize ||
+      15;
+
+    return `
+      --preview-primary:
+        ${primary};
+
+      --preview-primary-hover:
+        ${primaryHover};
+
+      --preview-text:
+        ${text};
+
+      --preview-muted:
+        ${muted};
+
+      --preview-border:
+        ${border};
+
+      --preview-input-background:
+        ${inputBackground};
+
+      --preview-card-background:
+        ${cardBackground};
+
+      --preview-card-radius:
+        ${this.addPx(
+          cardRadius
+        )};
+
+      --preview-card-padding:
+        ${this.addPx(
+          cardPadding
+        )};
+
+      --preview-title-size:
+        ${this.addPx(
+          titleSize
+        )};
+
+      --preview-subtitle-size:
+        ${this.addPx(
+          subtitleSize
+        )};
+    `;
+  }
+
+
+  /* =======================================================
+     LAYOUT
+  ======================================================= */
+
+  getLayout(config) {
+    const layout =
+      config?.layout || {};
+
+    const pageLayout =
+      String(
+        layout.pageLayout ||
+        layout.type ||
+        "split"
+      )
+        .toLowerCase()
+        .replace(
+          /[\s_-]+/g,
+          ""
+        );
+
+    const imageWidth =
+      String(
+        layout.imageWidth ||
+        "50"
+      )
+        .replace(
+          "%",
+          ""
+        );
+
+    const formPosition =
+      String(
+        layout.formPosition ||
+        "center"
+      )
+        .toLowerCase()
+        .replace(
+          /[\s_-]+/g,
+          ""
+        );
+
+    return {
+      type:
+        this.normalizeLayout(
+          pageLayout
+        ),
+
+      imageWidth:
+        this.normalizeImageWidth(
+          imageWidth
+        ),
+
+      formPosition:
+        this.normalizeFormPosition(
+          formPosition
+        )
+    };
+  }
+
+
+  normalizeLayout(value) {
+    const aliases = {
+      split: "split",
+      leftimage: "imageLeft",
+      imageleft: "imageLeft",
+      rightimage: "imageRight",
+      imageright: "imageRight",
+      full: "full",
+      background: "background"
+    };
+
+    return (
+      aliases[value] ||
+      "split"
+    );
+  }
+
+
+  normalizeImageWidth(value) {
+    const number =
+      Number(
+        String(value)
+          .replace(
+            /[^0-9.]/g,
+            ""
+          )
+      );
+
+    if (number <= 30) {
+      return "30";
+    }
+
+    if (number <= 40) {
+      return "40";
+    }
+
+    if (number <= 50) {
+      return "50";
+    }
+
+    if (number <= 60) {
+      return "60";
+    }
+
+    if (number <= 70) {
+      return "70";
+    }
+
+    return "50";
+  }
+
+
+  normalizeFormPosition(value) {
+    const aliases = {
+      left: "left",
+      center: "center",
+      right: "right",
+
+      top: "top",
+      bottom: "bottom",
+
+      topleft: "topLeft",
+      topright: "topRight",
+
+      bottomleft: "bottomLeft",
+      bottomright: "bottomRight"
+    };
+
+    return (
+      aliases[value] ||
+      "center"
+    );
+  }
+
+
+  /* =======================================================
+     BACKGROUND
+  ======================================================= */
+
+  getBackground(config) {
+    const background =
+      config?.background || {};
+
+    const image =
+      background.uploadedImage ||
+      background.image ||
+      background.imageUrl ||
+      background.url ||
+      "";
+
+    const color =
+      background.color ||
+      background.backgroundColor ||
+      "#111827";
+
+    const overlay =
+      background.overlay ||
+      background.overlayColor ||
+      "rgba(15, 23, 42, 0.45)";
+
+    return {
+      image,
+      color,
+      overlay
+    };
+  }
+
+
+  /* =======================================================
+     BRANDING
+  ======================================================= */
+
+  getBranding(config) {
+    const branding =
+      config?.branding || {};
+
+    return {
+      brandName:
+        branding.brandName ||
+        branding.name ||
+        "",
+
+      title:
+        branding.title ||
+        config?.title ||
+        "",
+
+      description:
+        branding.description ||
+        branding.subtitle ||
+        ""
+    };
+  }
+
+
+  getLogo(config) {
+    const branding =
+      config?.branding || {};
+
+    return (
+      branding.uploadedLogo ||
+      branding.logo ||
+      branding.logoUrl ||
+      branding.image ||
+      ""
+    );
+  }
+
+
+  generateLogo(
+    logo,
+    branding
+  ) {
+    if (logo) {
+      return `
+        <div
+          class="auth-preview-logo"
+        >
+          <img
+            src="${this.escapeAttribute(
+              logo
+            )}"
+            alt="${this.escapeAttribute(
+              branding.brandName ||
+              "Logo"
+            )}"
+          >
+        </div>
+      `;
+    }
+
+    if (branding.brandName) {
+      return `
+        <div
+          class="auth-preview-brand-name"
+        >
+          ${this.escapeHTML(
+            branding.brandName
+          )}
+        </div>
+      `;
+    }
+
+    return "";
+  }
+
+
+  generateBackgroundContent(
+    config,
+    branding
+  ) {
+    const layout =
+      config?.layout || {};
+
+    const showContent =
+      layout.showBackgroundContent !==
+      false;
+
+    if (!showContent) {
+      return "";
+    }
+
+    const title =
+      branding.title ||
+      branding.brandName ||
+      "Welcome";
+
+    const description =
+      branding.description ||
+      "Secure authentication designed for your application.";
+
+    return `
+      <div
+        class="auth-preview-background-content"
+      >
+
+        <div
+          class="auth-preview-background-copy"
+        >
+
+          <h1>
+            ${this.escapeHTML(
+              title
+            )}
+          </h1>
+
+          <p>
+            ${this.escapeHTML(
+              description
+            )}
+          </p>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  /* =======================================================
+     PAGE GENERATION
+  ======================================================= */
+
+  generatePage(
+    config,
+    pageConfig
+  ) {
+    switch (
+      this.currentPage
+    ) {
+
+      case "signup":
+        return this.generateSignup(
+          config,
+          pageConfig
+        );
+
+      case "forgotPassword":
+        return this.generateForgotPassword(
+          config,
+          pageConfig
+        );
+
+      case "otp":
+        return this.generateOTP(
+          config,
+          pageConfig
+        );
+
+      case "login":
+      default:
+        return this.generateLogin(
+          config,
+          pageConfig
+        );
+    }
+  }
+
+
+  /* =======================================================
+     LOGIN
+  ======================================================= */
+
+  generateLogin(
+    config,
+    page
+  ) {
+    const authentication =
+      config?.authentication || {};
+
+    const social =
+      authentication.social || {};
+
+    const login =
+      page || {};
+
+    const title =
+      login.title ||
+      "Welcome back";
+
+    const subtitle =
+      login.subtitle ||
+      "Sign in to continue to your account";
+
+    const identifierOptions =
+      this.getIdentifierOptions(
+        login,
+        authentication
+      );
+
+    const showPassword =
+      login.showPassword !== false;
+
+    const showRemember =
+      login.showRememberMe !== false;
+
+    const showForgot =
+      login.showForgotPassword !== false;
+
+    const showSignup =
+      login.showSignup !== false;
+
+    const showSocial =
+      social.google?.enabled ||
+      social.linkedin?.enabled ||
+      social.github?.enabled;
+
+    return `
+      <div
+        class="preview-page-header"
+      >
+
+        <h1>
+          ${this.escapeHTML(
+            title
+          )}
+        </h1>
+
+        <p>
+          ${this.escapeHTML(
+            subtitle
+          )}
+        </p>
+
+      </div>
+
+
+      <form
+        class="preview-auth-form"
+        data-preview-form="login"
+      >
+
+        ${this.generateIdentifierSelector(
+          identifierOptions
+        )}
+
+
+        <div
+          class="preview-form-group"
+        >
+
+          <label>
+            ${this.escapeHTML(
+              this.getIdentifierLabel(
+                identifierOptions[0]
+              )
+            )}
+          </label>
+
+          <input
+            type="${this.getIdentifierInputType(
+              identifierOptions[0]
+            )}"
+            placeholder="${this.escapeAttribute(
+              this.getIdentifierPlaceholder(
+                identifierOptions[0]
+              )
+            )}"
+            autocomplete="username"
+          >
+
+        </div>
+
+
+        ${
+          showPassword
+            ? `
+              <div
+                class="preview-form-group"
+              >
+
+                <label>
+                  Password
+                </label>
+
+                <div
+                  class="preview-password-wrapper"
+                >
+
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                  >
+
+                  <button
+                    type="button"
+                    class="preview-password-toggle"
+                    data-preview-action="toggle-password"
+                  >
+                    Show
+                  </button>
+
+                </div>
+
+              </div>
+            `
+            : ""
+        }
+
+
+        <div
+          class="preview-login-options"
+        >
+
+          ${
+            showRemember
+              ? `
+                <label
+                  class="preview-checkbox"
+                >
+
+                  <input
+                    type="checkbox"
+                  >
+
+                  <span>
+                    Remember me
+                  </span>
+
+                </label>
+              `
+              : ""
+          }
+
+
+          ${
+            showForgot
+              ? `
+                <button
+                  type="button"
+                  class="preview-link-button"
+                  data-preview-action="forgot-password"
+                >
+                  ${
+                    this.escapeHTML(
+                      login.forgotPasswordText ||
+                      "Forgot password?"
+                    )
+                  }
+                </button>
+              `
+              : ""
+          }
+
+        </div>
+
+
+        ${
+          authentication.magicLink?.enabled
+            ? `
+              <button
+                type="button"
+                class="preview-secondary-action"
+                data-preview-action="magic-link"
+              >
+                Send Magic Link
+              </button>
+            `
+            : ""
+        }
+
+
+        ${
+          authentication.otp?.enabled
+            ? `
+              <button
+                type="button"
+                class="preview-secondary-action"
+                data-preview-action="open-otp"
+              >
+                ${
+                  this.escapeHTML(
+                    authentication.otp.buttonText ||
+                    "Continue with OTP"
+                  )
+                }
+              </button>
+            `
+            : ""
+        }
+
+
+        <button
+          type="submit"
+          class="preview-primary-button"
+        >
+          ${
+            this.escapeHTML(
+              login.buttonText ||
+              "Sign In"
+            )
+          }
+        </button>
+
+      </form>
+
+
+      ${
+        showSocial
+          ? this.generateSocialLogin(
+              social
+            )
+          : ""
+      }
+
+
+      ${
+        showSignup
+          ? `
+            <div
+              class="preview-page-switch"
+            >
+
+              <span>
+                ${
+                  this.escapeHTML(
+                    login.signupPrompt ||
+                    "New here?"
+                  )
+                }
+              </span>
+
+              <button
+                type="button"
+                data-preview-action="signup"
+              >
+                ${
+                  this.escapeHTML(
+                    login.signupButtonText ||
+                    "Create Account"
+                  )
+                }
+              </button>
 
             </div>
           `
           : ""
       }
-
-    </section>
-  `;
-}
+    `;
+  }
 
 
-/* =========================================================
-   CREATE FORM SECTION
-========================================================= */
+  /* =======================================================
+     SIGNUP
+  ======================================================= */
 
-function createFormSection() {
-  const pageTemplate =
-    authTemplates.getPageTemplate(
-      config.currentPage
+  generateSignup(
+    config,
+    page
+  ) {
+    const signup =
+      page || {};
+
+    const title =
+      signup.title ||
+      "Create account";
+
+    const subtitle =
+      signup.subtitle ||
+      "Create your account to get started";
+
+    const fields =
+      signup.fields ||
+      {
+        fullName: true,
+        email: true,
+        mobile: false,
+        username: false,
+        password: true,
+        confirmPassword: true
+      };
+
+    return `
+      <div
+        class="preview-page-header"
+      >
+
+        <h1>
+          ${this.escapeHTML(
+            title
+          )}
+        </h1>
+
+        <p>
+          ${this.escapeHTML(
+            subtitle
+          )}
+        </p>
+
+      </div>
+
+
+      <form
+        class="preview-auth-form"
+        data-preview-form="signup"
+      >
+
+        ${
+          fields.fullName !== false
+            ? this.generateInputGroup(
+                "Full Name",
+                "text",
+                "Enter your full name",
+                "name"
+              )
+            : ""
+        }
+
+        ${
+          fields.username
+            ? this.generateInputGroup(
+                "Username",
+                "text",
+                "Choose a username",
+                "username"
+              )
+            : ""
+        }
+
+        ${
+          fields.email !== false
+            ? this.generateInputGroup(
+                "Email Address",
+                "email",
+                "Enter your email",
+                "email"
+              )
+            : ""
+        }
+
+        ${
+          fields.mobile
+            ? this.generateInputGroup(
+                "Mobile Number",
+                "tel",
+                "Enter your mobile number",
+                "tel"
+              )
+            : ""
+        }
+
+        ${
+          fields.password !== false
+            ? this.generatePasswordGroup(
+                "Password",
+                "Create a password"
+              )
+            : ""
+        }
+
+        ${
+          fields.confirmPassword !== false
+            ? this.generatePasswordGroup(
+                "Confirm Password",
+                "Confirm your password"
+              )
+            : ""
+        }
+
+
+        <button
+          type="submit"
+          class="preview-primary-button"
+        >
+          ${
+            this.escapeHTML(
+              signup.buttonText ||
+              "Create Account"
+            )
+          }
+        </button>
+
+      </form>
+
+
+      <div
+        class="preview-page-switch"
+      >
+
+        <span>
+          ${
+            this.escapeHTML(
+              signup.loginPrompt ||
+              "Already have an account?"
+            )
+          }
+        </span>
+
+        <button
+          type="button"
+          data-preview-action="login"
+        >
+          ${
+            this.escapeHTML(
+              signup.loginButtonText ||
+              "Sign In"
+            )
+          }
+        </button>
+
+      </div>
+    `;
+  }
+
+
+  /* =======================================================
+     FORGOT PASSWORD
+  ======================================================= */
+
+  generateForgotPassword(
+    config,
+    page
+  ) {
+    const forgot =
+      page || {};
+
+    const title =
+      forgot.title ||
+      "Forgot password?";
+
+    const subtitle =
+      forgot.subtitle ||
+      "Enter your email or mobile number and we will help you reset your password.";
+
+    return `
+      <button
+        type="button"
+        class="preview-back-button"
+        data-preview-action="login"
+      >
+        ← Back to login
+      </button>
+
+
+      <div
+        class="preview-page-header"
+      >
+
+        <h1>
+          ${this.escapeHTML(
+            title
+          )}
+        </h1>
+
+        <p>
+          ${this.escapeHTML(
+            subtitle
+          )}
+        </p>
+
+      </div>
+
+
+      <form
+        class="preview-auth-form"
+        data-preview-form="forgot-password"
+      >
+
+        <div
+          class="preview-form-group"
+        >
+
+          <label>
+            Email or Mobile Number
+          </label>
+
+          <input
+            type="text"
+            placeholder="Enter your email or mobile number"
+          >
+
+        </div>
+
+
+        <button
+          type="submit"
+          class="preview-primary-button"
+        >
+          ${
+            this.escapeHTML(
+              forgot.buttonText ||
+              "Send Reset Link"
+            )
+          }
+        </button>
+
+      </form>
+    `;
+  }
+
+
+  /* =======================================================
+     OTP
+  ======================================================= */
+
+  generateOTP(
+    config,
+    page
+  ) {
+    const otpConfig =
+      config?.pages?.otp ||
+      config?.otp ||
+      config?.authentication?.otp ||
+      {};
+
+    const otp =
+      page || otpConfig;
+
+    const input =
+      otp.input ||
+      {};
+
+    let length =
+      Number(
+        input.length ||
+        otp.length ||
+        otpConfig.length ||
+        6
+      );
+
+    if (
+      ![4, 6, 8].includes(
+        length
+      )
+    ) {
+      length = 6;
+    }
+
+    const methods =
+      input.methods ||
+      otp.methods ||
+      otp.deliveryMethods ||
+      otpConfig.deliveryMethods ||
+      [
+        "email",
+        "sms",
+        "whatsapp"
+      ];
+
+    const resendEnabled =
+      otp.resendEnabled !== false;
+
+    return `
+      <button
+        type="button"
+        class="preview-back-button"
+        data-preview-action="login"
+      >
+        ← Back to login
+      </button>
+
+
+      <div
+        class="preview-page-header"
+      >
+
+        <h1>
+          ${
+            this.escapeHTML(
+              otp.title ||
+              "Verify your identity"
+            )
+          }
+        </h1>
+
+        <p>
+          ${
+            this.escapeHTML(
+              otp.subtitle ||
+              "Enter the verification code sent to you."
+            )
+          }
+        </p>
+
+      </div>
+
+
+      ${
+        this.generateOtpMethods(
+          methods
+        )
+      }
+
+
+      <form
+        class="preview-auth-form"
+        data-preview-form="otp"
+      >
+
+        <div
+          class="preview-otp-inputs"
+          data-otp-length="${length}"
+        >
+
+          ${
+            Array.from(
+              {
+                length
+              }
+            )
+              .map(
+                (_, index) => `
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="1"
+                    class="preview-otp-input"
+                    data-otp-index="${index}"
+                    autocomplete="one-time-code"
+                  >
+                `
+              )
+              .join("")
+          }
+
+        </div>
+
+
+        <button
+          type="submit"
+          class="preview-primary-button"
+        >
+          ${
+            this.escapeHTML(
+              otp.buttonText ||
+              "Verify OTP"
+            )
+          }
+        </button>
+
+      </form>
+
+
+      ${
+        resendEnabled
+          ? `
+            <div
+              class="preview-resend"
+            >
+
+              <span>
+                Didn't receive the code?
+              </span>
+
+              <button
+                type="button"
+                class="preview-link-button"
+                data-preview-action="resend-otp"
+              >
+                Resend OTP
+              </button>
+
+              <span
+                class="preview-otp-timer"
+                data-otp-timer
+              >
+                00:30
+              </span>
+
+            </div>
+          `
+          : ""
+      }
+    `;
+  }
+
+
+  generateOtpMethods(
+    methods
+  ) {
+    if (
+      !Array.isArray(
+        methods
+      ) ||
+      methods.length === 0
+    ) {
+      return "";
+    }
+
+    const labels = {
+      email: "Email",
+      sms: "SMS",
+      whatsapp: "WhatsApp",
+      authenticator:
+        "Authenticator"
+    };
+
+    return `
+      <div
+        class="preview-otp-methods"
+      >
+
+        ${
+          methods
+            .map(
+              (
+                method,
+                index
+              ) => `
+                <button
+                  type="button"
+                  class="
+                    preview-otp-method
+                    ${
+                      index === 0
+                        ? "active"
+                        : ""
+                    }
+                  "
+                  data-preview-action="select-otp-method"
+                  data-otp-method="${this.escapeAttribute(
+                    method
+                  )}"
+                >
+                  ${
+                    this.escapeHTML(
+                      labels[method] ||
+                      method
+                    )
+                  }
+                </button>
+              `
+            )
+            .join("")
+        }
+
+      </div>
+    `;
+  }
+
+
+  /* =======================================================
+     IDENTIFIER OPTIONS
+  ======================================================= */
+
+  getIdentifierOptions(
+    login,
+    authentication
+  ) {
+    const options =
+      login.identifierTypes ||
+      authentication.identifierTypes ||
+      authentication.loginMethods ||
+      [
+        "email"
+      ];
+
+    if (
+      !Array.isArray(
+        options
+      ) ||
+      options.length === 0
+    ) {
+      return ["email"];
+    }
+
+    return options;
+  }
+
+
+  generateIdentifierSelector(
+    options
+  ) {
+    if (
+      !options ||
+      options.length <= 1
+    ) {
+      return "";
+    }
+
+    return `
+      <div
+        class="preview-identifier-options"
+      >
+
+        ${
+          options
+            .map(
+              (
+                option,
+                index
+              ) => `
+                <button
+                  type="button"
+                  class="
+                    preview-identifier-option
+                    ${
+                      index === 0
+                        ? "active"
+                        : ""
+                    }
+                  "
+                  data-preview-action="select-identifier"
+                  data-identifier="${this.escapeAttribute(
+                    option
+                  )}"
+                >
+                  ${
+                    this.escapeHTML(
+                      this.getIdentifierLabel(
+                        option
+                      )
+                    )
+                  }
+                </button>
+              `
+            )
+            .join("")
+        }
+
+      </div>
+    `;
+  }
+
+
+  getIdentifierLabel(
+    identifier
+  ) {
+    const labels = {
+      email:
+        "Email Address",
+
+      mobile:
+        "Mobile Number",
+
+      phone:
+        "Mobile Number",
+
+      username:
+        "Username"
+    };
+
+    return (
+      labels[
+        String(identifier)
+          .toLowerCase()
+      ] ||
+      "Email Address"
     );
+  }
 
-  return `
-    <section class="auth-form-section">
 
-      <div class="auth-form-alignment">
+  getIdentifierInputType(
+    identifier
+  ) {
+    const value =
+      String(identifier)
+        .toLowerCase();
 
-        <div class="auth-card">
+    if (value === "email") {
+      return "email";
+    }
 
-          ${pageTemplate}
+    if (
+      value === "mobile" ||
+      value === "phone"
+    ) {
+      return "tel";
+    }
+
+    return "text";
+  }
+
+
+  getIdentifierPlaceholder(
+    identifier
+  ) {
+    const value =
+      String(identifier)
+        .toLowerCase();
+
+    if (value === "mobile") {
+      return "Enter your mobile number";
+    }
+
+    if (value === "phone") {
+      return "Enter your phone number";
+    }
+
+    if (value === "username") {
+      return "Enter your username";
+    }
+
+    return "Enter your email";
+  }
+
+
+  /* =======================================================
+     SOCIAL LOGIN
+  ======================================================= */
+
+  generateSocialLogin(
+    social
+  ) {
+    const buttons = [];
+
+    if (social.google?.enabled) {
+      buttons.push(
+        this.generateSocialButton(
+          "Google",
+          "G"
+        )
+      );
+    }
+
+    if (social.linkedin?.enabled) {
+      buttons.push(
+        this.generateSocialButton(
+          "LinkedIn",
+          "in"
+        )
+      );
+    }
+
+    if (social.github?.enabled) {
+      buttons.push(
+        this.generateSocialButton(
+          "GitHub",
+          "GH"
+        )
+      );
+    }
+
+    if (
+      buttons.length === 0
+    ) {
+      return "";
+    }
+
+    return `
+      <div
+        class="preview-social-login"
+      >
+
+        <div
+          class="preview-divider"
+        >
+          <span>
+            OR CONTINUE WITH
+          </span>
+        </div>
+
+        <div
+          class="preview-social-buttons"
+        >
+          ${buttons.join("")}
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  generateSocialButton(
+    name,
+    icon
+  ) {
+    return `
+      <button
+        type="button"
+        class="preview-social-button"
+        data-preview-action="social-login"
+        data-provider="${this.escapeAttribute(
+          name
+        )}"
+      >
+
+        <span
+          class="preview-social-icon"
+        >
+          ${this.escapeHTML(
+            icon
+          )}
+        </span>
+
+        Continue with ${this.escapeHTML(
+          name
+        )}
+
+      </button>
+    `;
+  }
+
+
+  /* =======================================================
+     FORM COMPONENTS
+  ======================================================= */
+
+  generateInputGroup(
+    label,
+    type,
+    placeholder,
+    autocomplete = ""
+  ) {
+    return `
+      <div
+        class="preview-form-group"
+      >
+
+        <label>
+          ${this.escapeHTML(
+            label
+          )}
+        </label>
+
+        <input
+          type="${this.escapeAttribute(
+            type
+          )}"
+          placeholder="${this.escapeAttribute(
+            placeholder
+          )}"
+          autocomplete="${this.escapeAttribute(
+            autocomplete
+          )}"
+        >
+
+      </div>
+    `;
+  }
+
+
+  generatePasswordGroup(
+    label,
+    placeholder
+  ) {
+    return `
+      <div
+        class="preview-form-group"
+      >
+
+        <label>
+          ${this.escapeHTML(
+            label
+          )}
+        </label>
+
+        <div
+          class="preview-password-wrapper"
+        >
+
+          <input
+            type="password"
+            placeholder="${this.escapeAttribute(
+              placeholder
+            )}"
+          >
+
+          <button
+            type="button"
+            class="preview-password-toggle"
+            data-preview-action="toggle-password"
+          >
+            Show
+          </button>
 
         </div>
 
       </div>
-
-    </section>
-  `;
-}
+    `;
+  }
 
 
-/* =========================================================
-   GET ACTIVE BACKGROUND
-========================================================= */
+  /* =======================================================
+     ACTIONS
+  ======================================================= */
 
-function getActiveBackgroundImage() {
-  const background =
-    config.background;
-
-  if (
-    background.uploadedImage &&
-    background.uploadedImage.trim() !== ""
+  handlePreviewAction(
+    action,
+    element
   ) {
-    return background.uploadedImage;
+    switch (action) {
+
+      case "login":
+        this.setPage("login");
+        break;
+
+      case "signup":
+        this.setPage("signup");
+        break;
+
+      case "forgot-password":
+        this.setPage(
+          "forgotPassword"
+        );
+        break;
+
+      case "open-otp":
+        this.setPage("otp");
+        break;
+
+      case "toggle-password":
+        this.togglePassword(
+          element
+        );
+        break;
+
+      case "select-identifier":
+        this.selectIdentifier(
+          element
+        );
+        break;
+
+      case "select-otp-method":
+        this.selectOtpMethod(
+          element
+        );
+        break;
+
+      case "resend-otp":
+        this.resendOtp(
+          element
+        );
+        break;
+
+      case "magic-link":
+        this.showTemporaryMessage(
+          "Magic link would be sent here."
+        );
+        break;
+
+      case "social-login":
+        this.showTemporaryMessage(
+          `Continue with ${
+            element.dataset.provider ||
+            "provider"
+          }`
+        );
+        break;
+
+      default:
+        break;
+    }
   }
 
-  return background.image || "";
-}
 
+  /* =======================================================
+     PAGE SWITCHING
+  ======================================================= */
 
-/* =========================================================
-   APPLY ALL PREVIEW STYLES
-========================================================= */
-
-function applyPreviewStyles(previewApp) {
-  if (!previewApp) {
-    return;
-  }
-
-  applyLayoutStyles(previewApp);
-
-  applyBackgroundStyles(previewApp);
-
-  applyImageTextStyles(previewApp);
-
-  applyFormSectionStyles(previewApp);
-
-  applyCardStyles(previewApp);
-
-  applyBrandingStyles(previewApp);
-
-  applyTypographyStyles(previewApp);
-
-  applyInputStyles(previewApp);
-
-  applyButtonStyles(previewApp);
-
-  applySocialStyles(previewApp);
-
-  applySpacingStyles(previewApp);
-
-  applyAnimationStyles(previewApp);
-
-  applyCustomCSS(previewApp);
-}
-
-
-/* =========================================================
-   LAYOUT STYLES
-========================================================= */
-
-function applyLayoutStyles(root) {
-  const layout =
-    config.layout;
-
-  const previewLayout =
-    root.querySelector(
-      ".auth-preview-layout"
-    );
-
-  if (!previewLayout) {
-    return;
-  }
-
-  const imageWidth =
-    Number(layout.imageWidth) || 50;
-
-  const formWidth =
-    Number(layout.formWidth) || 50;
-
-  root.style.setProperty(
-    "--image-width",
-    `${imageWidth}%`
-  );
-
-  root.style.setProperty(
-    "--form-width",
-    `${formWidth}%`
-  );
-
-  root.style.setProperty(
-    "--form-horizontal-alignment",
-    getHorizontalAlignment(
-      layout.formHorizontalAlignment
-    )
-  );
-
-  root.style.setProperty(
-    "--form-vertical-alignment",
-    getVerticalAlignment(
-      layout.formVerticalAlignment
-    )
-  );
-
-  previewLayout.dataset.layout =
-    layout.type;
-}
-
-
-/* =========================================================
-   BACKGROUND STYLES
-========================================================= */
-
-function applyBackgroundStyles(root) {
-  const imageSection =
-    root.querySelector(
-      ".auth-image-section"
-    );
-
-  if (!imageSection) {
-    applyFullBackground(root);
-    return;
-  }
-
-  const background =
-    config.background;
-
-  const image =
-    getActiveBackgroundImage();
-
-  imageSection.style.backgroundColor =
-    background.color;
-
-  if (image) {
-    imageSection.style.backgroundImage =
-      `url("${image}")`;
-  } else {
-    imageSection.style.backgroundImage =
-      "none";
-  }
-
-  imageSection.style.backgroundPosition =
-    background.position;
-
-  imageSection.style.backgroundSize =
-    background.size;
-
-  imageSection.style.backgroundRepeat =
-    background.repeat;
-
-  const overlay =
-    root.querySelector(
-      ".auth-image-overlay"
-    );
-
-  if (!overlay) {
-    return;
-  }
-
-  if (background.overlayEnabled) {
-    overlay.style.display = "block";
-
-    overlay.style.backgroundColor =
-      background.overlayColor;
-
-    overlay.style.opacity =
-      clampOpacity(
-        background.overlayOpacity
+  setPage(page) {
+    this.currentPage =
+      this.normalizePageName(
+        page
       );
-  } else {
-    overlay.style.display = "none";
-  }
-}
 
-
-/* =========================================================
-   FULL BACKGROUND
-========================================================= */
-
-function applyFullBackground(root) {
-  const background =
-    config.background;
-
-  const image =
-    getActiveBackgroundImage();
-
-  root.style.backgroundColor =
-    background.color;
-
-  if (image) {
-    root.style.backgroundImage =
-      `url("${image}")`;
-  } else {
-    root.style.backgroundImage =
-      "none";
-  }
-
-  root.style.backgroundPosition =
-    background.position;
-
-  root.style.backgroundSize =
-    background.size;
-
-  root.style.backgroundRepeat =
-    background.repeat;
-}
-
-
-/* =========================================================
-   IMAGE TEXT STYLES
-========================================================= */
-
-function applyImageTextStyles(root) {
-  const imageContent =
-    root.querySelector(
-      ".auth-image-content"
+    this.updateStatePage(
+      this.currentPage
     );
 
-  const imageTitle =
-    root.querySelector(
-      ".auth-image-title"
-    );
-
-  if (!imageContent || !imageTitle) {
-    return;
+    this.render();
   }
 
-  const imageConfig =
-    config.imageSection;
 
-  imageContent.dataset.position =
-    imageConfig.textPosition;
-
-  imageTitle.style.color =
-    imageConfig.textColor;
-
-  imageTitle.style.fontSize =
-    `${imageConfig.textSize}px`;
-
-  imageTitle.style.fontWeight =
-    imageConfig.textWeight;
-
-  imageTitle.style.fontFamily =
-    imageConfig.textFont;
-
-  imageTitle.style.textShadow =
-    imageConfig.textShadow;
-}
-
-
-/* =========================================================
-   FORM SECTION STYLES
-========================================================= */
-
-function applyFormSectionStyles(root) {
-  const section =
-    root.querySelector(
-      ".auth-form-section"
-    );
-
-  if (!section) {
-    return;
-  }
-
-  const formSection =
-    config.formSection;
-
-  if (formSection.useGradient) {
-    section.style.background =
-      `linear-gradient(
-        135deg,
-        ${formSection.gradientStart},
-        ${formSection.gradientEnd}
-      )`;
-  } else {
-    section.style.background =
-      formSection.backgroundColor;
-  }
-
-  section.style.setProperty(
-    "--form-horizontal-alignment",
-    getHorizontalAlignment(
-      config.layout.formHorizontalAlignment
-    )
-  );
-
-  section.style.setProperty(
-    "--form-vertical-alignment",
-    getVerticalAlignment(
-      config.layout.formVerticalAlignment
-    )
-  );
-}
-
-
-/* =========================================================
-   CARD STYLES
-========================================================= */
-
-function applyCardStyles(root) {
-  const card =
-    root.querySelector(
-      ".auth-card"
-    );
-
-  if (!card) {
-    return;
-  }
-
-  const cardConfig =
-    config.card;
-
-  if (!cardConfig.enabled) {
-    card.style.background =
-      "transparent";
-
-    card.style.boxShadow =
-      "none";
-
-    card.style.border =
-      "none";
-
-    card.style.borderRadius =
-      "0";
-
-    card.style.maxWidth =
-      "100%";
-
-    return;
-  }
-
-  card.style.background =
-    hexToRGBA(
-      cardConfig.backgroundColor,
-      cardConfig.opacity
-    );
-
-  card.style.maxWidth =
-    `${cardConfig.width}px`;
-
-  card.style.minHeight =
-    cardConfig.minHeight > 0
-      ? `${cardConfig.minHeight}px`
-      : "auto";
-
-  card.style.borderRadius =
-    `${cardConfig.borderRadius}px`;
-
-  card.style.paddingTop =
-    `${cardConfig.paddingTop}px`;
-
-  card.style.paddingRight =
-    `${cardConfig.paddingRight}px`;
-
-  card.style.paddingBottom =
-    `${cardConfig.paddingBottom}px`;
-
-  card.style.paddingLeft =
-    `${cardConfig.paddingLeft}px`;
-
-  if (cardConfig.borderEnabled) {
-    card.style.border =
-      `${cardConfig.borderWidth}px solid ${cardConfig.borderColor}`;
-  } else {
-    card.style.border =
-      "none";
-  }
-
-  if (cardConfig.shadowEnabled) {
-    card.style.boxShadow =
-      cardConfig.shadow;
-  } else {
-    card.style.boxShadow =
-      "none";
-  }
-
-  if (cardConfig.blurEnabled) {
-    card.style.backdropFilter =
-      `blur(${cardConfig.blur}px)`;
-  } else {
-    card.style.backdropFilter =
-      "none";
-  }
-}
-
-
-/* =========================================================
-   BRANDING STYLES
-========================================================= */
-
-function applyBrandingStyles(root) {
-  const branding =
-    config.branding;
-
-  const logo =
-    root.querySelector(
-      ".auth-logo"
-    );
-
-  const logoContainer =
-    root.querySelector(
-      ".auth-logo-container"
-    );
-
-  const logoWrapper =
-    root.querySelector(
-      ".auth-logo-wrapper"
-    );
-
-  if (logo) {
-    logo.style.width =
-      `${branding.logoSize}px`;
-
-    logo.style.height =
-      `${branding.logoSize}px`;
-
-    applyLogoShape(
-      logo,
-      branding.logoShape
-    );
-  }
-
-  if (logoContainer) {
-    logoContainer.style.padding =
-      `${branding.logoPadding}px`;
+  updateStatePage(page) {
+    const paths = [
+      "currentPage",
+      "page.activePage"
+    ];
 
     if (
-      branding.logoBackgroundEnabled
+      window.state &&
+      typeof window.state.set ===
+        "function"
     ) {
-      logoContainer.style.backgroundColor =
-        branding.logoBackgroundColor;
-    } else {
-      logoContainer.style.backgroundColor =
-        "transparent";
+      paths.forEach(
+        (path) => {
+          try {
+            window.state.set(
+              path,
+              page
+            );
+          } catch (error) {}
+        }
+      );
     }
 
     if (
-      branding.logoBorderEnabled
+      window.state &&
+      typeof window.state.update ===
+        "function"
     ) {
-      logoContainer.style.border =
-        `${branding.logoBorderWidth}px solid ${branding.logoBorderColor}`;
-    } else {
-      logoContainer.style.border =
-        "none";
+      try {
+        window.state.update(
+          {
+            currentPage:
+              page
+          }
+        );
+      } catch (error) {}
     }
 
-    applyLogoContainerShape(
-      logoContainer,
-      branding.logoShape
-    );
-  }
-
-  if (logoWrapper) {
-    applyLogoPosition(
-      logoWrapper,
-      branding.logoPosition
-    );
-  }
-}
-
-
-/* =========================================================
-   LOGO SHAPE
-========================================================= */
-
-function applyLogoShape(
-  logo,
-  shape
-) {
-  const shapeMap = {
-    square: "0",
-    rounded: "16px",
-    circle: "50%",
-    ellipse: "50%"
-  };
-
-  logo.style.borderRadius =
-    shapeMap[shape] ||
-    "12px";
-
-  if (shape === "ellipse") {
-    logo.style.width =
-      `${config.branding.logoSize * 1.5}px`;
-
-    logo.style.height =
-      `${config.branding.logoSize}px`;
-  }
-
-  logo.style.objectFit =
-    "cover";
-}
-
-
-/* =========================================================
-   LOGO CONTAINER SHAPE
-========================================================= */
-
-function applyLogoContainerShape(
-  container,
-  shape
-) {
-  const shapeMap = {
-    square: "0",
-    rounded: "18px",
-    circle: "50%",
-    ellipse: "50%"
-  };
-
-  container.style.borderRadius =
-    shapeMap[shape] ||
-    "16px";
-}
-
-
-/* =========================================================
-   LOGO POSITION
-========================================================= */
-
-function applyLogoPosition(
-  wrapper,
-  position
-) {
-  wrapper.style.display = "flex";
-
-  if (position === "center") {
-    wrapper.style.justifyContent =
-      "center";
-
-    wrapper.style.textAlign =
-      "center";
-  } else if (position === "right") {
-    wrapper.style.justifyContent =
-      "flex-end";
-
-    wrapper.style.textAlign =
-      "right";
-  } else {
-    wrapper.style.justifyContent =
-      "flex-start";
-
-    wrapper.style.textAlign =
-      "left";
-  }
-}
-
-
-/* =========================================================
-   TYPOGRAPHY STYLES
-========================================================= */
-
-function applyTypographyStyles(root) {
-  const typography =
-    config.typography;
-
-  root.style.fontFamily =
-    typography.fontFamily;
-
-  const title =
-    root.querySelector(
-      ".auth-title"
-    );
-
-  if (title) {
-    title.style.color =
-      typography.titleColor;
-
-    title.style.fontSize =
-      `${typography.titleSize}px`;
-
-    title.style.fontWeight =
-      typography.titleWeight;
-
-    title.style.fontFamily =
-      typography.fontFamily;
-  }
-
-  const subtitle =
-    root.querySelector(
-      ".auth-subtitle"
-    );
-
-  if (subtitle) {
-    subtitle.style.color =
-      typography.subtitleColor;
-
-    subtitle.style.fontSize =
-      `${typography.subtitleSize}px`;
-
-    subtitle.style.fontWeight =
-      typography.subtitleWeight;
-
-    subtitle.style.fontFamily =
-      typography.fontFamily;
-  }
-
-  root
-    .querySelectorAll(
-      ".auth-label"
-    )
-    .forEach((label) => {
-      label.style.color =
-        typography.labelColor;
-
-      label.style.fontSize =
-        `${typography.labelSize}px`;
-
-      label.style.fontWeight =
-        typography.labelWeight;
-    });
-
-  root
-    .querySelectorAll(
-      ".auth-page-footer, .auth-terms"
-    )
-    .forEach((element) => {
-      element.style.color =
-        typography.bodyColor;
-
-      element.style.fontSize =
-        `${typography.bodySize}px`;
-
-      element.style.fontWeight =
-        typography.bodyWeight;
-    });
-}
-
-
-/* =========================================================
-   INPUT STYLES
-========================================================= */
-
-function applyInputStyles(root) {
-  const inputConfig =
-    config.inputs;
-
-  root
-    .querySelectorAll(
-      ".auth-input"
-    )
-    .forEach((input) => {
-      input.style.backgroundColor =
-        inputConfig.backgroundColor;
-
-      input.style.color =
-        inputConfig.textColor;
-
-      input.style.border =
-        `${inputConfig.borderWidth}px solid ${inputConfig.borderColor}`;
-
-      input.style.borderRadius =
-        `${inputConfig.borderRadius}px`;
-
-      input.style.height =
-        `${inputConfig.height}px`;
-
-      input.style.fontSize =
-        `${inputConfig.fontSize}px`;
-
-      input.style.paddingLeft =
-        `${inputConfig.paddingHorizontal}px`;
-
-      input.style.paddingRight =
-        `${inputConfig.paddingHorizontal}px`;
-    });
-
-  root
-    .querySelectorAll(
-      ".otp-box"
-    )
-    .forEach((input) => {
-      input.style.backgroundColor =
-        inputConfig.backgroundColor;
-
-      input.style.color =
-        inputConfig.textColor;
-
-      input.style.border =
-        `${inputConfig.borderWidth}px solid ${inputConfig.borderColor}`;
-
-      input.style.borderRadius =
-        `${inputConfig.borderRadius}px`;
-
-      input.style.fontSize =
-        `${inputConfig.fontSize}px`;
-    });
-}
-
-
-/* =========================================================
-   BUTTON STYLES
-========================================================= */
-
-function applyButtonStyles(root) {
-  const button =
-    root.querySelector(
-      ".auth-primary-button"
-    );
-
-  if (!button) {
-    return;
-  }
-
-  const buttonConfig =
-    config.button;
-
-  button.style.height =
-    `${buttonConfig.height}px`;
-
-  button.style.color =
-    buttonConfig.textColor;
-
-  button.style.fontSize =
-    `${buttonConfig.fontSize}px`;
-
-  button.style.fontWeight =
-    buttonConfig.fontWeight;
-
-  button.style.borderRadius =
-    `${buttonConfig.borderRadius}px`;
-
-  if (
-    buttonConfig.backgroundType ===
-    "gradient"
-  ) {
-    button.style.background =
-      `linear-gradient(
-        135deg,
-        ${buttonConfig.gradientStart},
-        ${buttonConfig.gradientEnd}
-      )`;
-  } else {
-    button.style.background =
-      buttonConfig.backgroundColor;
-  }
-
-  if (
-    buttonConfig.borderEnabled
-  ) {
-    button.style.border =
-      `${buttonConfig.borderWidth}px solid ${buttonConfig.borderColor}`;
-  } else {
-    button.style.border =
-      "none";
-  }
-
-  button.style.boxShadow =
-    buttonConfig.shadowEnabled
-      ? buttonConfig.shadow
-      : "none";
-}
-
-
-/* =========================================================
-   SOCIAL STYLES
-========================================================= */
-
-function applySocialStyles(root) {
-  const social =
-    config.social;
-
-  const socialContainer =
-    root.querySelector(
-      ".auth-social-login"
-    );
-
-  if (!socialContainer) {
-    return;
-  }
-
-  socialContainer.dataset.layout =
-    social.layout;
-
-  root
-    .querySelectorAll(
-      ".auth-social-button"
-    )
-    .forEach((button) => {
-      button.style.height =
-        `${social.buttonHeight}px`;
-
-      button.style.borderRadius =
-        `${social.buttonRadius}px`;
-
-      button.style.backgroundColor =
-        social.buttonBackground;
-
-      button.style.color =
-        social.buttonTextColor;
-
-      button.style.border =
-        `${social.buttonBorderWidth}px solid ${social.buttonBorderColor}`;
-    });
-}
-
-
-/* =========================================================
-   SPACING
-========================================================= */
-
-function applySpacingStyles(root) {
-  const spacing =
-    config.spacing;
-
-  root.style.setProperty(
-    "--form-group-gap",
-    `${spacing.formGroupGap}px`
-  );
-
-  root.style.setProperty(
-    "--button-gap",
-    `${spacing.buttonGap}px`
-  );
-
-  root.style.setProperty(
-    "--social-gap",
-    `${spacing.socialGap}px`
-  );
-
-  root.style.setProperty(
-    "--brand-bottom-margin",
-    `${spacing.brandBottomMargin}px`
-  );
-
-  root.style.setProperty(
-    "--divider-margin",
-    `${spacing.dividerMargin}px`
-  );
-}
-
-
-/* =========================================================
-   ANIMATION
-========================================================= */
-
-function applyAnimationStyles(root) {
-  const animation =
-    config.animation;
-
-  if (!animation.enabled) {
-    root.style.animation =
-      "none";
-
-    return;
-  }
-
-  const animations = {
-    fade: `authFadeIn ${animation.duration}ms ease`,
-    slide: `authSlideIn ${animation.duration}ms ease`,
-    zoom: `authZoomIn ${animation.duration}ms ease`
-  };
-
-  root.style.animation =
-    animations[animation.type] ||
-    animations.fade;
-}
-
-
-/* =========================================================
-   CUSTOM CSS
-========================================================= */
-
-function applyCustomCSS(root) {
-  if (!config.customCSS) {
-    return;
-  }
-
-  let style =
-    root.querySelector(
-      ".auth-custom-css"
-    );
-
-  if (!style) {
-    style =
-      document.createElement("style");
-
-    style.className =
-      "auth-custom-css";
-
-    root.appendChild(style);
-  }
-
-  style.textContent =
-    config.customCSS;
-}
-
-
-/* =========================================================
-   INITIALIZE PREVIEW INTERACTIONS
-========================================================= */
-
-function initializePreviewInteractions(root) {
-  initializePageNavigation(root);
-
-  initializePasswordToggles(root);
-
-  initializeIdentifierSwitching(root);
-
-  initializeOtpInputs(root);
-
-  initializeGetKeySelection(root);
-
-  initializePreviewForms(root);
-
-  initializeSocialButtons(root);
-}
-
-
-/* =========================================================
-   PAGE NAVIGATION
-========================================================= */
-
-function initializePageNavigation(root) {
-  root
-    .querySelectorAll(
-      "[data-page]"
-    )
-    .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          const page =
-            button.dataset.page;
-
-          if (!page) {
-            return;
-          }
-
-          config.currentPage =
-            page;
-
-          renderPreviewRoot();
-        }
-      );
-    });
-}
-
-
-/* =========================================================
-   PASSWORD TOGGLE
-========================================================= */
-
-function initializePasswordToggles(root) {
-  root
-    .querySelectorAll(
-      "[data-password-toggle]"
-    )
-    .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          const inputId =
-            button.dataset.passwordToggle;
-
-          const input =
-            root.querySelector(
-              `#${inputId}`
-            );
-
-          if (!input) {
-            return;
-          }
-
-          if (
-            input.type === "password"
-          ) {
-            input.type = "text";
-
-            button.textContent =
-              "🙈";
-
-            button.setAttribute(
-              "aria-label",
-              "Hide password"
-            );
-          } else {
-            input.type =
-              "password";
-
-            button.textContent =
-              "👁";
-
-            button.setAttribute(
-              "aria-label",
-              "Show password"
-            );
+    if (
+      window.state &&
+      window.state.config
+    ) {
+      window.state.config.currentPage =
+        page;
+    }
+
+    if (
+      window.config
+    ) {
+      window.config.currentPage =
+        page;
+    }
+
+    document.dispatchEvent(
+      new CustomEvent(
+        "auth-builder:page-changed",
+        {
+          detail: {
+            page
           }
         }
-      );
-    });
-}
-
-
-/* =========================================================
-   IDENTIFIER SWITCHING
-========================================================= */
-
-function initializeIdentifierSwitching(root) {
-  root
-    .querySelectorAll(
-      "[data-auth-identifier]"
-    )
-    .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          const identifier =
-            button.dataset.authIdentifier;
-
-          config.login.identifier =
-            identifier;
-
-          renderPreviewRoot();
-        }
-      );
-    });
-}
-
-
-/* =========================================================
-   OTP INPUT BEHAVIOR
-========================================================= */
-
-function initializeOtpInputs(root) {
-  const otpInputs =
-    Array.from(
-      root.querySelectorAll(
-        ".otp-box"
       )
     );
+  }
 
-  otpInputs.forEach(
-    (input, index) => {
 
-      input.addEventListener(
-        "input",
-        () => {
-          input.value =
-            input.value
-              .replace(/\D/g, "")
-              .slice(0, 1);
+  /* =======================================================
+     DEVICE PREVIEW
+  ======================================================= */
 
-          if (
-            input.value &&
-            otpInputs[index + 1]
-          ) {
-            otpInputs[
-              index + 1
-            ].focus();
+  setDevice(device) {
+    const allowed =
+      [
+        "desktop",
+        "tablet",
+        "mobile"
+      ];
+
+    if (
+      !allowed.includes(
+        device
+      )
+    ) {
+      return;
+    }
+
+    this.currentDevice =
+      device;
+
+    this.applyDeviceMode();
+
+    this.updateActiveDeviceButtons();
+
+    document.dispatchEvent(
+      new CustomEvent(
+        "auth-builder:device-changed",
+        {
+          detail: {
+            device
           }
         }
+      )
+    );
+  }
+
+
+  applyDeviceMode() {
+    if (!this.container) {
+      return;
+    }
+
+    const root =
+      this.container.querySelector(
+        ".auth-preview-root"
       );
 
-      input.addEventListener(
-        "keydown",
-        (event) => {
-          if (
-            event.key === "Backspace" &&
-            !input.value &&
-            otpInputs[index - 1]
-          ) {
-            otpInputs[
-              index - 1
-            ].focus();
-          }
+    if (!root) {
+      return;
+    }
+
+    root.classList.remove(
+      "preview-device-desktop",
+      "preview-device-tablet",
+      "preview-device-mobile"
+    );
+
+    root.classList.add(
+      `preview-device-${this.currentDevice}`
+    );
+
+    this.container.classList.remove(
+      "preview-mode-desktop",
+      "preview-mode-tablet",
+      "preview-mode-mobile"
+    );
+
+    this.container.classList.add(
+      `preview-mode-${this.currentDevice}`
+    );
+  }
+
+
+  updateActiveDeviceButtons() {
+    document
+      .querySelectorAll(
+        this.deviceSelector
+      )
+      .forEach(
+        (button) => {
+          button.classList.toggle(
+            "active",
+            button.dataset.previewDevice ===
+              this.currentDevice
+          );
         }
       );
+  }
 
-      input.addEventListener(
-        "paste",
-        (event) => {
-          event.preventDefault();
 
-          const pasted =
-            event.clipboardData
-              .getData("text")
-              .replace(/\D/g, "");
-
-          if (!pasted) {
-            return;
-          }
-
-          pasted
-            .slice(
-              0,
-              otpInputs.length
-            )
-            .split("")
-            .forEach(
-              (digit, digitIndex) => {
-                if (
-                  otpInputs[digitIndex]
-                ) {
-                  otpInputs[
-                    digitIndex
-                  ].value = digit;
-                }
-              }
+  updateActivePageButtons() {
+    document
+      .querySelectorAll(
+        this.pageSelector
+      )
+      .forEach(
+        (button) => {
+          const page =
+            this.normalizePageName(
+              button.dataset.previewPage
             );
 
-          const lastIndex =
-            Math.min(
-              pasted.length,
-              otpInputs.length
-            ) - 1;
+          button.classList.toggle(
+            "active",
+            page ===
+              this.currentPage
+          );
+        }
+      );
+  }
+
+
+  /* =======================================================
+     PASSWORD
+  ======================================================= */
+
+  togglePassword(button) {
+    const wrapper =
+      button.closest(
+        ".preview-password-wrapper"
+      );
+
+    if (!wrapper) {
+      return;
+    }
+
+    const input =
+      wrapper.querySelector(
+        "input"
+      );
+
+    if (!input) {
+      return;
+    }
+
+    const isPassword =
+      input.type ===
+      "password";
+
+    input.type =
+      isPassword
+        ? "text"
+        : "password";
+
+    button.textContent =
+      isPassword
+        ? "Hide"
+        : "Show";
+  }
+
+
+  /* =======================================================
+     IDENTIFIER
+  ======================================================= */
+
+  selectIdentifier(
+    button
+  ) {
+    const identifier =
+      button.dataset.identifier ||
+      "email";
+
+    const parent =
+      button.parentElement;
+
+    if (!parent) {
+      return;
+    }
+
+    parent
+      .querySelectorAll(
+        ".preview-identifier-option"
+      )
+      .forEach(
+        (item) => {
+          item.classList.remove(
+            "active"
+          );
+        }
+      );
+
+    button.classList.add(
+      "active"
+    );
+
+    const form =
+      button.closest(
+        ".preview-auth-form"
+      );
+
+    if (!form) {
+      return;
+    }
+
+    const group =
+      form.querySelector(
+        ".preview-form-group"
+      );
+
+    if (!group) {
+      return;
+    }
+
+    const label =
+      group.querySelector(
+        "label"
+      );
+
+    const input =
+      group.querySelector(
+        "input"
+      );
+
+    if (label) {
+      label.textContent =
+        this.getIdentifierLabel(
+          identifier
+        );
+    }
+
+    if (input) {
+      input.type =
+        this.getIdentifierInputType(
+          identifier
+        );
+
+      input.placeholder =
+        this.getIdentifierPlaceholder(
+          identifier
+        );
+
+      input.value = "";
+    }
+  }
+
+
+  /* =======================================================
+     OTP
+  ======================================================= */
+
+  selectOtpMethod(
+    button
+  ) {
+    const parent =
+      button.parentElement;
+
+    if (!parent) {
+      return;
+    }
+
+    parent
+      .querySelectorAll(
+        ".preview-otp-method"
+      )
+      .forEach(
+        (item) => {
+          item.classList.remove(
+            "active"
+          );
+        }
+      );
+
+    button.classList.add(
+      "active"
+    );
+
+    const method =
+      button.dataset.otpMethod;
+
+    document.dispatchEvent(
+      new CustomEvent(
+        "auth-builder:otp-method-changed",
+        {
+          detail: {
+            method
+          }
+        }
+      )
+    );
+  }
+
+
+  resendOtp(button) {
+    if (
+      button.disabled
+    ) {
+      return;
+    }
+
+    this.startOtpTimer();
+
+    this.showTemporaryMessage(
+      "OTP has been resent."
+    );
+  }
+
+
+  startOtpTimer() {
+    this.stopOtpTimer();
+
+    this.resendSeconds =
+      30;
+
+    const timer =
+      this.container.querySelector(
+        "[data-otp-timer]"
+      );
+
+    const resendButton =
+      this.container.querySelector(
+        '[data-preview-action="resend-otp"]'
+      );
+
+    if (
+      resendButton
+    ) {
+      resendButton.disabled =
+        true;
+    }
+
+    const updateTimer = () => {
+      if (timer) {
+        timer.textContent =
+          this.formatTimer(
+            this.resendSeconds
+          );
+      }
+    };
+
+    updateTimer();
+
+    this.otpTimer =
+      setInterval(
+        () => {
+          this.resendSeconds -= 1;
+
+          updateTimer();
 
           if (
-            otpInputs[lastIndex]
+            this.resendSeconds <= 0
           ) {
-            otpInputs[
-              lastIndex
-            ].focus();
+            this.stopOtpTimer();
+
+            if (
+              resendButton
+            ) {
+              resendButton.disabled =
+                false;
+            }
+
+            if (timer) {
+              timer.textContent =
+                "";
+            }
           }
-        }
+        },
+        1000
       );
+  }
+
+
+  stopOtpTimer() {
+    if (
+      this.otpTimer
+    ) {
+      clearInterval(
+        this.otpTimer
+      );
+
+      this.otpTimer = null;
     }
-  );
-}
+  }
 
 
-/* =========================================================
-   GET KEY SELECTION
-========================================================= */
+  formatTimer(seconds) {
+    const safe =
+      Math.max(
+        0,
+        Number(seconds) || 0
+      );
 
-function initializeGetKeySelection(root) {
-  root
-    .querySelectorAll(
-      'input[name="getKeyFrom"]'
-    )
-    .forEach((radio) => {
-      radio.addEventListener(
-        "change",
-        () => {
-          if (!radio.checked) {
-            return;
+    const minutes =
+      Math.floor(
+        safe / 60
+      );
+
+    const remaining =
+      safe % 60;
+
+    return (
+      String(minutes)
+        .padStart(
+          2,
+          "0"
+        ) +
+      ":" +
+      String(remaining)
+        .padStart(
+          2,
+          "0"
+        )
+    );
+  }
+
+
+  /* =======================================================
+     FORM EVENTS
+  ======================================================= */
+
+  handleForms() {
+    if (!this.container) {
+      return;
+    }
+
+    const forms =
+      this.container.querySelectorAll(
+        ".preview-auth-form"
+      );
+
+    forms.forEach(
+      (form) => {
+        form.addEventListener(
+          "submit",
+          (event) => {
+            event.preventDefault();
+
+            const type =
+              form.dataset.previewForm;
+
+            if (
+              type ===
+              "forgot-password"
+            ) {
+              this.setPage(
+                "otp"
+              );
+
+              return;
+            }
+
+            this.showTemporaryMessage(
+              `${
+                type
+                  ? this.capitalize(
+                      type.replace(
+                        /-/g,
+                        " "
+                      )
+                    )
+                  : "Form"
+              } submitted.`
+            );
           }
+        );
+      }
+    );
 
-          config.authentication.selectedGetKey =
-            radio.value;
-        }
+    this.attachOtpInputBehavior();
+  }
+
+
+  attachOtpInputBehavior() {
+    const inputs =
+      this.container.querySelectorAll(
+        ".preview-otp-input"
       );
-    });
-}
+
+    inputs.forEach(
+      (
+        input,
+        index
+      ) => {
+
+        input.addEventListener(
+          "input",
+          () => {
+            input.value =
+              input.value
+                .replace(
+                  /\D/g,
+                  ""
+                )
+                .slice(
+                  0,
+                  1
+                );
+
+            if (
+              input.value &&
+              inputs[index + 1]
+            ) {
+              inputs[
+                index + 1
+              ].focus();
+            }
+          }
+        );
+
+        input.addEventListener(
+          "keydown",
+          (event) => {
+            if (
+              event.key ===
+                "Backspace" &&
+              !input.value &&
+              inputs[index - 1]
+            ) {
+              inputs[
+                index - 1
+              ].focus();
+            }
+          }
+        );
+
+        input.addEventListener(
+          "paste",
+          (event) => {
+            event.preventDefault();
+
+            const text =
+              (
+                event.clipboardData ||
+                window.clipboardData
+              )
+                .getData("text")
+                .replace(
+                  /\D/g,
+                  ""
+                );
+
+            text
+              .slice(
+                0,
+                inputs.length
+              )
+              .split("")
+              .forEach(
+                (
+                  character,
+                  characterIndex
+                ) => {
+                  if (
+                    inputs[
+                      characterIndex
+                    ]
+                  ) {
+                    inputs[
+                      characterIndex
+                    ].value =
+                      character;
+                  }
+                }
+              );
+
+            const nextIndex =
+              Math.min(
+                text.length,
+                inputs.length - 1
+              );
+
+            if (
+              inputs[nextIndex]
+            ) {
+              inputs[
+                nextIndex
+              ].focus();
+            }
+          }
+        );
+      }
+    );
+  }
 
 
-/* =========================================================
-   PREVIEW FORMS
-========================================================= */
+  /* =======================================================
+     RENDER EVENTS
+  ======================================================= */
 
-function initializePreviewForms(root) {
-  root
-    .querySelectorAll(
-      ".auth-form"
-    )
-    .forEach((form) => {
-      form.addEventListener(
-        "submit",
-        (event) => {
-          event.preventDefault();
+  emitPreviewUpdated() {
+    this.handleForms();
 
-          showPreviewMessage(
-            root,
-            getSubmitMessage()
-          );
+    document.dispatchEvent(
+      new CustomEvent(
+        "auth-builder:preview-updated",
+        {
+          detail: {
+            page:
+              this.currentPage,
+
+            device:
+              this.currentDevice,
+
+            preview:
+              this.container
+          }
         }
-      );
-    });
-}
+      )
+    );
+  }
 
 
-/* =========================================================
-   SUBMIT MESSAGE
-========================================================= */
+  /* =======================================================
+     TEMP MESSAGE
+  ======================================================= */
 
-function getSubmitMessage() {
-  switch (
-    config.currentPage
+  showTemporaryMessage(
+    message
   ) {
-    case "signup":
-      return "Account created successfully";
-
-    case "forgot":
-      return "Password reset instructions sent";
-
-    case "otp":
-      return "Verification successful";
-
-    case "login":
-    default:
-      return "Login successful";
-  }
-}
-
-
-/* =========================================================
-   SOCIAL BUTTONS
-========================================================= */
-
-function initializeSocialButtons(root) {
-  root
-    .querySelectorAll(
-      "[data-social-provider]"
-    )
-    .forEach((button) => {
-      button.addEventListener(
-        "click",
-        () => {
-          const provider =
-            button.dataset.socialProvider;
-
-          showPreviewMessage(
-            root,
-            `Continue with ${
-              provider.charAt(0).toUpperCase() +
-              provider.slice(1)
-            }`
-          );
-        }
+    const existing =
+      document.querySelector(
+        ".preview-temporary-message"
       );
-    });
-}
 
+    if (existing) {
+      existing.remove();
+    }
 
-/* =========================================================
-   PREVIEW MESSAGE
-========================================================= */
+    const element =
+      document.createElement(
+        "div"
+      );
 
-function showPreviewMessage(
-  root,
-  message
-) {
-  let messageElement =
-    root.querySelector(
-      ".auth-preview-message"
+    element.className =
+      "preview-temporary-message";
+
+    element.textContent =
+      message;
+
+    document.body.appendChild(
+      element
     );
 
-  if (!messageElement) {
-    messageElement =
-      document.createElement("div");
-
-    messageElement.className =
-      "auth-preview-message";
-
-    root.appendChild(
-      messageElement
-    );
-  }
-
-  messageElement.textContent =
-    message;
-
-  messageElement.classList.add(
-    "show"
-  );
-
-  clearTimeout(
-    window.__previewMessageTimer
-  );
-
-  window.__previewMessageTimer =
     setTimeout(
       () => {
-        messageElement.classList.remove(
+        element.classList.add(
           "show"
         );
       },
-      2500
-    );
-}
-
-
-/* =========================================================
-   RENDER MAIN PREVIEW ROOT
-========================================================= */
-
-function renderPreviewRoot() {
-  const root =
-    document.getElementById(
-      "previewRoot"
+      10
     );
 
-  if (root) {
-    renderPreview(root);
-  }
+    setTimeout(
+      () => {
+        element.classList.remove(
+          "show"
+        );
 
-  const fullscreenRoot =
-    document.getElementById(
-      "fullscreenPreviewRoot"
-    );
-
-  if (
-    fullscreenRoot &&
-    fullscreenRoot
-      .closest(
-        ".auth-fullscreen-preview"
-      )
-      ?.classList.contains(
-        "auth-fullscreen-open"
-      )
-  ) {
-    renderPreview(
-      fullscreenRoot
-    );
-  }
-}
-
-
-/* =========================================================
-   ALIGNMENT HELPERS
-========================================================= */
-
-function getHorizontalAlignment(
-  alignment
-) {
-  const map = {
-    left: "flex-start",
-    center: "center",
-    right: "flex-end"
-  };
-
-  return (
-    map[alignment] ||
-    "center"
-  );
-}
-
-
-function getVerticalAlignment(
-  alignment
-) {
-  const map = {
-    top: "flex-start",
-    center: "center",
-    bottom: "flex-end"
-  };
-
-  return (
-    map[alignment] ||
-    "center"
-  );
-}
-
-
-/* =========================================================
-   OPACITY HELPER
-========================================================= */
-
-function clampOpacity(value) {
-  const number =
-    Number(value);
-
-  if (
-    Number.isNaN(number)
-  ) {
-    return 0;
-  }
-
-  if (number > 1) {
-    return Math.min(
-      number / 100,
-      1
+        setTimeout(
+          () => {
+            element.remove();
+          },
+          250
+        );
+      },
+      2200
     );
   }
 
-  return Math.max(
-    0,
-    Math.min(number, 1)
-  );
-}
 
+  /* =======================================================
+     HELPERS
+  ======================================================= */
 
-/* =========================================================
-   HEX TO RGBA
-========================================================= */
-
-function hexToRGBA(
-  hex,
-  opacity = 1
-) {
-  if (!hex) {
-    return `rgba(255, 255, 255, ${opacity})`;
-  }
-
-  let color =
-    String(hex).replace(
-      "#",
-      ""
-    );
-
-  if (
-    color.length === 3
-  ) {
-    color =
-      color
-        .split("")
-        .map(
-          (character) =>
-            character + character
+  addPx(value) {
+    if (
+      typeof value ===
+      "string"
+    ) {
+      if (
+        value.includes(
+          "px"
+        ) ||
+        value.includes(
+          "%"
+        ) ||
+        value.includes(
+          "rem"
         )
-        .join("");
+      ) {
+        return value;
+      }
+    }
+
+    const number =
+      Number(value);
+
+    if (
+      Number.isNaN(
+        number
+      )
+    ) {
+      return "0px";
+    }
+
+    return `${number}px`;
   }
 
-  if (
-    color.length !== 6
-  ) {
-    return hex;
+
+  capitalize(value) {
+    return String(value)
+      .replace(
+        /\b\w/g,
+        (character) =>
+          character.toUpperCase()
+      );
   }
 
-  const red =
-    parseInt(
-      color.substring(0, 2),
-      16
-    );
 
-  const green =
-    parseInt(
-      color.substring(2, 4),
-      16
-    );
-
-  const blue =
-    parseInt(
-      color.substring(4, 6),
-      16
-    );
-
-  return `
-    rgba(
-      ${red},
-      ${green},
-      ${blue},
-      ${clampOpacity(opacity)}
+  escapeHTML(value) {
+    return String(
+      value ?? ""
     )
-  `
-    .replace(/\s+/g, " ")
-    .trim();
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /'/g,
+        "&#039;"
+      );
+  }
+
+
+  escapeAttribute(value) {
+    return this.escapeHTML(
+      value
+    );
+  }
 }
 
 
 /* =========================================================
-   FALLBACK ESCAPE FUNCTIONS
+   GLOBAL INSTANCE
 ========================================================= */
 
-if (
-  typeof window.escapeHTML !==
-  "function"
-) {
-  window.escapeHTML =
-    function (value = "") {
-      const div =
-        document.createElement(
-          "div"
-        );
-
-      div.textContent = value;
-
-      return div.innerHTML;
-    };
-}
+window.PreviewManager =
+  PreviewManager;
 
 
-if (
-  typeof window.escapeAttribute !==
-  "function"
-) {
-  window.escapeAttribute =
-    function (value = "") {
-      return String(value)
-        .replace(
-          /&/g,
-          "&amp;"
-        )
-        .replace(
-          /"/g,
-          "&quot;"
-        )
-        .replace(
-          /</g,
-          "&lt;"
-        )
-        .replace(
-          />/g,
-          "&gt;"
-        );
-    };
-}
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    window.previewManager =
+      new PreviewManager({
+        previewSelector:
+          "#preview-content",
+
+        deviceSelector:
+          "[data-preview-device]",
+
+        pageSelector:
+          "[data-preview-page]"
+      });
+
+  }
+);
 
 
 /* =========================================================
-   EXPOSE PREVIEW FUNCTIONS
+   GLOBAL COMPATIBILITY FUNCTIONS
 ========================================================= */
 
 window.renderPreview =
-  renderPreview;
+  function () {
 
-window.renderPreviewRoot =
-  renderPreviewRoot;
+    if (
+      window.previewManager
+    ) {
+      window.previewManager
+        .render();
+    }
+  };
 
-window.authPreview = {
 
-  renderPreview,
+window.refreshPreview =
+  window.renderPreview;
 
-  renderPreviewRoot,
 
-  applyPreviewStyles,
+window.setPreviewDevice =
+  function (device) {
 
-  createPreviewShell,
+    if (
+      window.previewManager
+    ) {
+      window.previewManager
+        .setDevice(
+          device
+        );
+    }
+  };
 
-  getActiveBackgroundImage,
 
-  applyLayoutStyles,
+window.setPreviewPage =
+  function (page) {
 
-  applyBackgroundStyles,
+    if (
+      window.previewManager
+    ) {
+      window.previewManager
+        .setPage(
+          page
+        );
+    }
+  };
 
-  applyBrandingStyles,
 
-  applyTypographyStyles,
+/* =========================================================
+   CUSTOMIZATION LISTENERS
+========================================================= */
 
-  applyInputStyles,
+[
+  "auth-builder:config-updated",
+  "auth-builder:customization-updated",
+  "auth-builder:state-updated",
+  "auth-builder:layout-updated",
+  "auth-builder:branding-updated",
+  "auth-builder:background-updated",
+  "auth-builder:page-config-updated"
+].forEach(
+  (eventName) => {
 
-  applyButtonStyles,
+    document.addEventListener(
+      eventName,
+      () => {
 
-  applySocialStyles,
+        if (
+          window.previewManager
+        ) {
+          window.previewManager
+            .render();
+        }
 
-  initializePreviewInteractions
-};
+      }
+    );
+
+  }
+);

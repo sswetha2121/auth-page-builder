@@ -1,65 +1,63 @@
 /* =========================================================
-   AUTH PAGE CONFIGURATOR
+   AUTH PAGE BUILDER
    File: js/state.js
 
-   Central Application State
+   CENTRAL APPLICATION STATE
 
-   This file manages:
-   - Current customization configuration
-   - Default login page settings
-   - Login authentication settings
-   - Signup settings
-   - Forgot password settings
-   - OTP settings
-   - Branding
-   - Logo
-   - Background
-   - Colors
-   - Typography
-   - Layout
-   - Social login
-   - Device preview mode
-   - Active customization section
+   Responsibilities:
+   - Store complete builder configuration
+   - Support Login / Signup / Forgot Password / OTP
+   - Provide get / set / update APIs
+   - Deep merge configuration safely
+   - Notify PreviewManager and Renderer
+   - Support undo / redo
+   - Handle uploaded logo and background assets
+   - Import / export configuration
+   - Maintain preview device state
 ========================================================= */
 
 
 /* =========================================================
-   DEFAULT CONFIGURATION
+   DEFAULT CONFIG
 ========================================================= */
 
 const DEFAULT_CONFIG = {
-
-  /* =====================================================
-     PROJECT
-  ===================================================== */
-
-  project: {
-    name: "my-custom-auth-page"
-  },
-
 
   /* =====================================================
      APPLICATION
   ===================================================== */
 
   app: {
-    activeSection: "background",
-    previewMode: "desktop"
+    previewMode: "desktop",
+    activeSection: "layout"
   },
 
 
   /* =====================================================
-     PAGE
+     PAGE NAVIGATION
   ===================================================== */
+
+  currentPage: "login",
 
   page: {
     activePage: "login",
+
     availablePages: [
       "login",
       "signup",
-      "forgot",
+      "forgotPassword",
       "otp"
     ]
+  },
+
+
+  /* =====================================================
+     PROJECT
+  ===================================================== */
+
+  project: {
+    name: "Auth Page",
+    description: ""
   },
 
 
@@ -69,17 +67,15 @@ const DEFAULT_CONFIG = {
 
   layout: {
 
-    backgroundSide: "left",
+    pageLayout: "split",
 
-    formPanelWidth: 50,
+    type: "split",
 
-    backgroundPanelWidth: 50,
+    imageWidth: 50,
 
-    formAlignment: "center",
+    formPosition: "center",
 
-    contentAlignment: "center",
-
-    pageLayout: "split"
+    showBackgroundContent: true
   },
 
 
@@ -89,27 +85,29 @@ const DEFAULT_CONFIG = {
 
   background: {
 
-    showPanel: true,
+    type: "color",
 
-    type: "image",
+    color: "#111827",
 
-    image: "assets/backgrounds/login-bg.jpg",
+    backgroundColor: "#111827",
 
-    color: "#0f172a",
+    image: "",
 
-    size: "cover",
+    imageUrl: "",
+
+    uploadedImage: "",
 
     position: "center",
 
+    size: "cover",
+
     repeat: "no-repeat",
 
-    overlayColor: "#000000",
+    overlay: "rgba(15, 23, 42, 0.35)",
 
-    overlayOpacity: 0.35,
+    overlayColor: "#0f172a",
 
-    blur: 0,
-
-    brightness: 1
+    overlayOpacity: 0.35
   },
 
 
@@ -119,55 +117,26 @@ const DEFAULT_CONFIG = {
 
   branding: {
 
-    showLogo: true,
+    brandName: "",
 
-    logo: "assets/logos/default-logo.png",
+    name: "",
 
-    logoText: "A",
+    title: "Welcome",
 
-    logoStyle: "circle",
+    description:
+      "Secure authentication designed for your application.",
 
-    logoPosition: "left",
+    logo: "",
 
-    logoSize: 64,
+    logoUrl: "",
 
-    showBrandName: true,
+    uploadedLogo: "",
 
-    brandName: "AuthFlow",
+    image: "",
 
-    subtitle:
-      "Secure access to your account with a seamless authentication experience.",
+    logoWidth: 120,
 
-    heading:
-      "Welcome back",
-
-    showBackgroundText: true
-  },
-
-
-  /* =====================================================
-     CARD
-  ===================================================== */
-
-  card: {
-
-    width: 430,
-
-    padding: 42,
-
-    borderRadius: 20,
-
-    backgroundColor: "#ffffff",
-
-    textColor: "#0f172a",
-
-    shadow: "large",
-
-    border: false,
-
-    borderColor: "#e2e8f0",
-
-    transparent: false
+    logoPosition: "center"
   },
 
 
@@ -181,29 +150,53 @@ const DEFAULT_CONFIG = {
 
     primaryHover: "#1d4ed8",
 
-    secondary: "#0f172a",
-
-    background: "#ffffff",
-
-    cardBackground: "#ffffff",
+    secondary: "#64748b",
 
     text: "#0f172a",
 
-    mutedText: "#64748b",
+    textColor: "#0f172a",
 
-    linkColor: "#2563eb",
+    muted: "#64748b",
+
+    secondaryText: "#64748b",
+
+    border: "#dbe3ee",
+
+    inputBorder: "#dbe3ee",
 
     inputBackground: "#ffffff",
 
-    inputBorder: "#cbd5e1",
-
     inputText: "#0f172a",
 
-    buttonText: "#ffffff",
+    cardBackground: "#ffffff",
 
-    error: "#dc2626",
+    linkColor: "#2563eb"
+  },
 
-    success: "#16a34a"
+
+  /* =====================================================
+     CARD
+  ===================================================== */
+
+  card: {
+
+    background: "#ffffff",
+
+    backgroundColor: "#ffffff",
+
+    borderRadius: 20,
+
+    radius: 20,
+
+    padding: 36,
+
+    shadow: "medium",
+
+    border: false,
+
+    borderColor: "#e2e8f0",
+
+    transparent: false
   },
 
 
@@ -213,54 +206,70 @@ const DEFAULT_CONFIG = {
 
   typography: {
 
-    fontFamily: "Inter, Arial, sans-serif",
+    fontFamily:
+      "Inter, Arial, sans-serif",
 
     titleSize: 30,
 
-    subtitleSize: 14,
+    subtitleSize: 15,
 
-    labelSize: 14,
+    bodySize: 14,
 
-    inputSize: 15,
-
-    buttonSize: 15,
-
-    titleWeight: 700,
-
-    bodyWeight: 400,
-
-    letterSpacing: 0
+    fontWeight: 700
   },
 
 
   /* =====================================================
-     LOGIN
+     LOGIN PAGE
   ===================================================== */
 
   login: {
 
-    enabled: true,
-
-    loginButtonText: "Login",
-
     title: "Welcome back",
 
     subtitle:
-      "Login to access your account",
+      "Sign in to continue to your account",
+
+    buttonText: "Sign In",
+
+    loginButtonText: "Sign In",
+
+    forgotPasswordText:
+      "Forgot password?",
+
+    signupPrompt:
+      "New here?",
+
+    signupButtonText:
+      "Create Account",
+
+    showPassword: true,
+
+    showRememberMe: true,
+
+    showForgotPassword: true,
+
+    showSignup: true,
 
     showIdentifierSelector: true,
 
-    defaultIdentifier: "email",
+    identifierTypes: [
+      "email",
+      "mobile"
+    ],
 
-    identifierOptions: {
-      email: true,
-      mobile: true
-    },
+    identifierOptions: [
+      "email",
+      "mobile"
+    ],
 
+    identifierEnabled: true,
 
-    /* =================================================
-       AUTHENTICATION METHODS
-    ================================================= */
+    identifierLabel:
+      "Email Address",
+
+    identifierPlaceholder:
+      "Enter your email",
 
     authenticationMethods: {
 
@@ -271,77 +280,39 @@ const DEFAULT_CONFIG = {
       magicLink: false
     },
 
+    defaultAuthentication:
+      "password",
 
-    defaultAuthentication: "password",
-
-
-    /* =================================================
-       PASSWORD
-    ================================================= */
-
-    password: {
-
-      label: "Password",
-
-      placeholder:
-        "Enter your password",
-
-      showToggle: true
-    },
-
-
-    /* =================================================
-       OTP
-    ================================================= */
-
-    otpLength: 6,
-
-    otpButtonText:
-      "Get Verification Code",
-
-    otpVerificationButtonText:
-      "Verify Code",
-
-
-    /* =================================================
-       REMEMBER / FORGOT
-    ================================================= */
-
-    showRememberMe: true,
-
-    rememberMeText:
-      "Remember me",
-
-    showForgotPassword: true,
-
-    forgotPasswordText:
-      "Forgot password?"
+    otpLength: 6
   },
 
 
   /* =====================================================
-     SIGNUP
+     SIGNUP PAGE
   ===================================================== */
 
   signup: {
 
     enabled: true,
 
+    title:
+      "Create account",
+
+    subtitle:
+      "Create your account to get started",
+
     buttonText:
       "Create Account",
 
-    title:
-      "Create your account",
+    loginPrompt:
+      "Already have an account?",
 
-    subtitle:
-      "Fill in your details to get started",
-
-
-    /* =================================================
-       SIGNUP FIELDS
-    ================================================= */
+    loginButtonText:
+      "Sign In",
 
     fields: {
+
+      fullName: true,
 
       username: true,
 
@@ -352,57 +323,12 @@ const DEFAULT_CONFIG = {
       password: true,
 
       confirmPassword: true
-    },
-
-
-    labels: {
-
-      username:
-        "Username",
-
-      email:
-        "Email Address",
-
-      mobile:
-        "Mobile Number",
-
-      password:
-        "Password",
-
-      confirmPassword:
-        "Confirm Password"
-    },
-
-
-    placeholders: {
-
-      username:
-        "Enter your username",
-
-      email:
-        "Enter your email address",
-
-      mobile:
-        "Enter your mobile number",
-
-      password:
-        "Create your password",
-
-      confirmPassword:
-        "Confirm your password"
-    },
-
-
-    footerText:
-      "Already have an account?",
-
-    footerButtonText:
-      "Login"
+    }
   },
 
 
   /* =====================================================
-     FORGOT PASSWORD
+     FORGOT PASSWORD PAGE
   ===================================================== */
 
   forgotPassword: {
@@ -413,22 +339,13 @@ const DEFAULT_CONFIG = {
       "Forgot password?",
 
     subtitle:
-      "Enter your email or mobile number to receive a verification key.",
-
-    identifierLabel:
-      "Email or Mobile Number",
-
-    identifierPlaceholder:
-      "Enter your email or mobile number",
+      "Enter your email or mobile number and we will help you reset your password.",
 
     buttonText:
-      "Send Verification Key",
+      "Send Reset Link",
 
     backButtonText:
-      "Back to login",
-
-    successMessage:
-      "Verification instructions have been sent."
+      "Back to login"
   },
 
 
@@ -441,24 +358,124 @@ const DEFAULT_CONFIG = {
     enabled: true,
 
     title:
-      "Verify your account",
+      "Verify your identity",
 
     subtitle:
       "Enter the verification code sent to you.",
 
-    length: 6,
+    buttonText:
+      "Verify OTP",
 
     verificationButtonText:
-      "Verify",
+      "Verify OTP",
+
+    resendEnabled: true,
 
     resendText:
-      "Resend Code",
+      "Resend OTP",
+
+    resendSeconds: 30,
 
     backButtonText:
       "Back to login",
 
-    inputStyle:
-      "separate"
+    length: 6,
+
+    input: {
+
+      length: 6,
+
+      style: "separate",
+
+      methods: [
+        "email",
+        "sms",
+        "whatsapp"
+      ]
+    },
+
+    deliveryMethods: [
+      "email",
+      "sms",
+      "whatsapp"
+    ],
+
+    showWhatsApp: true,
+
+    showSMS: true,
+
+    showEmail: true,
+
+    showAuthenticator: false
+  },
+
+
+  /* =====================================================
+     AUTHENTICATION
+  ===================================================== */
+
+  authentication: {
+
+    identifierTypes: [
+      "email",
+      "mobile"
+    ],
+
+    loginMethods: [
+      "password",
+      "otp"
+    ],
+
+    password: {
+      enabled: true
+    },
+
+    otp: {
+
+      enabled: true,
+
+      length: 6,
+
+      buttonText:
+        "Continue with OTP",
+
+      deliveryMethods: [
+        "email",
+        "sms",
+        "whatsapp"
+      ]
+    },
+
+    magicLink: {
+
+      enabled: false,
+
+      buttonText:
+        "Send Magic Link"
+    },
+
+    social: {
+
+      google: {
+        enabled: true
+      },
+
+      linkedin: {
+        enabled: false
+      },
+
+      github: {
+        enabled: false
+      },
+
+      facebook: {
+        enabled: false
+      },
+
+      apple: {
+        enabled: false
+      }
+    }
   },
 
 
@@ -471,20 +488,21 @@ const DEFAULT_CONFIG = {
     enabled: true,
 
     title:
-      "Or continue with",
+      "OR CONTINUE WITH",
 
-    layout:
-      "vertical",
+    layout: "vertical",
 
     providers: {
 
       google: true,
 
+      linkedin: false,
+
+      github: false,
+
       facebook: false,
 
-      apple: false,
-
-      github: false
+      apple: false
     }
   },
 
@@ -505,7 +523,8 @@ const DEFAULT_CONFIG = {
 
     focusShadow: true,
 
-    placeholderColor: "#94a3b8"
+    placeholderColor:
+      "#94a3b8"
   },
 
 
@@ -560,6 +579,22 @@ const DEFAULT_CONFIG = {
     enablePasswordStrength: true,
 
     enableAutoComplete: true
+  },
+
+
+  /* =====================================================
+     CUSTOM ASSETS
+
+     Used by download.js
+  ===================================================== */
+
+  assets: {
+
+    logo: null,
+
+    background: null,
+
+    uploads: []
   }
 };
 
@@ -570,7 +605,10 @@ const DEFAULT_CONFIG = {
 
 const AppState = {
 
-  config: cloneValue(DEFAULT_CONFIG),
+  config:
+    cloneValue(
+      DEFAULT_CONFIG
+    ),
 
   listeners: [],
 
@@ -586,7 +624,9 @@ const AppState = {
    CLONE VALUE
 ========================================================= */
 
-function cloneValue(value) {
+function cloneValue(
+  value
+) {
 
   if (
     value === undefined
@@ -594,8 +634,147 @@ function cloneValue(value) {
     return undefined;
   }
 
+  if (
+    value === null
+  ) {
+    return null;
+  }
+
   return JSON.parse(
-    JSON.stringify(value)
+    JSON.stringify(
+      value
+    )
+  );
+}
+
+
+/* =========================================================
+   DEEP MERGE
+========================================================= */
+
+function deepMerge(
+  target = {},
+  source = {}
+) {
+
+  const output =
+    Array.isArray(target)
+      ? [...target]
+      : {
+          ...target
+        };
+
+
+  if (
+    !source ||
+    typeof source !== "object"
+  ) {
+    return output;
+  }
+
+
+  Object.keys(
+    source
+  ).forEach(
+    (key) => {
+
+      const sourceValue =
+        source[key];
+
+      const targetValue =
+        output[key];
+
+
+      if (
+        sourceValue &&
+        typeof sourceValue ===
+          "object" &&
+        !Array.isArray(
+          sourceValue
+        )
+      ) {
+
+        output[key] =
+          deepMerge(
+            targetValue &&
+            typeof targetValue ===
+              "object"
+              ? targetValue
+              : {},
+            sourceValue
+          );
+
+      } else {
+
+        output[key] =
+          cloneValue(
+            sourceValue
+          );
+
+      }
+
+    }
+  );
+
+
+  return output;
+}
+
+
+/* =========================================================
+   NORMALIZE PAGE NAME
+========================================================= */
+
+function normalizePageName(
+  pageName
+) {
+
+  const value =
+    String(
+      pageName || ""
+    )
+      .toLowerCase()
+      .trim()
+      .replace(
+        /[\s_-]+/g,
+        ""
+      );
+
+
+  const aliases = {
+
+    login:
+      "login",
+
+    signin:
+      "login",
+
+    signup:
+      "signup",
+
+    register:
+      "signup",
+
+    forgot:
+      "forgotPassword",
+
+    forgotpassword:
+      "forgotPassword",
+
+    otp:
+      "otp",
+
+    verification:
+      "otp",
+
+    verify:
+      "otp"
+  };
+
+
+  return (
+    aliases[value] ||
+    "login"
   );
 }
 
@@ -614,7 +793,6 @@ function getConfig() {
 
 /* =========================================================
    GET LIVE CONFIG
-   Used internally by application
 ========================================================= */
 
 function getLiveConfig() {
@@ -624,27 +802,26 @@ function getLiveConfig() {
 
 
 /* =========================================================
-   GET VALUE USING PATH
-
-   Example:
-
-   getValue(
-     "colors.primary"
-   );
-
+   GET VALUE
 ========================================================= */
 
-function getValue(path) {
+function getValue(
+  path
+) {
 
   if (!path) {
     return undefined;
   }
 
+
   const keys =
-    path.split(".");
+    String(path)
+      .split(".");
+
 
   let current =
     AppState.config;
+
 
   for (
     const key of keys
@@ -657,9 +834,11 @@ function getValue(path) {
       return undefined;
     }
 
+
     current =
       current[key];
   }
+
 
   return cloneValue(
     current
@@ -668,15 +847,7 @@ function getValue(path) {
 
 
 /* =========================================================
-   SET VALUE USING PATH
-
-   Example:
-
-   setValue(
-     "colors.primary",
-     "#ff0000"
-   );
-
+   SET VALUE
 ========================================================= */
 
 function setValue(
@@ -689,138 +860,342 @@ function setValue(
     return;
   }
 
+
   const keys =
-    path.split(".");
+    String(path)
+      .split(".");
+
 
   const lastKey =
     keys.pop();
 
+
   let current =
     AppState.config;
+
 
   keys.forEach(
     (key) => {
 
       if (
+        !current[key] ||
         typeof current[key] !==
-        "object"
+          "object" ||
+        Array.isArray(
+          current[key]
+        )
       ) {
 
         current[key] = {};
+
       }
+
 
       current =
         current[key];
+
     }
   );
 
+
   current[lastKey] =
-    cloneValue(value);
+    cloneValue(
+      value
+    );
 
 
   if (
-    options.saveHistory !== false
+    path ===
+    "currentPage"
   ) {
-    saveHistory();
+
+    const page =
+      normalizePageName(
+        value
+      );
+
+    AppState.config.currentPage =
+      page;
+
+    AppState.config.page.activePage =
+      page;
+
   }
 
 
-  notifyStateChange(
-    path,
+  if (
+    path ===
+    "page.activePage"
+  ) {
+
+    const page =
+      normalizePageName(
+        value
+      );
+
+    AppState.config.page.activePage =
+      page;
+
+    AppState.config.currentPage =
+      page;
+
+  }
+
+
+  if (
+    path ===
+    "app.previewMode"
+  ) {
+
+    const allowedModes = [
+      "desktop",
+      "tablet",
+      "mobile"
+    ];
+
+
+    if (
+      !allowedModes.includes(
+        value
+      )
+    ) {
+
+      AppState.config.app.previewMode =
+        "desktop";
+
+    }
+
+  }
+
+
+  if (
+    options.history !== false
+  ) {
+
+    saveHistory();
+
+  }
+
+
+  if (
+    options.notify !== false
+  ) {
+
+    notifyStateChange(
+      "set",
+      {
+        path,
+        value
+      }
+    );
+
+  }
+
+
+  return cloneValue(
     value
   );
-
-  return value;
 }
 
 
 /* =========================================================
-   UPDATE MULTIPLE VALUES
+   UPDATE CONFIG
 ========================================================= */
 
 function updateConfig(
-  updates,
+  newConfig = {},
   options = {}
 ) {
 
   if (
-    !updates ||
-    typeof updates !==
+    !newConfig ||
+    typeof newConfig !==
+      "object"
+  ) {
+    return getConfig();
+  }
+
+
+  AppState.config =
+    deepMerge(
+      AppState.config,
+      newConfig
+    );
+
+
+  syncPageConfiguration();
+
+
+  if (
+    options.history !== false
+  ) {
+
+    saveHistory();
+
+  }
+
+
+  if (
+    options.notify !== false
+  ) {
+
+    notifyStateChange(
+      "update",
+      newConfig
+    );
+
+  }
+
+
+  return getConfig();
+}
+
+
+/* =========================================================
+   UPDATE MULTIPLE PATHS
+========================================================= */
+
+function setValues(
+  values = {},
+  options = {}
+) {
+
+  if (
+    !values ||
+    typeof values !==
       "object"
   ) {
     return;
   }
 
-  mergeObjects(
-    AppState.config,
-    updates
+
+  Object.entries(
+    values
+  ).forEach(
+    ([path, value]) => {
+
+      setValue(
+        path,
+        value,
+        {
+          history: false,
+          notify: false
+        }
+      );
+
+    }
   );
 
 
   if (
-    options.saveHistory !== false
+    options.history !== false
   ) {
+
     saveHistory();
+
   }
 
 
-  notifyStateChange(
-    "*",
-    updates
-  );
+  if (
+    options.notify !== false
+  ) {
+
+    notifyStateChange(
+      "batch",
+      values
+    );
+
+  }
 }
 
 
 /* =========================================================
-   MERGE OBJECTS
+   PAGE CONFIGURATION SYNC
 ========================================================= */
 
-function mergeObjects(
-  target,
-  source
-) {
+function syncPageConfiguration() {
 
-  Object.keys(source)
-    .forEach(
-      (key) => {
+  if (
+    !AppState.config.page
+  ) {
 
-        if (
-          source[key] &&
-          typeof source[key] ===
-            "object" &&
-          !Array.isArray(
-            source[key]
-          )
-        ) {
+    AppState.config.page = {};
 
-          if (
-            !target[key] ||
-            typeof target[key] !==
-              "object"
-          ) {
+  }
 
-            target[key] = {};
-          }
 
-          mergeObjects(
-            target[key],
-            source[key]
-          );
+  const page =
+    normalizePageName(
+      AppState.config.currentPage ||
+      AppState.config.page.activePage
+    );
 
-        } else {
 
-          target[key] =
-            cloneValue(
-              source[key]
-            );
-        }
-      }
+  AppState.config.currentPage =
+    page;
+
+
+  AppState.config.page.activePage =
+    page;
+
+
+  if (
+    !Array.isArray(
+      AppState.config.page.availablePages
+    )
+  ) {
+
+    AppState.config.page.availablePages =
+      [
+        "login",
+        "signup",
+        "forgotPassword",
+        "otp"
+      ];
+
+  }
+
+
+  if (
+    !AppState.config.pages
+  ) {
+
+    AppState.config.pages = {};
+
+  }
+
+
+  AppState.config.pages.login =
+    deepMerge(
+      AppState.config.login || {},
+      AppState.config.pages.login || {}
+    );
+
+
+  AppState.config.pages.signup =
+    deepMerge(
+      AppState.config.signup || {},
+      AppState.config.pages.signup || {}
+    );
+
+
+  AppState.config.pages.forgotPassword =
+    deepMerge(
+      AppState.config.forgotPassword || {},
+      AppState.config.pages.forgotPassword || {}
+    );
+
+
+  AppState.config.pages.otp =
+    deepMerge(
+      AppState.config.otp || {},
+      AppState.config.pages.otp || {}
     );
 }
 
 
 /* =========================================================
-   RESET ENTIRE CONFIG
+   RESET CONFIG
 ========================================================= */
 
 function resetConfig() {
@@ -830,11 +1205,12 @@ function resetConfig() {
       DEFAULT_CONFIG
     );
 
-  AppState.history = [];
 
-  AppState.historyIndex = -1;
+  syncPageConfiguration();
+
 
   saveHistory();
+
 
   notifyStateChange(
     "reset",
@@ -845,13 +1221,6 @@ function resetConfig() {
 
 /* =========================================================
    RESET SECTION
-
-   Example:
-
-   resetSection(
-     "background"
-   );
-
 ========================================================= */
 
 function resetSection(
@@ -859,12 +1228,21 @@ function resetSection(
 ) {
 
   if (
-    !DEFAULT_CONFIG[
-      sectionName
-    ]
+    !sectionName
   ) {
     return;
   }
+
+
+  if (
+    !Object.prototype.hasOwnProperty.call(
+      DEFAULT_CONFIG,
+      sectionName
+    )
+  ) {
+    return;
+  }
+
 
   AppState.config[
     sectionName
@@ -875,96 +1253,19 @@ function resetSection(
       ]
     );
 
+
+  syncPageConfiguration();
+
+
   saveHistory();
 
+
   notifyStateChange(
-    sectionName,
-    AppState.config[
-      sectionName
-    ]
-  );
-}
-
-
-/* =========================================================
-   SUBSCRIBE TO STATE CHANGES
-========================================================= */
-
-function subscribe(
-  listener
-) {
-
-  if (
-    typeof listener !==
-    "function"
-  ) {
-    return () => {};
-  }
-
-  AppState.listeners.push(
-    listener
-  );
-
-
-  return () => {
-
-    AppState.listeners =
-      AppState.listeners.filter(
-        (item) =>
-          item !== listener
-      );
-  };
-}
-
-
-/* =========================================================
-   NOTIFY STATE CHANGE
-========================================================= */
-
-function notifyStateChange(
-  path,
-  value
-) {
-
-  AppState.listeners.forEach(
-    (listener) => {
-
-      try {
-
-        listener({
-          path,
-          value:
-            cloneValue(value),
-
-          config:
-            getConfig()
-        });
-
-      } catch (error) {
-
-        console.error(
-          "State listener error:",
-          error
-        );
-      }
+    "reset-section",
+    {
+      section:
+        sectionName
     }
-  );
-
-
-  document.dispatchEvent(
-    new CustomEvent(
-      "auth-builder:state-change",
-      {
-        detail: {
-          path,
-          value:
-            cloneValue(value),
-
-          config:
-            getConfig()
-        }
-      }
-    )
   );
 }
 
@@ -981,6 +1282,25 @@ function saveHistory() {
     );
 
 
+  const currentSnapshot =
+    AppState.history[
+      AppState.historyIndex
+    ];
+
+
+  if (
+    currentSnapshot &&
+    JSON.stringify(
+      currentSnapshot
+    ) ===
+    JSON.stringify(
+      snapshot
+    )
+  ) {
+    return;
+  }
+
+
   if (
     AppState.historyIndex <
     AppState.history.length - 1
@@ -991,6 +1311,7 @@ function saveHistory() {
         0,
         AppState.historyIndex + 1
       );
+
   }
 
 
@@ -1006,10 +1327,11 @@ function saveHistory() {
 
     AppState.history.shift();
 
-  } else {
-
-    AppState.historyIndex++;
   }
+
+
+  AppState.historyIndex =
+    AppState.history.length - 1;
 }
 
 
@@ -1020,12 +1342,14 @@ function saveHistory() {
 function undo() {
 
   if (
-    AppState.historyIndex <= 0
+    !canUndo()
   ) {
     return false;
   }
 
-  AppState.historyIndex--;
+
+  AppState.historyIndex -= 1;
+
 
   AppState.config =
     cloneValue(
@@ -1035,10 +1359,14 @@ function undo() {
     );
 
 
+  syncPageConfiguration();
+
+
   notifyStateChange(
     "undo",
     AppState.config
   );
+
 
   return true;
 }
@@ -1051,13 +1379,14 @@ function undo() {
 function redo() {
 
   if (
-    AppState.historyIndex >=
-    AppState.history.length - 1
+    !canRedo()
   ) {
     return false;
   }
 
-  AppState.historyIndex++;
+
+  AppState.historyIndex += 1;
+
 
   AppState.config =
     cloneValue(
@@ -1067,37 +1396,1046 @@ function redo() {
     );
 
 
+  syncPageConfiguration();
+
+
   notifyStateChange(
     "redo",
     AppState.config
   );
 
+
   return true;
 }
 
 
-/* =========================================================
-   CHECK UNDO
-========================================================= */
-
 function canUndo() {
 
   return (
-    AppState.historyIndex > 0
+    AppState.historyIndex >
+    0
+  );
+}
+
+
+function canRedo() {
+
+  return (
+    AppState.historyIndex >= 0 &&
+    AppState.historyIndex <
+      AppState.history.length - 1
   );
 }
 
 
 /* =========================================================
-   CHECK REDO
+   SUBSCRIPTIONS
 ========================================================= */
 
-function canRedo() {
+function subscribe(
+  callback
+) {
 
-  return (
-    AppState.historyIndex <
-    AppState.history.length - 1
+  if (
+    typeof callback !==
+    "function"
+  ) {
+    return function () {};
+  }
+
+
+  AppState.listeners.push(
+    callback
   );
+
+
+  return function unsubscribe() {
+
+    AppState.listeners =
+      AppState.listeners.filter(
+        (listener) =>
+          listener !== callback
+      );
+
+  };
+}
+
+
+/* =========================================================
+   NOTIFY STATE CHANGE
+========================================================= */
+
+function notifyStateChange(
+  type,
+  detail
+) {
+
+  const config =
+    getConfig();
+
+
+  AppState.listeners.forEach(
+    (listener) => {
+
+      try {
+
+        listener(
+          config,
+          {
+            type,
+            detail
+          }
+        );
+
+      } catch (error) {
+
+        console.error(
+          "State listener error:",
+          error
+        );
+
+      }
+
+    }
+  );
+
+
+  const eventDetail = {
+
+    type,
+
+    detail,
+
+    config,
+
+    liveConfig:
+      AppState.config
+  };
+
+
+  document.dispatchEvent(
+    new CustomEvent(
+      "auth-builder:state-updated",
+      {
+        detail:
+          eventDetail
+      }
+    )
+  );
+
+
+  document.dispatchEvent(
+    new CustomEvent(
+      "auth-builder:config-updated",
+      {
+        detail:
+          eventDetail
+      }
+    )
+  );
+
+
+  document.dispatchEvent(
+    new CustomEvent(
+      "auth-builder:rerender-preview",
+      {
+        detail:
+          eventDetail
+      }
+    )
+  );
+
+
+  notifySpecificEvents(
+    type,
+    detail,
+    eventDetail
+  );
+}
+
+
+/* =========================================================
+   SPECIFIC EVENTS
+========================================================= */
+
+function notifySpecificEvents(
+  type,
+  detail,
+  eventDetail
+) {
+
+  const changedPaths =
+    getChangedPaths(
+      detail
+    );
+
+
+  const checks = [
+
+    {
+      event:
+        "auth-builder:layout-updated",
+
+      paths: [
+        "layout"
+      ]
+    },
+
+    {
+      event:
+        "auth-builder:background-updated",
+
+      paths: [
+        "background"
+      ]
+    },
+
+    {
+      event:
+        "auth-builder:branding-updated",
+
+      paths: [
+        "branding"
+      ]
+    },
+
+    {
+      event:
+        "auth-builder:customization-updated",
+
+      paths: [
+        "colors",
+        "card",
+        "typography",
+        "inputs",
+        "button",
+        "animation",
+        "advanced"
+      ]
+    },
+
+    {
+      event:
+        "auth-builder:page-config-updated",
+
+      paths: [
+        "login",
+        "signup",
+        "forgotPassword",
+        "otp",
+        "pages",
+        "currentPage",
+        "page.activePage"
+      ]
+    }
+  ];
+
+
+  checks.forEach(
+    (check) => {
+
+      const shouldDispatch =
+        changedPaths.some(
+          (changedPath) => {
+
+            return check.paths.some(
+              (watchPath) => {
+
+                return (
+                  changedPath ===
+                    watchPath ||
+
+                  changedPath.startsWith(
+                    `${watchPath}.`
+                  )
+                );
+
+              }
+            );
+
+          }
+        );
+
+
+      if (
+        shouldDispatch
+      ) {
+
+        document.dispatchEvent(
+          new CustomEvent(
+            check.event,
+            {
+              detail:
+                eventDetail
+            }
+          )
+        );
+
+      }
+
+    }
+  );
+
+
+  if (
+    type ===
+    "reset"
+  ) {
+
+    document.dispatchEvent(
+      new CustomEvent(
+        "auth-builder:customization-updated",
+        {
+          detail:
+            eventDetail
+        }
+      )
+    );
+
+  }
+}
+
+
+/* =========================================================
+   GET CHANGED PATHS
+========================================================= */
+
+function getChangedPaths(
+  detail
+) {
+
+  if (
+    !detail
+  ) {
+    return [];
+  }
+
+
+  if (
+    detail.path
+  ) {
+    return [
+      detail.path
+    ];
+  }
+
+
+  if (
+    typeof detail ===
+    "object"
+  ) {
+
+    return Object.keys(
+      detail
+    );
+
+  }
+
+
+  return [];
+}
+
+
+/* =========================================================
+   SET ACTIVE PAGE
+========================================================= */
+
+function setActivePage(
+  pageName
+) {
+
+  const page =
+    normalizePageName(
+      pageName
+    );
+
+
+  setValues(
+    {
+
+      currentPage:
+        page,
+
+      "page.activePage":
+        page
+
+    }
+  );
+
+
+  document.dispatchEvent(
+    new CustomEvent(
+      "auth-builder:page-changed",
+      {
+        detail: {
+          page
+        }
+      }
+    )
+  );
+
+
+  return page;
+}
+
+
+/* =========================================================
+   SET PREVIEW MODE
+========================================================= */
+
+function setPreviewMode(
+  mode
+) {
+
+  const allowedModes = [
+    "desktop",
+    "tablet",
+    "mobile"
+  ];
+
+
+  if (
+    !allowedModes.includes(
+      mode
+    )
+  ) {
+    return;
+  }
+
+
+  setValue(
+    "app.previewMode",
+    mode
+  );
+
+
+  document.dispatchEvent(
+    new CustomEvent(
+      "auth-builder:device-changed",
+      {
+        detail: {
+          device:
+            mode
+        }
+      }
+    )
+  );
+}
+
+
+/* =========================================================
+   SET ACTIVE SECTION
+========================================================= */
+
+function setActiveSection(
+  sectionName
+) {
+
+  setValue(
+    "app.activeSection",
+    sectionName
+  );
+}
+
+
+/* =========================================================
+   BACKGROUND HELPERS
+========================================================= */
+
+function setBackgroundImage(
+  imageSource
+) {
+
+  updateConfig(
+    {
+
+      background: {
+
+        type:
+          "image",
+
+        image:
+          imageSource,
+
+        imageUrl:
+          imageSource,
+
+        uploadedImage:
+          imageSource
+      }
+
+    }
+  );
+
+
+  AppState.config.assets.background =
+    imageSource;
+}
+
+
+function setBackgroundColor(
+  color
+) {
+
+  updateConfig(
+    {
+
+      background: {
+
+        type:
+          "color",
+
+        color,
+
+        backgroundColor:
+          color
+      }
+
+    }
+  );
+}
+
+
+function setBackgroundPosition(
+  position
+) {
+
+  setValue(
+    "background.position",
+    position
+  );
+}
+
+
+function setBackgroundOverlay(
+  color,
+  opacity
+) {
+
+  const safeOpacity =
+    Number(
+      opacity
+    );
+
+
+  const alpha =
+    Number.isNaN(
+      safeOpacity
+    )
+      ? 0.35
+      : safeOpacity > 1
+        ? safeOpacity / 100
+        : safeOpacity;
+
+
+  updateConfig(
+    {
+
+      background: {
+
+        overlayColor:
+          color,
+
+        overlayOpacity:
+          alpha,
+
+        overlay:
+          color
+      }
+
+    }
+  );
+}
+
+
+/* =========================================================
+   BRANDING HELPERS
+========================================================= */
+
+function setLogo(
+  logoSource
+) {
+
+  updateConfig(
+    {
+
+      branding: {
+
+        logo:
+          logoSource,
+
+        logoUrl:
+          logoSource,
+
+        uploadedLogo:
+          logoSource,
+
+        image:
+          logoSource
+      }
+
+    }
+  );
+
+
+  AppState.config.assets.logo =
+    logoSource;
+}
+
+
+function setLogoStyle(
+  style = {}
+) {
+
+  updateConfig(
+    {
+
+      branding:
+        style
+
+    }
+  );
+}
+
+
+function setLogoPosition(
+  position
+) {
+
+  setValue(
+    "branding.logoPosition",
+    position
+  );
+}
+
+
+/* =========================================================
+   COLOR HELPERS
+========================================================= */
+
+function setPrimaryColor(
+  color
+) {
+
+  setValue(
+    "colors.primary",
+    color
+  );
+}
+
+
+function setSecondaryColor(
+  color
+) {
+
+  setValue(
+    "colors.secondary",
+    color
+  );
+}
+
+
+function setTextColor(
+  color
+) {
+
+  setValues(
+    {
+
+      "colors.text":
+        color,
+
+      "colors.textColor":
+        color
+
+    }
+  );
+}
+
+
+/* =========================================================
+   AUTHENTICATION HELPERS
+========================================================= */
+
+function setAuthenticationMethod(
+  method,
+  enabled
+) {
+
+  if (
+    !method
+  ) {
+    return;
+  }
+
+
+  setValue(
+    `login.authenticationMethods.${method}`,
+    Boolean(
+      enabled
+    )
+  );
+
+
+  if (
+    AppState.config.authentication[
+      method
+    ] &&
+    typeof AppState.config.authentication[
+      method
+    ] ===
+      "object"
+  ) {
+
+    setValue(
+      `authentication.${method}.enabled`,
+      Boolean(
+        enabled
+      ),
+      {
+        history: false,
+        notify: false
+      }
+    );
+
+
+    saveHistory();
+
+
+    notifyStateChange(
+      "authentication-update",
+      {
+        path:
+          `authentication.${method}.enabled`,
+
+        value:
+          Boolean(
+            enabled
+          )
+      }
+    );
+
+  }
+}
+
+
+function toggleAuthenticationMethod(
+  method
+) {
+
+  const current =
+    Boolean(
+      getValue(
+        `login.authenticationMethods.${method}`
+      )
+    );
+
+
+  setAuthenticationMethod(
+    method,
+    !current
+  );
+}
+
+
+/* =========================================================
+   OTP HELPERS
+========================================================= */
+
+function setOtpLength(
+  length
+) {
+
+  const validLengths = [
+    4,
+    6,
+    8
+  ];
+
+
+  const safeLength =
+    Number(
+      length
+    );
+
+
+  if (
+    !validLengths.includes(
+      safeLength
+    )
+  ) {
+    return;
+  }
+
+
+  setValues(
+    {
+
+      "otp.length":
+        safeLength,
+
+      "otp.input.length":
+        safeLength,
+
+      "login.otpLength":
+        safeLength,
+
+      "authentication.otp.length":
+        safeLength
+
+    }
+  );
+}
+
+
+function setOtpMethods(
+  methods
+) {
+
+  if (
+    !Array.isArray(
+      methods
+    )
+  ) {
+    return;
+  }
+
+
+  const allowed = [
+    "email",
+    "sms",
+    "whatsapp",
+    "authenticator"
+  ];
+
+
+  const filtered =
+    methods.filter(
+      (method) =>
+        allowed.includes(
+          method
+        )
+    );
+
+
+  setValues(
+    {
+
+      "otp.input.methods":
+        filtered,
+
+      "otp.deliveryMethods":
+        filtered,
+
+      "authentication.otp.deliveryMethods":
+        filtered
+
+    }
+  );
+}
+
+
+/* =========================================================
+   SIGNUP FIELD HELPERS
+========================================================= */
+
+function toggleSignupField(
+  field,
+  enabled
+) {
+
+  const allowedFields = [
+
+    "fullName",
+
+    "username",
+
+    "email",
+
+    "mobile",
+
+    "password",
+
+    "confirmPassword"
+  ];
+
+
+  if (
+    !allowedFields.includes(
+      field
+    )
+  ) {
+    return;
+  }
+
+
+  setValue(
+    `signup.fields.${field}`,
+    Boolean(
+      enabled
+    )
+  );
+}
+
+
+/* =========================================================
+   SOCIAL LOGIN HELPERS
+========================================================= */
+
+function toggleSocialProvider(
+  provider,
+  enabled
+) {
+
+  const allowedProviders = [
+
+    "google",
+
+    "linkedin",
+
+    "github",
+
+    "facebook",
+
+    "apple"
+  ];
+
+
+  if (
+    !allowedProviders.includes(
+      provider
+    )
+  ) {
+    return;
+  }
+
+
+  const value =
+    Boolean(
+      enabled
+    );
+
+
+  setValues(
+    {
+
+      [`social.providers.${provider}`]:
+        value,
+
+      [`authentication.social.${provider}.enabled`]:
+        value
+
+    }
+  );
+}
+
+
+/* =========================================================
+   FILE TO DATA URL
+========================================================= */
+
+function fileToDataURL(
+  file
+) {
+
+  return new Promise(
+    (
+      resolve,
+      reject
+    ) => {
+
+      if (
+        !file
+      ) {
+
+        reject(
+          new Error(
+            "No file selected."
+          )
+        );
+
+        return;
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        () => {
+
+          resolve(
+            reader.result
+          );
+
+        };
+
+
+      reader.onerror =
+        () => {
+
+          reject(
+            new Error(
+              "Unable to process file."
+            )
+          );
+
+        };
+
+
+      reader.readAsDataURL(
+        file
+      );
+
+    }
+  );
+}
+
+
+/* =========================================================
+   UPLOAD BACKGROUND
+========================================================= */
+
+async function uploadBackground(
+  file
+) {
+
+  const imageSource =
+    await fileToDataURL(
+      file
+    );
+
+
+  setBackgroundImage(
+    imageSource
+  );
+
+
+  return imageSource;
+}
+
+
+/* =========================================================
+   UPLOAD LOGO
+========================================================= */
+
+async function uploadLogo(
+  file
+) {
+
+  const imageSource =
+    await fileToDataURL(
+      file
+    );
+
+
+  setLogo(
+    imageSource
+  );
+
+
+  return imageSource;
 }
 
 
@@ -1106,32 +2444,32 @@ function canRedo() {
 ========================================================= */
 
 function importConfig(
-  config
+  config = {}
 ) {
 
   if (
     !config ||
     typeof config !==
-    "object"
+      "object"
   ) {
-
-    throw new Error(
-      "Invalid configuration."
-    );
+    return;
   }
 
 
   AppState.config =
-    cloneValue(
-      DEFAULT_CONFIG
+    deepMerge(
+      cloneValue(
+        DEFAULT_CONFIG
+      ),
+      config
     );
 
-  mergeObjects(
-    AppState.config,
-    config
-  );
+
+  syncPageConfiguration();
+
 
   saveHistory();
+
 
   notifyStateChange(
     "import",
@@ -1163,6 +2501,7 @@ function downloadConfigJSON() {
   const data =
     exportConfig();
 
+
   const blob =
     new Blob(
       [data],
@@ -1172,31 +2511,39 @@ function downloadConfigJSON() {
       }
     );
 
+
   const url =
     URL.createObjectURL(
       blob
     );
+
 
   const link =
     document.createElement(
       "a"
     );
 
+
   link.href =
     url;
 
+
   link.download =
     "auth-config.json";
+
 
   document.body.appendChild(
     link
   );
 
+
   link.click();
+
 
   document.body.removeChild(
     link
   );
+
 
   URL.revokeObjectURL(
     url
@@ -1205,7 +2552,7 @@ function downloadConfigJSON() {
 
 
 /* =========================================================
-   LOAD CONFIG JSON FILE
+   LOAD CONFIG FILE
 ========================================================= */
 
 function loadConfigFile(
@@ -1246,20 +2593,26 @@ function loadConfigFile(
                 reader.result
               );
 
+
             importConfig(
               config
             );
+
 
             resolve(
               config
             );
 
-          } catch (error) {
+          } catch (
+            error
+          ) {
 
             reject(
               error
             );
+
           }
+
         };
 
 
@@ -1271,476 +2624,35 @@ function loadConfigFile(
               "Unable to read configuration file."
             )
           );
+
         };
 
 
       reader.readAsText(
         file
       );
+
     }
   );
 }
 
 
 /* =========================================================
-   SET ACTIVE PAGE
+   INITIALIZE CONFIG
 ========================================================= */
 
-function setActivePage(
-  pageName
-) {
-
-  const pages =
-    AppState.config
-      .page
-      .availablePages;
-
-  if (
-    !pages.includes(
-      pageName
-    )
-  ) {
-    return;
-  }
-
-  setValue(
-    "page.activePage",
-    pageName
-  );
-}
-
-
-/* =========================================================
-   SET PREVIEW MODE
-========================================================= */
-
-function setPreviewMode(
-  mode
-) {
-
-  const allowedModes = [
-    "desktop",
-    "tablet",
-    "mobile"
-  ];
-
-  if (
-    !allowedModes.includes(
-      mode
-    )
-  ) {
-    return;
-  }
-
-  setValue(
-    "app.previewMode",
-    mode
-  );
-}
-
-
-/* =========================================================
-   SET ACTIVE SECTION
-========================================================= */
-
-function setActiveSection(
-  sectionName
-) {
-
-  setValue(
-    "app.activeSection",
-    sectionName
-  );
-}
-
-
-/* =========================================================
-   BACKGROUND HELPERS
-========================================================= */
-
-function setBackgroundImage(
-  imageSource
-) {
-
-  updateConfig({
-    background: {
-      type: "image",
-      image: imageSource
-    }
-  });
-}
-
-
-function setBackgroundColor(
-  color
-) {
-
-  updateConfig({
-    background: {
-      type: "color",
-      color
-    }
-  });
-}
-
-
-function setBackgroundPosition(
-  position
-) {
-
-  setValue(
-    "background.position",
-    position
-  );
-}
-
-
-function setBackgroundOverlay(
-  color,
-  opacity
-) {
-
-  updateConfig({
-    background: {
-      overlayColor: color,
-      overlayOpacity: opacity
-    }
-  });
-}
-
-
-/* =========================================================
-   LOGO HELPERS
-========================================================= */
-
-function setLogo(
-  logoSource
-) {
-
-  setValue(
-    "branding.logo",
-    logoSource
-  );
-}
-
-
-function setLogoStyle(
-  style
-) {
-
-  const allowedStyles = [
-    "circle",
-    "square",
-    "ellipse"
-  ];
-
-  if (
-    !allowedStyles.includes(
-      style
-    )
-  ) {
-    return;
-  }
-
-  setValue(
-    "branding.logoStyle",
-    style
-  );
-}
-
-
-function setLogoPosition(
-  position
-) {
-
-  const allowedPositions = [
-    "left",
-    "center",
-    "right"
-  ];
-
-  if (
-    !allowedPositions.includes(
-      position
-    )
-  ) {
-    return;
-  }
-
-  setValue(
-    "branding.logoPosition",
-    position
-  );
-}
-
-
-/* =========================================================
-   COLOR HELPERS
-========================================================= */
-
-function setPrimaryColor(
-  color
-) {
-
-  setValue(
-    "colors.primary",
-    color
-  );
-}
-
-
-function setSecondaryColor(
-  color
-) {
-
-  setValue(
-    "colors.secondary",
-    color
-  );
-}
-
-
-function setTextColor(
-  color
-) {
-
-  setValue(
-    "colors.text",
-    color
-  );
-}
-
-
-/* =========================================================
-   AUTHENTICATION HELPERS
-========================================================= */
-
-function setAuthenticationMethod(
-  method
-) {
-
-  const allowedMethods = [
-    "password",
-    "otp",
-    "magicLink"
-  ];
-
-  if (
-    !allowedMethods.includes(
-      method
-    )
-  ) {
-    return;
-  }
-
-  setValue(
-    "login.defaultAuthentication",
-    method
-  );
-}
-
-
-function toggleAuthenticationMethod(
-  method,
-  enabled
-) {
-
-  const path =
-    `login.authenticationMethods.${method}`;
-
-  setValue(
-    path,
-    Boolean(enabled)
-  );
-}
-
-
-/* =========================================================
-   SIGNUP FIELD HELPERS
-========================================================= */
-
-function toggleSignupField(
-  field,
-  enabled
-) {
-
-  const allowedFields = [
-    "username",
-    "email",
-    "mobile",
-    "password",
-    "confirmPassword"
-  ];
-
-  if (
-    !allowedFields.includes(
-      field
-    )
-  ) {
-    return;
-  }
-
-  setValue(
-    `signup.fields.${field}`,
-    Boolean(enabled)
-  );
-}
-
-
-/* =========================================================
-   SOCIAL LOGIN HELPERS
-========================================================= */
-
-function toggleSocialProvider(
-  provider,
-  enabled
-) {
-
-  const allowedProviders = [
-    "google",
-    "facebook",
-    "apple",
-    "github"
-  ];
-
-  if (
-    !allowedProviders.includes(
-      provider
-    )
-  ) {
-    return;
-  }
-
-  setValue(
-    `social.providers.${provider}`,
-    Boolean(enabled)
-  );
-}
-
-
-/* =========================================================
-   FILE TO DATA URL
-
-   Used for:
-
-   - Uploaded logo
-   - Uploaded background
-   - User custom assets
-========================================================= */
-
-function fileToDataURL(
-  file
-) {
-
-  return new Promise(
-    (
-      resolve,
-      reject
-    ) => {
-
-      if (
-        !file
-      ) {
-
-        reject(
-          new Error(
-            "No file selected."
-          )
-        );
-
-        return;
-      }
-
-
-      const reader =
-        new FileReader();
-
-
-      reader.onload =
-        () => {
-
-          resolve(
-            reader.result
-          );
-        };
-
-
-      reader.onerror =
-        () => {
-
-          reject(
-            new Error(
-              "Unable to process image."
-            )
-          );
-        };
-
-
-      reader.readAsDataURL(
-        file
-      );
-    }
-  );
-}
-
-
-/* =========================================================
-   IMAGE UPLOAD HELPERS
-========================================================= */
-
-async function uploadBackground(
-  file
-) {
-
-  const imageSource =
-    await fileToDataURL(
-      file
-    );
-
-  updateConfig({
-    background: {
-      type: "image",
-      image: imageSource
-    }
-  });
-
-  return imageSource;
-}
-
-
-async function uploadLogo(
-  file
-) {
-
-  const imageSource =
-    await fileToDataURL(
-      file
-    );
-
-  updateConfig({
-    branding: {
-      logo: imageSource
-    }
-  });
-
-  return imageSource;
-}
-
-
-/* =========================================================
-   INITIAL HISTORY SNAPSHOT
-========================================================= */
+syncPageConfiguration();
 
 saveHistory();
 
 
 /* =========================================================
-   GLOBAL API
+   PRIMARY GLOBAL API
 ========================================================= */
 
 window.AuthState = {
 
-  /* State */
+  /* Config */
 
   getConfig,
 
@@ -1749,6 +2661,8 @@ window.AuthState = {
   getValue,
 
   setValue,
+
+  setValues,
 
   updateConfig,
 
@@ -1833,6 +2747,13 @@ window.AuthState = {
   toggleAuthenticationMethod,
 
 
+  /* OTP */
+
+  setOtpLength,
+
+  setOtpMethods,
+
+
   /* Signup */
 
   toggleSignupField,
@@ -1850,10 +2771,66 @@ window.AuthState = {
 
 
 /* =========================================================
-   DEFAULT CONFIG EXPORT
+   COMPATIBILITY API
+
+   preview.js expects window.state
+========================================================= */
+
+window.state = {
+
+  getConfig,
+
+  getLiveConfig,
+
+  getValue,
+
+  setValue,
+
+  setValues,
+
+  update: updateConfig,
+
+  updateConfig,
+
+  config:
+    AppState.config
+};
+
+
+/* =========================================================
+   CONFIG COMPATIBILITY
+========================================================= */
+
+window.getAuthConfig =
+  getConfig;
+
+
+window.updateAuthConfig =
+  updateConfig;
+
+
+/* =========================================================
+   EXPOSE DEFAULT CONFIG
 ========================================================= */
 
 window.DEFAULT_AUTH_CONFIG =
   cloneValue(
     DEFAULT_CONFIG
   );
+
+
+/* =========================================================
+   STATE READY EVENT
+========================================================= */
+
+document.dispatchEvent(
+  new CustomEvent(
+    "auth-builder:state-ready",
+    {
+      detail: {
+        config:
+          getConfig()
+      }
+    }
+  )
+);

@@ -2,21 +2,21 @@
    AUTH PAGE BUILDER - UTILITIES
    File: js/utils.js
 
-   Contains:
-   - DOM helpers
-   - Safe HTML helpers
-   - Deep object utilities
-   - File and image upload helpers
-   - Data URL conversion
+   Shared utilities for:
+   - DOM operations
+   - Safe HTML
+   - Deep object operations
+   - Config/state access
+   - File and image uploads
+   - Asset handling
    - Download helpers
-   - Debounce and throttle
+   - Validation
    - Responsive helpers
-   - Form validation
-   - Unique IDs
+   - OTP helpers
+   - General utilities
 ========================================================= */
 
 window.AuthPageBuilder = window.AuthPageBuilder || {};
-
 window.AuthPageBuilder.Utils = {};
 
 
@@ -25,11 +25,19 @@ window.AuthPageBuilder.Utils = {};
 ========================================================= */
 
 function $(selector, parent = document) {
+  if (!selector || !parent) {
+    return null;
+  }
+
   return parent.querySelector(selector);
 }
 
 
 function $$(selector, parent = document) {
+  if (!selector || !parent) {
+    return [];
+  }
+
   return Array.from(
     parent.querySelectorAll(selector)
   );
@@ -37,38 +45,38 @@ function $$(selector, parent = document) {
 
 
 function createElement(tagName, options = {}) {
-  const element =
-    document.createElement(tagName);
+  const element = document.createElement(tagName);
 
   if (options.className) {
-    element.className =
-      options.className;
+    element.className = options.className;
   }
 
   if (options.id) {
-    element.id =
-      options.id;
+    element.id = options.id;
   }
 
   if (options.text !== undefined) {
-    element.textContent =
-      options.text;
+    element.textContent = options.text;
   }
 
   if (options.html !== undefined) {
-    element.innerHTML =
-      options.html;
+    element.innerHTML = options.html;
   }
 
   if (options.attributes) {
-    Object.entries(
-      options.attributes
-    ).forEach(([key, value]) => {
-      element.setAttribute(
-        key,
-        value
-      );
-    });
+    Object.entries(options.attributes).forEach(
+      ([key, value]) => {
+        if (
+          value !== undefined &&
+          value !== null
+        ) {
+          element.setAttribute(
+            key,
+            value
+          );
+        }
+      }
+    );
   }
 
   return element;
@@ -76,7 +84,7 @@ function createElement(tagName, options = {}) {
 
 
 /* =========================================================
-   SHOW / HIDE ELEMENTS
+   SHOW / HIDE
 ========================================================= */
 
 function showElement(element, display = "") {
@@ -84,8 +92,7 @@ function showElement(element, display = "") {
     return;
   }
 
-  element.style.display =
-    display;
+  element.style.display = display;
 }
 
 
@@ -94,8 +101,7 @@ function hideElement(element) {
     return;
   }
 
-  element.style.display =
-    "none";
+  element.style.display = "none";
 }
 
 
@@ -104,6 +110,10 @@ function toggleElement(
   visible,
   display = ""
 ) {
+  if (!element) {
+    return;
+  }
+
   if (visible) {
     showElement(element, display);
   } else {
@@ -116,10 +126,7 @@ function toggleElement(
    CLASS HELPERS
 ========================================================= */
 
-function addClass(
-  element,
-  className
-) {
+function addClass(element, className) {
   if (!element || !className) {
     return;
   }
@@ -128,10 +135,7 @@ function addClass(
 }
 
 
-function removeClass(
-  element,
-  className
-) {
+function removeClass(element, className) {
   if (!element || !className) {
     return;
   }
@@ -162,8 +166,19 @@ function toggleClass(
 }
 
 
+function hasClass(element, className) {
+  if (!element || !className) {
+    return false;
+  }
+
+  return element.classList.contains(
+    className
+  );
+}
+
+
 /* =========================================================
-   SAFE HTML ESCAPING
+   SAFE HTML
 ========================================================= */
 
 function escapeHtml(value) {
@@ -174,18 +189,108 @@ function escapeHtml(value) {
     return "";
   }
 
-  const div =
-    document.createElement("div");
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-  div.textContent =
+
+function unescapeHtml(value) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "";
+  }
+
+  const textarea =
+    document.createElement("textarea");
+
+  textarea.innerHTML =
     String(value);
 
-  return div.innerHTML;
+  return textarea.value;
 }
 
 
 /* =========================================================
-   DEEP CLONE
+   STRING HELPERS
+========================================================= */
+
+function isEmpty(value) {
+  return (
+    value === null ||
+    value === undefined ||
+    String(value).trim() === ""
+  );
+}
+
+
+function capitalize(value) {
+  const text =
+    String(value || "");
+
+  if (!text) {
+    return "";
+  }
+
+  return (
+    text.charAt(0).toUpperCase() +
+    text.slice(1)
+  );
+}
+
+
+function toTitleCase(value) {
+  return String(value || "")
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map(capitalize)
+    .join(" ");
+}
+
+
+function sanitizeFileName(
+  filename,
+  fallback = "file"
+) {
+  const value =
+    String(filename || fallback)
+      .trim()
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  return value || fallback;
+}
+
+
+function getFileExtension(filename) {
+  const name =
+    String(filename || "");
+
+  const index =
+    name.lastIndexOf(".");
+
+  if (
+    index === -1 ||
+    index === name.length - 1
+  ) {
+    return "";
+  }
+
+  return name
+    .slice(index + 1)
+    .toLowerCase();
+}
+
+
+/* =========================================================
+   DEEP OBJECT HELPERS
 ========================================================= */
 
 function deepClone(value) {
@@ -196,15 +301,21 @@ function deepClone(value) {
     return value;
   }
 
+  if (
+    typeof structuredClone === "function"
+  ) {
+    try {
+      return structuredClone(value);
+    } catch (error) {
+      /* fallback below */
+    }
+  }
+
   return JSON.parse(
     JSON.stringify(value)
   );
 }
 
-
-/* =========================================================
-   DEEP GET
-========================================================= */
 
 function deepGet(
   object,
@@ -221,10 +332,11 @@ function deepGet(
   const keys =
     Array.isArray(path)
       ? path
-      : String(path).split(".");
+      : String(path)
+          .split(".")
+          .filter(Boolean);
 
-  let current =
-    object;
+  let current = object;
 
   for (const key of keys) {
     if (
@@ -242,13 +354,13 @@ function deepGet(
       current[key];
   }
 
-  return current;
+  return (
+    current === undefined
+      ? fallback
+      : current
+  );
 }
 
-
-/* =========================================================
-   DEEP SET
-========================================================= */
 
 function deepSet(
   object,
@@ -265,27 +377,26 @@ function deepSet(
   const keys =
     Array.isArray(path)
       ? path
-      : String(path).split(".");
+      : String(path)
+          .split(".")
+          .filter(Boolean);
 
-  let current =
-    object;
+  let current = object;
 
   keys.forEach(
     (key, index) => {
-
       const isLast =
         index === keys.length - 1;
 
       if (isLast) {
-        current[key] =
-          value;
-
+        current[key] = value;
         return;
       }
 
       if (
         !current[key] ||
-        typeof current[key] !== "object"
+        typeof current[key] !== "object" ||
+        Array.isArray(current[key])
       ) {
         current[key] = {};
       }
@@ -299,8 +410,204 @@ function deepSet(
 }
 
 
+function deepMerge(
+  target,
+  source
+) {
+  const output =
+    deepClone(target || {});
+
+  if (
+    !source ||
+    typeof source !== "object"
+  ) {
+    return output;
+  }
+
+  Object.entries(source).forEach(
+    ([key, value]) => {
+      if (
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
+        output[key] =
+          deepMerge(
+            output[key] || {},
+            value
+          );
+      } else {
+        output[key] =
+          deepClone(value);
+      }
+    }
+  );
+
+  return output;
+}
+
+
 /* =========================================================
-   FILE TYPE VALIDATION
+   CONFIG HELPERS
+========================================================= */
+
+function getAppState() {
+  if (
+    window.AuthState &&
+    typeof window.AuthState.getState ===
+      "function"
+  ) {
+    return window.AuthState.getState();
+  }
+
+  if (window.state) {
+    return window.state;
+  }
+
+  return {};
+}
+
+
+function getConfig() {
+  if (
+    window.AuthState &&
+    typeof window.AuthState.getConfig ===
+      "function"
+  ) {
+    return window.AuthState.getConfig();
+  }
+
+  const state =
+    getAppState();
+
+  if (state.config) {
+    return state.config;
+  }
+
+  return state;
+}
+
+
+function getCurrentPage(
+  fallback = "login"
+) {
+  const config =
+    getConfig();
+
+  return (
+    config.currentPage ||
+    deepGet(
+      config,
+      "page.activePage",
+      fallback
+    )
+  );
+}
+
+
+function normalizePageName(pageName) {
+  const value =
+    String(pageName || "login")
+      .toLowerCase()
+      .replace(/[\s_-]/g, "");
+
+  const aliases = {
+    login: "login",
+    signin: "login",
+
+    signup: "signup",
+    register: "signup",
+
+    forgot: "forgotPassword",
+    forgotpassword:
+      "forgotPassword",
+
+    otp: "otp",
+    verification: "otp",
+    verify: "otp"
+  };
+
+  return (
+    aliases[value] ||
+    "login"
+  );
+}
+
+
+function getPageConfig(
+  pageName,
+  config = getConfig()
+) {
+  const page =
+    normalizePageName(pageName);
+
+  return {
+    ...(config[page] || {}),
+    ...deepGet(
+      config,
+      `pages.${page}`,
+      {}
+    )
+  };
+}
+
+
+/* =========================================================
+   STATE UPDATE HELPERS
+========================================================= */
+
+function updateConfig(
+  path,
+  value,
+  options = {}
+) {
+  if (
+    window.AuthState &&
+    typeof window.AuthState.updateConfig ===
+      "function"
+  ) {
+    return window.AuthState.updateConfig(
+      path,
+      value,
+      options
+    );
+  }
+
+  const config =
+    getConfig();
+
+  deepSet(
+    config,
+    path,
+    value
+  );
+
+  return config;
+}
+
+
+function triggerPreviewUpdate() {
+  if (
+    window.AuthPreview &&
+    typeof window.AuthPreview.render ===
+      "function"
+  ) {
+    window.AuthPreview.render();
+    return;
+  }
+
+  if (
+    window.renderPreview &&
+    typeof window.renderPreview ===
+      "function"
+  ) {
+    window.renderPreview();
+  }
+}
+
+
+/* =========================================================
+   FILE HELPERS
 ========================================================= */
 
 function isImageFile(file) {
@@ -336,7 +643,7 @@ function validateImageFile(
   if (!file) {
     return {
       valid: false,
-      message: "No file selected."
+      message: "No image selected."
     };
   }
 
@@ -350,7 +657,9 @@ function validateImageFile(
     };
   }
 
-  if (file.size > maxSize) {
+  if (
+    file.size > maxSize
+  ) {
     return {
       valid: false,
       message:
@@ -365,26 +674,15 @@ function validateImageFile(
 }
 
 
-/* =========================================================
-   FILE TO DATA URL
-
-   Used for:
-   - Uploaded background
-   - Uploaded logo
-   - ZIP export metadata
-========================================================= */
-
 function fileToDataURL(file) {
   return new Promise(
     (resolve, reject) => {
-
       if (!file) {
         reject(
           new Error(
             "No file was provided."
           )
         );
-
         return;
       }
 
@@ -409,21 +707,15 @@ function fileToDataURL(file) {
 }
 
 
-/* =========================================================
-   FILE TO TEXT
-========================================================= */
-
 function fileToText(file) {
   return new Promise(
     (resolve, reject) => {
-
       if (!file) {
         reject(
           new Error(
             "No file was provided."
           )
         );
-
         return;
       }
 
@@ -449,65 +741,133 @@ function fileToText(file) {
 
 
 /* =========================================================
-   DATA URL TO BLOB
+   DATA URL HELPERS
 ========================================================= */
 
-function dataURLToBlob(dataURL) {
-  if (
-    !dataURL ||
-    !String(dataURL).startsWith("data:")
-  ) {
-    return null;
-  }
-
-  const parts =
-    dataURL.split(",");
-
-  const header =
-    parts[0];
-
-  const base64 =
-    parts[1];
-
-  const mimeMatch =
-    header.match(
-      /data:(.*?);base64/
-    );
-
-  const mimeType =
-    mimeMatch
-      ? mimeMatch[1]
-      : "application/octet-stream";
-
-  const binary =
-    atob(base64);
-
-  const length =
-    binary.length;
-
-  const bytes =
-    new Uint8Array(length);
-
-  for (
-    let index = 0;
-    index < length;
-    index++
-  ) {
-    bytes[index] =
-      binary.charCodeAt(index);
-  }
-
-  return new Blob(
-    [bytes],
-    {
-      type: mimeType
-    }
+function isDataURL(value) {
+  return (
+    typeof value === "string" &&
+    value.startsWith("data:")
   );
 }
 
 
+function getDataURLMimeType(dataURL) {
+  if (!isDataURL(dataURL)) {
+    return "";
+  }
+
+  const match =
+    String(dataURL).match(
+      /^data:([^;,]+)/
+    );
+
+  return (
+    match
+      ? match[1]
+      : ""
+  );
+}
+
+
+function getMimeExtension(mimeType) {
+  const map = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/svg+xml": "svg"
+  };
+
+  return (
+    map[mimeType] ||
+    ""
+  );
+}
+
+
+function dataURLToBlob(dataURL) {
+  if (!isDataURL(dataURL)) {
+    return null;
+  }
+
+  try {
+    const parts =
+      String(dataURL).split(",");
+
+    if (parts.length < 2) {
+      return null;
+    }
+
+    const header =
+      parts.shift();
+
+    const data =
+      parts.join(",");
+
+    const mimeMatch =
+      header.match(
+        /^data:(.*?)(;base64)?$/
+      );
+
+    const mimeType =
+      mimeMatch &&
+      mimeMatch[1]
+        ? mimeMatch[1]
+        : "application/octet-stream";
+
+    const isBase64 =
+      header.includes(";base64");
+
+    if (!isBase64) {
+      return new Blob(
+        [
+          decodeURIComponent(data)
+        ],
+        {
+          type: mimeType
+        }
+      );
+    }
+
+    const binary =
+      atob(data);
+
+    const bytes =
+      new Uint8Array(
+        binary.length
+      );
+
+    for (
+      let index = 0;
+      index < binary.length;
+      index += 1
+    ) {
+      bytes[index] =
+        binary.charCodeAt(index);
+    }
+
+    return new Blob(
+      [bytes],
+      {
+        type: mimeType
+      }
+    );
+
+  } catch (error) {
+    console.error(
+      "Unable to convert data URL to blob:",
+      error
+    );
+
+    return null;
+  }
+}
+
+
 /* =========================================================
-   IMAGE DIMENSIONS
+   IMAGE HELPERS
 ========================================================= */
 
 function getImageDimensions(
@@ -515,14 +875,24 @@ function getImageDimensions(
 ) {
   return new Promise(
     (resolve, reject) => {
+      if (!imageSource) {
+        reject(
+          new Error(
+            "Image source is missing."
+          )
+        );
+        return;
+      }
 
       const image =
         new Image();
 
       image.onload = () => {
         resolve({
-          width: image.width,
-          height: image.height
+          width: image.naturalWidth ||
+            image.width,
+          height: image.naturalHeight ||
+            image.height
         });
       };
 
@@ -541,58 +911,115 @@ function getImageDimensions(
 }
 
 
-/* =========================================================
-   CREATE IMAGE PREVIEW
-========================================================= */
-
-function createImagePreview(
+async function createImagePreview(
   file
 ) {
-  return new Promise(
-    async (
-      resolve,
-      reject
-    ) => {
+  const validation =
+    validateImageFile(file);
+
+  if (!validation.valid) {
+    throw new Error(
+      validation.message
+    );
+  }
+
+  const dataURL =
+    await fileToDataURL(file);
+
+  let dimensions = {
+    width: 0,
+    height: 0
+  };
+
+  try {
+    dimensions =
+      await getImageDimensions(
+        dataURL
+      );
+  } catch (error) {
+    console.warn(
+      "Image dimensions unavailable:",
+      error
+    );
+  }
+
+  return {
+    dataURL,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    width: dimensions.width,
+    height: dimensions.height,
+    uploadedAt:
+      new Date().toISOString()
+  };
+}
+
+
+/* =========================================================
+   IMAGE UPLOAD
+========================================================= */
+
+function handleImageUpload(
+  input,
+  callback,
+  options = {}
+) {
+  if (!input) {
+    return;
+  }
+
+  input.addEventListener(
+    "change",
+    async (event) => {
+      const file =
+        event.target.files &&
+        event.target.files[0];
+
+      if (!file) {
+        return;
+      }
 
       try {
-
-        const validation =
-          validateImageFile(file);
-
-        if (!validation.valid) {
-          reject(
-            new Error(
-              validation.message
-            )
+        const result =
+          await createImagePreview(
+            file
           );
 
-          return;
+        if (
+          typeof callback ===
+          "function"
+        ) {
+          callback(
+            result,
+            file
+          );
         }
 
-        const dataURL =
-          await fileToDataURL(file);
-
-        const dimensions =
-          await getImageDimensions(
-            dataURL
-          );
-
-        resolve({
-          dataURL,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          width:
-            dimensions.width,
-          height:
-            dimensions.height
-        });
-
       } catch (error) {
-        reject(error);
+        console.error(
+          "Image upload failed:",
+          error
+        );
+
+        if (
+          typeof options.onError ===
+          "function"
+        ) {
+          options.onError(error);
+        }
       }
     }
   );
+}
+
+
+function resetFileInput(input) {
+  if (!input) {
+    return;
+  }
+
+  input.value = "";
 }
 
 
@@ -601,7 +1028,10 @@ function createImagePreview(
 ========================================================= */
 
 function formatFileSize(bytes) {
-  if (!bytes) {
+  const value =
+    Number(bytes || 0);
+
+  if (!value) {
     return "0 Bytes";
   }
 
@@ -613,20 +1043,26 @@ function formatFileSize(bytes) {
   ];
 
   const index =
-    Math.floor(
-      Math.log(bytes) /
-      Math.log(1024)
+    Math.min(
+      Math.floor(
+        Math.log(value) /
+        Math.log(1024)
+      ),
+      units.length - 1
+    );
+
+  const size =
+    value /
+    Math.pow(
+      1024,
+      index
     );
 
   return (
-    (
-      bytes /
-      Math.pow(
-        1024,
-        index
-      )
-    ).toFixed(
-      index === 0 ? 0 : 2
+    size.toFixed(
+      index === 0
+        ? 0
+        : 2
     ) +
     " " +
     units[index]
@@ -635,8 +1071,46 @@ function formatFileSize(bytes) {
 
 
 /* =========================================================
-   DOWNLOAD TEXT FILE
+   DOWNLOAD HELPERS
 ========================================================= */
+
+function downloadBlob(
+  filename,
+  blob
+) {
+  if (!blob) {
+    return false;
+  }
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  link.href = url;
+  link.download =
+    sanitizeFileName(
+      filename
+    );
+
+  link.style.display = "none";
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  setTimeout(
+    () => {
+      URL.revokeObjectURL(url);
+      link.remove();
+    },
+    1000
+  );
+
+  return true;
+}
+
 
 function downloadTextFile(
   filename,
@@ -658,10 +1132,6 @@ function downloadTextFile(
 }
 
 
-/* =========================================================
-   DOWNLOAD JSON FILE
-========================================================= */
-
 function downloadJSON(
   filename,
   data
@@ -682,56 +1152,146 @@ function downloadJSON(
 
 
 /* =========================================================
-   DOWNLOAD BLOB
+   ASSET HELPERS
 
-   Browser download behaviour:
-   The file will appear in the user's normal Downloads folder,
-   exactly like a browser file download.
+   Used by download.js to collect:
+   - uploaded logo
+   - uploaded background
+   - uploaded images
+   - default selected images
 ========================================================= */
 
-function downloadBlob(
-  filename,
-  blob
+function getAssetFromValue(
+  value,
+  type = "asset",
+  name = ""
 ) {
-  if (!blob) {
-    return false;
+  if (!value) {
+    return null;
   }
 
-  const url =
-    URL.createObjectURL(blob);
+  if (
+    typeof value === "string"
+  ) {
+    return {
+      type,
+      name:
+        name ||
+        type,
+      source: value,
+      isDataURL:
+        isDataURL(value)
+    };
+  }
 
-  const link =
-    document.createElement("a");
+  if (
+    typeof value === "object"
+  ) {
+    const source =
+      value.dataURL ||
+      value.url ||
+      value.src ||
+      value.path ||
+      "";
 
-  link.href =
-    url;
+    if (!source) {
+      return null;
+    }
 
-  link.download =
-    filename;
+    return {
+      type,
+      name:
+        value.name ||
+        name ||
+        type,
+      source,
+      mimeType:
+        value.type ||
+        getDataURLMimeType(source),
+      isDataURL:
+        isDataURL(source),
+      metadata: value
+    };
+  }
 
-  link.style.display =
-    "none";
+  return null;
+}
 
-  document.body.appendChild(
-    link
-  );
 
-  link.click();
+function collectAssetsFromConfig(
+  config = getConfig()
+) {
+  const assets = [];
 
-  setTimeout(
-    () => {
-
-      URL.revokeObjectURL(
-        url
-      );
-
-      link.remove();
-
+  const possibleAssets = [
+    {
+      path:
+        "branding.uploadedLogo",
+      type: "logo",
+      name: "logo"
     },
-    1000
+    {
+      path:
+        "branding.logo",
+      type: "logo",
+      name: "logo"
+    },
+    {
+      path:
+        "branding.logoUrl",
+      type: "logo",
+      name: "logo"
+    },
+    {
+      path:
+        "background.uploadedImage",
+      type: "background",
+      name: "background"
+    },
+    {
+      path:
+        "background.image",
+      type: "background",
+      name: "background"
+    },
+    {
+      path:
+        "background.imageUrl",
+      type: "background",
+      name: "background"
+    }
+  ];
+
+  possibleAssets.forEach(
+    (item) => {
+      const value =
+        deepGet(
+          config,
+          item.path,
+          null
+        );
+
+      const asset =
+        getAssetFromValue(
+          value,
+          item.type,
+          item.name
+        );
+
+      if (
+        asset &&
+        !assets.some(
+          (existing) =>
+            existing.source ===
+            asset.source
+        )
+      ) {
+        assets.push(asset);
+      }
+    }
   );
 
-  return true;
+  return assets;
 }
 
 
@@ -746,7 +1306,6 @@ function debounce(
   let timer = null;
 
   return function (...args) {
-
     clearTimeout(timer);
 
     timer =
@@ -772,11 +1331,9 @@ function throttle(
   delay = 200
 ) {
   let lastCall = 0;
-
   let timeout = null;
 
   return function (...args) {
-
     const now =
       Date.now();
 
@@ -788,28 +1345,25 @@ function throttle(
       );
 
     if (remaining <= 0) {
-
       if (timeout) {
         clearTimeout(timeout);
-
-        timeout =
-          null;
+        timeout = null;
       }
 
-      lastCall =
-        now;
+      lastCall = now;
 
       callback.apply(
         this,
         args
       );
 
-    } else if (!timeout) {
+      return;
+    }
 
+    if (!timeout) {
       timeout =
         setTimeout(
           () => {
-
             lastCall =
               Date.now();
 
@@ -820,7 +1374,6 @@ function throttle(
               this,
               args
             );
-
           },
           remaining
         );
@@ -837,7 +1390,7 @@ function generateId(
   prefix = "id"
 ) {
   return (
-    prefix +
+    sanitizeFileName(prefix) +
     "-" +
     Date.now().toString(36) +
     "-" +
@@ -849,7 +1402,7 @@ function generateId(
 
 
 /* =========================================================
-   DEVICE HELPERS
+   RESPONSIVE HELPERS
 ========================================================= */
 
 function isMobile() {
@@ -874,10 +1427,6 @@ function isDesktop() {
 }
 
 
-/* =========================================================
-   GET VIEWPORT SIZE
-========================================================= */
-
 function getViewportSize() {
   return {
     width:
@@ -889,9 +1438,41 @@ function getViewportSize() {
 }
 
 
+function getPreviewDevice(
+  value
+) {
+  const device =
+    String(value || "")
+      .toLowerCase()
+      .trim();
+
+  if (
+    device === "mobile" ||
+    device === "phone"
+  ) {
+    return "mobile";
+  }
+
+  if (
+    device === "tablet"
+  ) {
+    return "tablet";
+  }
+
+  return "desktop";
+}
+
+
 /* =========================================================
    COLOR HELPERS
 ========================================================= */
+
+function isValidHexColor(color) {
+  return /^#([A-Fa-f0-9]{3}){1,2}$/.test(
+    String(color || "")
+  );
+}
+
 
 function hexToRgba(
   hex,
@@ -902,10 +1483,9 @@ function hexToRgba(
   }
 
   let normalized =
-    String(hex).replace(
-      "#",
-      ""
-    );
+    String(hex)
+      .replace("#", "")
+      .trim();
 
   if (
     normalized.length === 3
@@ -949,18 +1529,7 @@ function hexToRgba(
 
 
 /* =========================================================
-   HEX COLOR VALIDATION
-========================================================= */
-
-function isValidHexColor(color) {
-  return /^#([A-Fa-f0-9]{3}){1,2}$/.test(
-    String(color)
-  );
-}
-
-
-/* =========================================================
-   CLAMP NUMBER
+   NUMBER HELPERS
 ========================================================= */
 
 function clamp(
@@ -971,7 +1540,9 @@ function clamp(
   const number =
     Number(value);
 
-  if (Number.isNaN(number)) {
+  if (
+    Number.isNaN(number)
+  ) {
     return minimum;
   }
 
@@ -986,17 +1557,8 @@ function clamp(
 
 
 /* =========================================================
-   REQUIRED FIELD VALIDATION
+   FORM VALIDATION
 ========================================================= */
-
-function isEmpty(value) {
-  return (
-    value === null ||
-    value === undefined ||
-    String(value).trim() === ""
-  );
-}
-
 
 function validateRequired(
   value,
@@ -1016,13 +1578,10 @@ function validateRequired(
 }
 
 
-/* =========================================================
-   EMAIL VALIDATION
-========================================================= */
-
 function validateEmail(email) {
   const value =
-    String(email || "").trim();
+    String(email || "")
+      .trim();
 
   const pattern =
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1041,10 +1600,6 @@ function validateEmail(email) {
   };
 }
 
-
-/* =========================================================
-   MOBILE NUMBER VALIDATION
-========================================================= */
 
 function validateMobile(
   mobile
@@ -1072,19 +1627,21 @@ function validateMobile(
 }
 
 
-/* =========================================================
-   PASSWORD VALIDATION
-========================================================= */
-
 function validatePassword(
   password,
   options = {}
 ) {
   const minimumLength =
-    options.minimumLength || 8;
+    Number(
+      options.minimumLength ||
+      8
+    );
+
+  const value =
+    String(password || "");
 
   if (
-    String(password || "").length <
+    value.length <
     minimumLength
   ) {
     return {
@@ -1101,15 +1658,13 @@ function validatePassword(
 }
 
 
-/* =========================================================
-   PASSWORD CONFIRMATION
-========================================================= */
-
 function validatePasswordMatch(
   password,
   confirmPassword
 ) {
-  if (password !== confirmPassword) {
+  if (
+    password !== confirmPassword
+  ) {
     return {
       valid: false,
       message:
@@ -1124,10 +1679,6 @@ function validatePasswordMatch(
 }
 
 
-/* =========================================================
-   VALIDATE OTP
-========================================================= */
-
 function validateOtp(
   otp,
   requiredLength = 6
@@ -1136,14 +1687,28 @@ function validateOtp(
     String(otp || "")
       .replace(/\D/g, "");
 
+  const length =
+    Number(requiredLength);
+
   if (
-    value.length !==
-    Number(requiredLength)
+    ![4, 6, 8].includes(
+      length
+    )
   ) {
     return {
       valid: false,
       message:
-        `Please enter the ${requiredLength}-digit key.`
+        "OTP length must be 4, 6, or 8 digits."
+    };
+  }
+
+  if (
+    value.length !== length
+  ) {
+    return {
+      valid: false,
+      message:
+        `Please enter the ${length}-digit OTP.`
     };
   }
 
@@ -1154,18 +1719,39 @@ function validateOtp(
 }
 
 
+function getOtpValue(
+  inputs
+) {
+  if (!inputs) {
+    return "";
+  }
+
+  const fields =
+    Array.isArray(inputs)
+      ? inputs
+      : Array.from(inputs);
+
+  return fields
+    .map(
+      (input) =>
+        String(
+          input.value || ""
+        ).replace(/\D/g, "")
+    )
+    .join("");
+}
+
+
 /* =========================================================
-   COPY TEXT
+   CLIPBOARD
 ========================================================= */
 
 async function copyToClipboard(text) {
   try {
-
     if (
       navigator.clipboard &&
       window.isSecureContext
     ) {
-
       await navigator.clipboard.writeText(
         text
       );
@@ -1179,7 +1765,7 @@ async function copyToClipboard(text) {
       );
 
     textArea.value =
-      text;
+      String(text || "");
 
     textArea.style.position =
       "fixed";
@@ -1203,7 +1789,6 @@ async function copyToClipboard(text) {
     return copied;
 
   } catch (error) {
-
     console.error(
       "Clipboard copy failed:",
       error
@@ -1215,7 +1800,7 @@ async function copyToClipboard(text) {
 
 
 /* =========================================================
-   SCROLL HELPERS
+   SCROLL
 ========================================================= */
 
 function scrollToElement(
@@ -1228,19 +1813,22 @@ function scrollToElement(
 
   element.scrollIntoView({
     behavior:
-      options.behavior || "smooth",
+      options.behavior ||
+      "smooth",
 
     block:
-      options.block || "center",
+      options.block ||
+      "center",
 
     inline:
-      options.inline || "nearest"
+      options.inline ||
+      "nearest"
   });
 }
 
 
 /* =========================================================
-   EMIT CUSTOM EVENT
+   CUSTOM EVENTS
 ========================================================= */
 
 function emitEvent(
@@ -1257,10 +1845,6 @@ function emitEvent(
   );
 }
 
-
-/* =========================================================
-   ADD EVENT LISTENER SAFELY
-========================================================= */
 
 function on(
   element,
@@ -1284,191 +1868,199 @@ function on(
 }
 
 
-/* =========================================================
-   IMAGE UPLOAD HANDLER
-
-   Usage:
-
-   handleImageUpload(inputElement, async (result) => {
-     updateConfig(
-       "background.uploadedImage",
-       result.dataURL
-     );
-   });
-========================================================= */
-
-function handleImageUpload(
-  input,
-  callback,
-  options = {}
+function once(
+  element,
+  eventName,
+  handler,
+  options
 ) {
-  if (!input) {
+  if (
+    !element ||
+    !eventName ||
+    !handler
+  ) {
     return;
   }
 
-  input.addEventListener(
-    "change",
-    async (event) => {
-
-      const file =
-        event.target.files?.[0];
-
-      if (!file) {
-        return;
-      }
-
-      try {
-
-        const result =
-          await createImagePreview(
-            file
-          );
-
-        if (
-          typeof callback ===
-          "function"
-        ) {
-          callback(
-            result,
-            file
-          );
-        }
-
-      } catch (error) {
-
-        console.error(
-          "Image upload failed:",
-          error
-        );
-
-        if (
-          typeof options.onError ===
-          "function"
-        ) {
-          options.onError(
-            error
-          );
-        }
-      }
+  element.addEventListener(
+    eventName,
+    handler,
+    {
+      ...options,
+      once: true
     }
   );
 }
 
 
 /* =========================================================
-   RESET FILE INPUT
-========================================================= */
-
-function resetFileInput(input) {
-  if (!input) {
-    return;
-  }
-
-  input.value =
-    "";
-}
-
-
-/* =========================================================
-   EXPOSE ALL UTILITIES
+   EXPOSE UTILITIES
 ========================================================= */
 
 Object.assign(
   window.AuthPageBuilder.Utils,
   {
 
+    /* DOM */
     $,
-
     $$,
-
     createElement,
 
+    /* Visibility */
     showElement,
-
     hideElement,
-
     toggleElement,
 
+    /* Classes */
     addClass,
-
     removeClass,
-
     toggleClass,
+    hasClass,
 
+    /* HTML */
     escapeHtml,
+    unescapeHtml,
 
+    /* String */
+    isEmpty,
+    capitalize,
+    toTitleCase,
+    sanitizeFileName,
+    getFileExtension,
+
+    /* Objects */
     deepClone,
-
     deepGet,
-
     deepSet,
+    deepMerge,
 
+    /* Config */
+    getAppState,
+    getConfig,
+    getCurrentPage,
+    normalizePageName,
+    getPageConfig,
+    updateConfig,
+    triggerPreviewUpdate,
+
+    /* Files */
     isImageFile,
-
     validateImageFile,
-
     fileToDataURL,
-
     fileToText,
 
+    /* Data URL */
+    isDataURL,
+    getDataURLMimeType,
+    getMimeExtension,
     dataURLToBlob,
 
+    /* Images */
     getImageDimensions,
-
     createImagePreview,
+    handleImageUpload,
+    resetFileInput,
 
+    /* Assets */
+    getAssetFromValue,
+    collectAssetsFromConfig,
+
+    /* File info */
     formatFileSize,
 
+    /* Downloads */
+    downloadBlob,
     downloadTextFile,
-
     downloadJSON,
 
-    downloadBlob,
-
+    /* Performance */
     debounce,
-
     throttle,
 
+    /* IDs */
     generateId,
 
+    /* Responsive */
     isMobile,
-
     isTablet,
-
     isDesktop,
-
     getViewportSize,
+    getPreviewDevice,
 
+    /* Colors */
+    isValidHexColor,
     hexToRgba,
 
-    isValidHexColor,
-
+    /* Numbers */
     clamp,
 
-    isEmpty,
-
+    /* Validation */
     validateRequired,
-
     validateEmail,
-
     validateMobile,
-
     validatePassword,
-
     validatePasswordMatch,
-
     validateOtp,
+    getOtpValue,
 
+    /* Clipboard */
     copyToClipboard,
 
+    /* DOM */
     scrollToElement,
 
+    /* Events */
     emitEvent,
-
     on,
-
-    handleImageUpload,
-
-    resetFileInput
+    once
   }
 );
+
+
+/* =========================================================
+   BACKWARD COMPATIBILITY
+
+   Allows existing project files to use the
+   utility functions directly.
+========================================================= */
+
+window.$ = window.$ || $;
+window.$$ = window.$$ || $$;
+
+window.deepGet =
+  window.deepGet || deepGet;
+
+window.deepSet =
+  window.deepSet || deepSet;
+
+window.deepClone =
+  window.deepClone || deepClone;
+
+window.escapeHtml =
+  window.escapeHtml || escapeHtml;
+
+window.updateConfig =
+  window.updateConfig || updateConfig;
+
+window.getConfig =
+  window.getConfig || getConfig;
+
+window.collectAssetsFromConfig =
+  window.collectAssetsFromConfig ||
+  collectAssetsFromConfig;
+
+window.dataURLToBlob =
+  window.dataURLToBlob ||
+  dataURLToBlob;
+
+window.fileToDataURL =
+  window.fileToDataURL ||
+  fileToDataURL;
+
+window.validateOtp =
+  window.validateOtp ||
+  validateOtp;
+
+window.getOtpValue =
+  window.getOtpValue ||
+  getOtpValue;

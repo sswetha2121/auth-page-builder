@@ -2,12 +2,18 @@
    AUTH PAGE BUILDER
    File: js/controls.js
 
-   Customization Controls Engine
+   Professional Customization Controls Engine
 
-   Every control can update the central configuration object
-   and notify the application to refresh the preview.
+   Responsibilities:
+   - Update the central configuration
+   - Synchronize all customization controls
+   - Handle layout, typography, colors and appearance
+   - Handle default background/logo selection
+   - Handle uploaded background/logo assets
+   - Preserve uploaded asset metadata for ZIP generation
+   - Notify renderer and application immediately
+   - Support dynamic controls added later
 ========================================================= */
-
 
 class ControlsManager {
   constructor(options = {}) {
@@ -16,7 +22,17 @@ class ControlsManager {
         ? document.querySelector(options.container)
         : options.container;
 
-    this.config = options.config || {};
+    this.config =
+      options.config ||
+      window.config ||
+      {};
+
+    this.defaultConfig =
+      this.clone(
+        options.defaultConfig ||
+        window.defaultConfig ||
+        this.config
+      );
 
     this.onChange =
       typeof options.onChange === "function"
@@ -28,8 +44,10 @@ class ControlsManager {
         ? options.onUpload
         : null;
 
-    this.defaultConfig =
-      this.clone(this.config);
+    this.uploadedAssets =
+      this.loadUploadedAssets();
+
+    this.bound = false;
 
     this.initialize();
   }
@@ -49,6 +67,10 @@ class ControlsManager {
     }
 
     this.attachAllControls();
+
+    this.syncAllControls();
+
+    this.bound = true;
   }
 
 
@@ -80,6 +102,8 @@ class ControlsManager {
     this.attachResetControls();
 
     this.attachSectionControls();
+
+    this.attachSpecialControls();
   }
 
 
@@ -94,24 +118,24 @@ class ControlsManager {
       );
 
     controls.forEach((control) => {
-      const handler = () => {
-        const path =
-          control.dataset.configText;
-
-        this.updateValue(
-          path,
-          control.value
-        );
-      };
-
       control.addEventListener(
         "input",
-        handler
+        () => {
+          this.updateValue(
+            control.dataset.configText,
+            control.value
+          );
+        }
       );
 
       control.addEventListener(
         "change",
-        handler
+        () => {
+          this.updateValue(
+            control.dataset.configText,
+            control.value
+          );
+        }
       );
     });
   }
@@ -128,22 +152,26 @@ class ControlsManager {
       );
 
     controls.forEach((control) => {
+      const update = () => {
+        const value =
+          Number(control.value);
+
+        this.updateValue(
+          control.dataset.configNumber,
+          Number.isNaN(value)
+            ? 0
+            : value
+        );
+      };
+
       control.addEventListener(
         "input",
-        () => {
-          const path =
-            control.dataset.configNumber;
+        update
+      );
 
-          const value =
-            Number(control.value);
-
-          this.updateValue(
-            path,
-            Number.isNaN(value)
-              ? 0
-              : value
-          );
-        }
+      control.addEventListener(
+        "change",
+        update
       );
     });
   }
@@ -160,32 +188,38 @@ class ControlsManager {
       );
 
     controls.forEach((control) => {
+      const update = () => {
+        const value =
+          Number(control.value);
+
+        this.updateValue(
+          control.dataset.configRange,
+          Number.isNaN(value)
+            ? 0
+            : value
+        );
+
+        this.updateRangeDisplay(
+          control,
+          value
+        );
+      };
+
       control.addEventListener(
         "input",
-        () => {
-          const path =
-            control.dataset.configRange;
+        update
+      );
 
-          const value =
-            Number(control.value);
-
-          this.updateValue(
-            path,
-            value
-          );
-
-          this.updateRangeDisplay(
-            control,
-            value
-          );
-        }
+      control.addEventListener(
+        "change",
+        update
       );
     });
   }
 
 
   /* =======================================================
-     RANGE VALUE DISPLAY
+     RANGE DISPLAY
   ======================================================= */
 
   updateRangeDisplay(
@@ -199,10 +233,17 @@ class ControlsManager {
       return;
     }
 
-    const output =
+    let output =
       this.container.querySelector(
         targetSelector
       );
+
+    if (!output) {
+      output =
+        document.querySelector(
+          targetSelector
+        );
+    }
 
     if (!output) {
       return;
@@ -227,43 +268,37 @@ class ControlsManager {
       );
 
     controls.forEach((control) => {
+      const update = () => {
+        const path =
+          control.dataset.configColor;
+
+        this.updateValue(
+          path,
+          control.value
+        );
+
+        this.syncColorInputs(
+          path,
+          control.value,
+          control
+        );
+      };
+
       control.addEventListener(
         "input",
-        () => {
-          const path =
-            control.dataset.configColor;
-
-          this.updateValue(
-            path,
-            control.value
-          );
-
-          this.syncColorInputs(
-            path,
-            control.value,
-            control
-          );
-        }
+        update
       );
 
       control.addEventListener(
         "change",
-        () => {
-          const path =
-            control.dataset.configColor;
-
-          this.updateValue(
-            path,
-            control.value
-          );
-        }
+        update
       );
     });
   }
 
 
   /* =======================================================
-     COLOR INPUT SYNCHRONIZATION
+     COLOR SYNCHRONIZATION
   ======================================================= */
 
   syncColorInputs(
@@ -298,12 +333,11 @@ class ControlsManager {
       control.addEventListener(
         "change",
         () => {
-          const path =
-            control.dataset.configSelect;
-
           this.updateValue(
-            path,
-            control.value
+            control.dataset.configSelect,
+            this.parseValue(
+              control.value
+            )
           );
         }
       );
@@ -325,11 +359,8 @@ class ControlsManager {
       control.addEventListener(
         "change",
         () => {
-          const path =
-            control.dataset.configToggle;
-
           this.updateValue(
-            path,
+            control.dataset.configToggle,
             control.checked
           );
 
@@ -339,7 +370,9 @@ class ControlsManager {
         }
       );
 
-      this.updateToggleUI(control);
+      this.updateToggleUI(
+        control
+      );
     });
   }
 
@@ -351,7 +384,7 @@ class ControlsManager {
   updateToggleUI(control) {
     const parent =
       control.closest(
-        ".sidebar-toggle-row"
+        ".sidebar-toggle-row, .toggle-row, .control-toggle"
       );
 
     if (!parent) {
@@ -383,12 +416,11 @@ class ControlsManager {
             return;
           }
 
-          const path =
-            control.dataset.configRadio;
-
           this.updateValue(
-            path,
-            control.value
+            control.dataset.configRadio,
+            this.parseValue(
+              control.value
+            )
           );
         }
       );
@@ -398,6 +430,10 @@ class ControlsManager {
 
   /* =======================================================
      OPTION CARDS
+
+     Example:
+     data-config-option="layout.type"
+     data-value="split-left-image"
   ======================================================= */
 
   attachOptionCards() {
@@ -409,12 +445,24 @@ class ControlsManager {
     controls.forEach((control) => {
       control.addEventListener(
         "click",
-        () => {
+        (event) => {
+          if (
+            event.target.closest(
+              "input, select, textarea, button"
+            )
+          ) {
+            return;
+          }
+
           const path =
             control.dataset.configOption;
 
           const value =
             control.dataset.value;
+
+          if (!path) {
+            return;
+          }
 
           this.updateValue(
             path,
@@ -455,6 +503,19 @@ class ControlsManager {
 
   /* =======================================================
      IMAGE PRESET CONTROLS
+
+     Supports:
+     - Background presets
+     - Logo presets
+     - Default image selection
+
+     Example:
+     data-config-image="background.image"
+     data-value="assets/backgrounds/file.jpg"
+     data-config-id="background.selected"
+     data-id="background-1"
+     data-image-type="background.type"
+     data-image-source="default"
   ======================================================= */
 
   attachImageControls() {
@@ -473,18 +534,41 @@ class ControlsManager {
           const value =
             control.dataset.value;
 
+          const idPath =
+            control.dataset.configId;
+
+          const id =
+            control.dataset.id;
+
           const typePath =
             control.dataset.imageType;
 
+          const source =
+            control.dataset.imageSource ||
+            "default";
+
+          if (!path || !value) {
+            return;
+          }
+
           this.updateValue(
             path,
-            value
+            value,
+            false
           );
+
+          if (idPath && id) {
+            this.updateValue(
+              idPath,
+              id,
+              false
+            );
+          }
 
           if (typePath) {
             this.updateValue(
               typePath,
-              "image",
+              source,
               false
             );
           }
@@ -493,6 +577,14 @@ class ControlsManager {
             path,
             control
           );
+
+          this.emitChange({
+            type: "image-select",
+            path,
+            value,
+            source,
+            config: this.getConfig()
+          });
         }
       );
     });
@@ -550,32 +642,100 @@ class ControlsManager {
       );
     });
 
-
     const dropZones =
       this.container.querySelectorAll(
         "[data-upload-zone]"
       );
 
     dropZones.forEach((zone) => {
-      this.attachDragAndDrop(zone);
+      this.attachDragAndDrop(
+        zone
+      );
     });
   }
 
 
   /* =======================================================
+     VALIDATE UPLOAD
+  ======================================================= */
+
+  validateImageFile(file) {
+    if (!file) {
+      return {
+        valid: false,
+        message: "No file selected."
+      };
+    }
+
+    const limits =
+      window.AuthPageBuilder?.Constants?.UPLOAD_LIMITS;
+
+    const supportedTypes =
+      limits?.supportedImageTypes || [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "image/svg+xml"
+      ];
+
+    const maxSize =
+      limits?.maxImageSize ||
+      10 * 1024 * 1024;
+
+    if (
+      !file.type ||
+      !supportedTypes.includes(
+        file.type
+      )
+    ) {
+      return {
+        valid: false,
+        message:
+          "Please upload a JPG, PNG, WEBP, GIF, or SVG image."
+      };
+    }
+
+    if (file.size > maxSize) {
+      return {
+        valid: false,
+        message:
+          `Image is too large. Maximum size is ${
+            limits?.maxImageSizeLabel || "10 MB"
+          }.`
+      };
+    }
+
+    return {
+      valid: true
+    };
+  }
+
+
+  /* =======================================================
      HANDLE FILE UPLOAD
+
+     Uploaded files are stored as:
+     - Data URL for immediate preview
+     - Metadata for project ZIP generation
+     - Original file object in memory when available
   ======================================================= */
 
   async handleFileUpload(
     control,
     file
   ) {
-    if (
-      !file.type.startsWith("image/")
-    ) {
-      alert(
-        "Please upload a valid image file."
+    const validation =
+      this.validateImageFile(
+        file
       );
+
+    if (!validation.valid) {
+      alert(
+        validation.message
+      );
+
+      control.value = "";
 
       return;
     }
@@ -586,9 +746,49 @@ class ControlsManager {
     const typePath =
       control.dataset.uploadType;
 
+    const fileNamePath =
+      control.dataset.uploadFileName;
+
+    const assetRole =
+      control.dataset.assetRole ||
+      this.detectAssetRole(path);
+
     try {
       const dataURL =
-        await this.readFileAsDataURL(file);
+        await this.readFileAsDataURL(
+          file
+        );
+
+      const assetId =
+        this.createAssetId(
+          assetRole,
+          file
+        );
+
+      const asset = {
+        id: assetId,
+        role: assetRole,
+        path,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified:
+          file.lastModified,
+        dataURL,
+        file
+      };
+
+      this.uploadedAssets =
+        this.uploadedAssets.filter(
+          (item) =>
+            item.path !== path
+        );
+
+      this.uploadedAssets.push(
+        asset
+      );
+
+      this.saveUploadedAssets();
 
       this.updateValue(
         path,
@@ -599,7 +799,15 @@ class ControlsManager {
       if (typePath) {
         this.updateValue(
           typePath,
-          "image",
+          "upload",
+          false
+        );
+      }
+
+      if (fileNamePath) {
+        this.updateValue(
+          fileNamePath,
+          file.name,
           false
         );
       }
@@ -613,22 +821,83 @@ class ControlsManager {
         type: "upload",
         path,
         file,
-        value: dataURL
+        value: dataURL,
+        asset,
+        config: this.getConfig()
       });
 
       if (this.onUpload) {
         this.onUpload({
           file,
           path,
-          value: dataURL
+          value: dataURL,
+          asset
         });
       }
+
     } catch (error) {
       console.error(
         "Image upload failed:",
         error
       );
+
+      alert(
+        "Unable to upload this image."
+      );
     }
+  }
+
+
+  /* =======================================================
+     DETECT ASSET ROLE
+  ======================================================= */
+
+  detectAssetRole(path = "") {
+    const normalized =
+      String(path).toLowerCase();
+
+    if (
+      normalized.includes("logo")
+    ) {
+      return "logo";
+    }
+
+    if (
+      normalized.includes("background")
+    ) {
+      return "background";
+    }
+
+    if (
+      normalized.includes("icon")
+    ) {
+      return "icon";
+    }
+
+    return "image";
+  }
+
+
+  /* =======================================================
+     CREATE ASSET ID
+  ======================================================= */
+
+  createAssetId(
+    role,
+    file
+  ) {
+    return [
+      role,
+      Date.now(),
+      Math.random()
+        .toString(36)
+        .slice(2, 9),
+      file.name
+        .replace(
+          /[^a-zA-Z0-9_-]/g,
+          "-"
+        )
+    ].join("-");
   }
 
 
@@ -652,7 +921,9 @@ class ControlsManager {
             )
           );
 
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(
+          file
+        );
       }
     );
   }
@@ -673,10 +944,17 @@ class ControlsManager {
       return;
     }
 
-    const preview =
+    let preview =
       this.container.querySelector(
         previewSelector
       );
+
+    if (!preview) {
+      preview =
+        document.querySelector(
+          previewSelector
+        );
+    }
 
     if (!preview) {
       return;
@@ -685,7 +963,12 @@ class ControlsManager {
     if (
       preview.tagName === "IMG"
     ) {
-      preview.src = imageSource;
+      preview.src =
+        imageSource;
+
+      preview.classList.add(
+        "has-image"
+      );
 
       return;
     }
@@ -704,39 +987,42 @@ class ControlsManager {
   ======================================================= */
 
   attachDragAndDrop(zone) {
-    zone.addEventListener(
-      "dragover",
-      (event) => {
-        event.preventDefault();
+    ["dragenter", "dragover"].forEach(
+      (eventName) => {
+        zone.addEventListener(
+          eventName,
+          (event) => {
+            event.preventDefault();
 
-        zone.classList.add(
-          "drag-over"
+            zone.classList.add(
+              "drag-over"
+            );
+          }
         );
       }
     );
 
-
-    zone.addEventListener(
-      "dragleave",
-      () => {
-        zone.classList.remove(
-          "drag-over"
+    ["dragleave", "drop"].forEach(
+      (eventName) => {
+        zone.addEventListener(
+          eventName,
+          () => {
+            zone.classList.remove(
+              "drag-over"
+            );
+          }
         );
       }
     );
-
 
     zone.addEventListener(
       "drop",
       async (event) => {
         event.preventDefault();
 
-        zone.classList.remove(
-          "drag-over"
-        );
-
         const file =
-          event.dataTransfer.files?.[0];
+          event.dataTransfer
+            .files?.[0];
 
         if (!file) {
           return;
@@ -745,12 +1031,24 @@ class ControlsManager {
         const inputSelector =
           zone.dataset.uploadZone;
 
-        const input =
+        let input =
           this.container.querySelector(
             inputSelector
           );
 
         if (!input) {
+          input =
+            document.querySelector(
+              inputSelector
+            );
+        }
+
+        if (!input) {
+          console.warn(
+            "Upload input not found:",
+            inputSelector
+          );
+
           return;
         }
 
@@ -761,7 +1059,6 @@ class ControlsManager {
       }
     );
 
-
     zone.addEventListener(
       "click",
       () => {
@@ -770,6 +1067,9 @@ class ControlsManager {
 
         const input =
           this.container.querySelector(
+            inputSelector
+          ) ||
+          document.querySelector(
             inputSelector
           );
 
@@ -793,14 +1093,12 @@ class ControlsManager {
       control.addEventListener(
         "click",
         () => {
-          const path =
-            control.dataset.resetConfig;
-
-          this.resetValue(path);
+          this.resetValue(
+            control.dataset.resetConfig
+          );
         }
       );
     });
-
 
     const fullReset =
       this.container.querySelectorAll(
@@ -841,15 +1139,17 @@ class ControlsManager {
       this.clone(defaultValue)
     );
 
-    this.syncControlValue(
-      path,
-      defaultValue
+    this.updateGlobalConfig(
+      this.config
     );
+
+    this.syncAllControls();
 
     this.emitChange({
       type: "reset",
       path,
-      value: defaultValue
+      value:
+        this.clone(defaultValue)
     });
   }
 
@@ -873,17 +1173,26 @@ class ControlsManager {
         this.defaultConfig
       );
 
+    this.uploadedAssets = [];
+
+    this.clearUploadedAssets();
+
+    this.updateGlobalConfig(
+      this.config
+    );
+
     this.syncAllControls();
 
     this.emitChange({
       type: "reset-all",
-      config: this.getConfig()
+      config:
+        this.getConfig()
     });
   }
 
 
   /* =======================================================
-     COLLAPSIBLE SECTIONS
+     COLLAPSIBLE SIDEBAR SECTIONS
   ======================================================= */
 
   attachSectionControls() {
@@ -895,7 +1204,15 @@ class ControlsManager {
     controls.forEach((control) => {
       control.addEventListener(
         "click",
-        () => {
+        (event) => {
+          if (
+            event.target.closest(
+              "input, select, textarea, button"
+            )
+          ) {
+            return;
+          }
+
           const section =
             control.closest(
               ".sidebar-section"
@@ -921,6 +1238,154 @@ class ControlsManager {
 
 
   /* =======================================================
+     SPECIAL CONTROLS
+
+     Handles:
+     - OTP length cards
+     - OTP delivery methods
+     - Page type controls
+     - Preview device controls
+     - Fullscreen trigger
+  ======================================================= */
+
+  attachSpecialControls() {
+
+    /* OTP LENGTH */
+
+    const otpLengths =
+      this.container.querySelectorAll(
+        "[data-otp-length]"
+      );
+
+    otpLengths.forEach((control) => {
+      control.addEventListener(
+        "click",
+        () => {
+          const value =
+            Number(
+              control.dataset.otpLength
+            );
+
+          this.updateValue(
+            "authentication.otpLength",
+            value
+          );
+
+          otpLengths.forEach(
+            (item) => {
+              item.classList.toggle(
+                "active",
+                item === control
+              );
+            }
+          );
+        }
+      );
+    });
+
+
+    /* OTP DELIVERY METHOD */
+
+    const otpMethods =
+      this.container.querySelectorAll(
+        "[data-otp-method]"
+      );
+
+    otpMethods.forEach((control) => {
+      control.addEventListener(
+        "click",
+        () => {
+          const value =
+            control.dataset.otpMethod;
+
+          this.updateValue(
+            "authentication.defaultOtpMethod",
+            value
+          );
+
+          otpMethods.forEach(
+            (item) => {
+              item.classList.toggle(
+                "active",
+                item === control
+              );
+            }
+          );
+        }
+      );
+    });
+
+
+    /* PAGE TYPE */
+
+    const pageControls =
+      this.container.querySelectorAll(
+        "[data-page-type]"
+      );
+
+    pageControls.forEach((control) => {
+      control.addEventListener(
+        "click",
+        () => {
+          const page =
+            control.dataset.pageType;
+
+          this.updateValue(
+            "currentPage",
+            page
+          );
+        }
+      );
+    });
+
+
+    /* PREVIEW DEVICE */
+
+    const deviceControls =
+      this.container.querySelectorAll(
+        "[data-preview-device]"
+      );
+
+    deviceControls.forEach((control) => {
+      control.addEventListener(
+        "click",
+        () => {
+          const device =
+            control.dataset.previewDevice;
+
+          this.updateValue(
+            "previewDevice",
+            device
+          );
+        }
+      );
+    });
+
+
+    /* FULLSCREEN */
+
+    const fullscreenControls =
+      this.container.querySelectorAll(
+        "[data-preview-fullscreen]"
+      );
+
+    fullscreenControls.forEach(
+      (control) => {
+        control.addEventListener(
+          "click",
+          () => {
+            this.updateValue(
+              "fullscreen",
+              true
+            );
+          }
+        );
+      }
+    );
+  }
+
+
+  /* =======================================================
      UPDATE CONFIG VALUE
   ======================================================= */
 
@@ -929,14 +1394,21 @@ class ControlsManager {
     value,
     notify = true
   ) {
-    if (!path) {
-      return;
+    if (
+      !path ||
+      typeof path !== "string"
+    ) {
+      return false;
     }
 
     this.setValue(
       this.config,
       path,
       value
+    );
+
+    this.updateGlobalConfig(
+      this.config
     );
 
     if (notify) {
@@ -946,6 +1418,33 @@ class ControlsManager {
         value
       });
     }
+
+    return true;
+  }
+
+
+  /* =======================================================
+     UPDATE GLOBAL CONFIG
+  ======================================================= */
+
+  updateGlobalConfig(
+    newConfig
+  ) {
+    if (
+      typeof window.setConfig ===
+      "function"
+    ) {
+      window.setConfig(
+        newConfig
+      );
+    } else {
+      window.config =
+        newConfig;
+    }
+
+    this.config =
+      window.config ||
+      newConfig;
   }
 
 
@@ -957,7 +1456,10 @@ class ControlsManager {
     object,
     path
   ) {
-    if (!path) {
+    if (
+      !object ||
+      !path
+    ) {
       return undefined;
     }
 
@@ -980,6 +1482,13 @@ class ControlsManager {
     path,
     value
   ) {
+    if (
+      !object ||
+      !path
+    ) {
+      return;
+    }
+
     const keys =
       path.split(".");
 
@@ -992,7 +1501,11 @@ class ControlsManager {
     keys.forEach((key) => {
       if (
         !current[key] ||
-        typeof current[key] !== "object"
+        typeof current[key] !==
+          "object" ||
+        Array.isArray(
+          current[key]
+        )
       ) {
         current[key] = {};
       }
@@ -1010,24 +1523,113 @@ class ControlsManager {
      EMIT CONFIG CHANGE
   ======================================================= */
 
-  emitChange(change) {
+  emitChange(change = {}) {
+    const currentConfig =
+      this.getConfig();
+
     this.onChange({
       ...change,
-      config: this.getConfig()
+      config:
+        currentConfig
     });
 
-    const event =
+    document.dispatchEvent(
       new CustomEvent(
         "auth-builder:config-change",
         {
           detail: {
             ...change,
-            config: this.getConfig()
+            config:
+              currentConfig
           }
         }
-      );
+      )
+    );
 
-    document.dispatchEvent(event);
+    document.dispatchEvent(
+      new CustomEvent(
+        "auth-builder:preview-refresh",
+        {
+          detail: {
+            ...change,
+            config:
+              currentConfig
+          }
+        }
+      )
+    );
+
+    this.dispatchApplicationEvent(
+      change
+    );
+  }
+
+
+  /* =======================================================
+     DISPATCH APPLICATION EVENT
+  ======================================================= */
+
+  dispatchApplicationEvent(
+    change
+  ) {
+    const events =
+      window.AuthPageBuilder
+        ?.Constants
+        ?.EVENTS;
+
+    if (!events) {
+      return;
+    }
+
+    if (
+      change.path === "currentPage"
+    ) {
+      document.dispatchEvent(
+        new CustomEvent(
+          events.PAGE_CHANGED,
+          {
+            detail: change
+          }
+        )
+      );
+    }
+
+    if (
+      change.path === "previewDevice"
+    ) {
+      document.dispatchEvent(
+        new CustomEvent(
+          events.DEVICE_CHANGED,
+          {
+            detail: change
+          }
+        )
+      );
+    }
+
+    if (
+      change.path === "fullscreen"
+    ) {
+      document.dispatchEvent(
+        new CustomEvent(
+          change.value
+            ? events.FULLSCREEN_OPEN
+            : events.FULLSCREEN_CLOSE,
+          {
+            detail: change
+          }
+        )
+      );
+    }
+
+    document.dispatchEvent(
+      new CustomEvent(
+        events.CONFIG_CHANGED,
+        {
+          detail: change
+        }
+      )
+    );
   }
 
 
@@ -1046,19 +1648,29 @@ class ControlsManager {
      SET CONFIG
   ======================================================= */
 
-  setConfig(newConfig = {}) {
+  setConfig(
+    newConfig = {},
+    notify = true
+  ) {
     this.config =
       this.mergeDeep(
         this.config,
         newConfig
       );
 
+    this.updateGlobalConfig(
+      this.config
+    );
+
     this.syncAllControls();
 
-    this.emitChange({
-      type: "set-config",
-      config: this.getConfig()
-    });
+    if (notify) {
+      this.emitChange({
+        type: "set-config",
+        config:
+          this.getConfig()
+      });
+    }
   }
 
 
@@ -1067,6 +1679,10 @@ class ControlsManager {
   ======================================================= */
 
   syncAllControls() {
+    if (!this.container) {
+      return;
+    }
+
     const controls =
       this.container.querySelectorAll(
         [
@@ -1103,7 +1719,8 @@ class ControlsManager {
       }
 
       if (
-        control.type === "checkbox"
+        control.type ===
+        "checkbox"
       ) {
         control.checked =
           Boolean(value);
@@ -1111,12 +1728,15 @@ class ControlsManager {
         this.updateToggleUI(
           control
         );
+
       } else if (
-        control.type === "radio"
+        control.type ===
+        "radio"
       ) {
         control.checked =
           String(value) ===
           String(control.value);
+
       } else {
         control.value =
           value;
@@ -1133,37 +1753,118 @@ class ControlsManager {
     });
 
 
+    /* OPTION CARDS */
+
     const optionControls =
       this.container.querySelectorAll(
         "[data-config-option]"
       );
 
-    optionControls.forEach((control) => {
-      const path =
-        control.dataset.configOption;
+    optionControls.forEach(
+      (control) => {
+        const path =
+          control.dataset
+            .configOption;
 
-      const currentValue =
-        this.getValue(
-          this.config,
-          path
+        const currentValue =
+          this.getValue(
+            this.config,
+            path
+          );
+
+        const optionValue =
+          this.parseValue(
+            control.dataset.value
+          );
+
+        control.classList.toggle(
+          "active",
+          String(currentValue) ===
+            String(optionValue)
         );
+      }
+    );
 
-      const optionValue =
-        this.parseValue(
-          control.dataset.value
-        );
 
-      control.classList.toggle(
-        "active",
-        String(currentValue) ===
-          String(optionValue)
+    /* IMAGE PRESETS */
+
+    const imageControls =
+      this.container.querySelectorAll(
+        "[data-config-image]"
       );
-    });
+
+    imageControls.forEach(
+      (control) => {
+        const path =
+          control.dataset
+            .configImage;
+
+        const currentValue =
+          this.getValue(
+            this.config,
+            path
+          );
+
+        control.classList.toggle(
+          "active",
+          String(currentValue) ===
+            String(
+              control.dataset.value
+            )
+        );
+      }
+    );
+
+
+    /* OTP LENGTH */
+
+    const otpLength =
+      this.getValue(
+        this.config,
+        "authentication.otpLength"
+      );
+
+    this.container
+      .querySelectorAll(
+        "[data-otp-length]"
+      )
+      .forEach((control) => {
+        control.classList.toggle(
+          "active",
+          Number(
+            control.dataset
+              .otpLength
+          ) ===
+          Number(otpLength)
+        );
+      });
+
+
+    /* OTP METHOD */
+
+    const otpMethod =
+      this.getValue(
+        this.config,
+        "authentication.defaultOtpMethod"
+      );
+
+    this.container
+      .querySelectorAll(
+        "[data-otp-method]"
+      )
+      .forEach((control) => {
+        control.classList.toggle(
+          "active",
+          control.dataset
+            .otpMethod ===
+          otpMethod
+        );
+      });
   }
 
 
   /* =======================================================
-     GET CONTROL CONFIG PATH
+     GET CONTROL PATH
   ======================================================= */
 
   getControlPath(control) {
@@ -1195,6 +1896,8 @@ class ControlsManager {
 
     if (
       value !== "" &&
+      value !== null &&
+      value !== undefined &&
       !Number.isNaN(
         Number(value)
       )
@@ -1224,14 +1927,18 @@ class ControlsManager {
 
         if (
           sourceValue &&
-          typeof sourceValue === "object" &&
-          !Array.isArray(sourceValue)
+          typeof sourceValue ===
+            "object" &&
+          !Array.isArray(
+            sourceValue
+          )
         ) {
           output[key] =
             this.mergeDeep(
               output[key] || {},
               sourceValue
             );
+
         } else {
           output[key] =
             this.clone(
@@ -1242,6 +1949,136 @@ class ControlsManager {
     );
 
     return output;
+  }
+
+
+  /* =======================================================
+     UPLOADED ASSET STORAGE
+  ======================================================= */
+
+  getStorageKey() {
+    return (
+      window.AuthPageBuilder
+        ?.Constants
+        ?.STORAGE_KEYS
+        ?.uploadedAssets ||
+      "authPageBuilderUploadedAssets"
+    );
+  }
+
+
+  loadUploadedAssets() {
+    try {
+      const raw =
+        localStorage.getItem(
+          this.getStorageKey()
+        );
+
+      if (!raw) {
+        return [];
+      }
+
+      const assets =
+        JSON.parse(raw);
+
+      return Array.isArray(assets)
+        ? assets.map((asset) => ({
+            ...asset,
+            file: null
+          }))
+        : [];
+
+    } catch (error) {
+      console.warn(
+        "Unable to load uploaded assets:",
+        error
+      );
+
+      return [];
+    }
+  }
+
+
+  saveUploadedAssets() {
+    try {
+      const serializableAssets =
+        this.uploadedAssets.map(
+          (asset) => ({
+            id: asset.id,
+            role: asset.role,
+            path: asset.path,
+            name: asset.name,
+            type: asset.type,
+            size: asset.size,
+            lastModified:
+              asset.lastModified,
+            dataURL:
+              asset.dataURL
+          })
+        );
+
+      localStorage.setItem(
+        this.getStorageKey(),
+        JSON.stringify(
+          serializableAssets
+        )
+      );
+
+    } catch (error) {
+      console.warn(
+        "Unable to save uploaded assets:",
+        error
+      );
+    }
+  }
+
+
+  clearUploadedAssets() {
+    try {
+      localStorage.removeItem(
+        this.getStorageKey()
+      );
+
+    } catch (error) {
+      console.warn(
+        "Unable to clear uploaded assets:",
+        error
+      );
+    }
+  }
+
+
+  /* =======================================================
+     GET UPLOADED ASSETS
+
+     Used by download.js / ZIP generator.
+  ======================================================= */
+
+  getUploadedAssets() {
+    return this.uploadedAssets.map(
+      (asset) => ({
+        ...asset
+      })
+    );
+  }
+
+
+  /* =======================================================
+     REMOVE UPLOADED ASSET
+  ======================================================= */
+
+  removeUploadedAsset(
+    path
+  ) {
+    this.uploadedAssets =
+      this.uploadedAssets.filter(
+        (asset) =>
+          asset.path !== path
+      );
+
+    this.saveUploadedAssets();
+
+    return true;
   }
 
 
@@ -1271,12 +2108,9 @@ class ControlsManager {
       return;
     }
 
-    this.container
-      .replaceWith(
-        this.container.cloneNode(true)
-      );
-
     this.container = null;
+
+    this.bound = false;
   }
 }
 

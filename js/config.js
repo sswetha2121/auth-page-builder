@@ -15,7 +15,18 @@ const defaultConfig = {
   ------------------------------------------------------- */
 
   currentPage: "login",
+
   previewDevice: "desktop",
+
+  previewMode: "builder",
+
+  previewScale: 1,
+
+  fullscreen: false,
+
+  projectName: "auth-page",
+
+  projectVersion: "2.0.0",
 
 
   /* -------------------------------------------------------
@@ -26,17 +37,62 @@ const defaultConfig = {
 
     type: "split-left-image",
 
+    /*
+      split-left-image
+      split-right-image
+      full-background
+      centered-card
+      stacked
+    */
+
+    pageLayout: "split-left-image",
+
     imagePosition: "left",
 
-    imageWidth: 70,
+    imageSide: "left",
 
-    formWidth: 30,
+    imageWidth: 50,
+
+    formWidth: 50,
+
+    formPosition: "right",
 
     formVerticalAlignment: "center",
 
+    /*
+      top
+      center
+      bottom
+    */
+
     formHorizontalAlignment: "center",
 
-    mobileStackOrder: "image-first"
+    /*
+      left
+      center
+      right
+    */
+
+    formMaxWidth: 560,
+
+    formOffsetX: 0,
+
+    formOffsetY: 0,
+
+    contentPadding: 48,
+
+    mobileStackOrder: "image-first",
+
+    mobileImageHeight: 38,
+
+    showImageSection: true,
+
+    showFormSection: true,
+
+    split: {
+      imageWidth: 50,
+      imageSide: "left"
+    }
   },
 
 
@@ -48,11 +104,25 @@ const defaultConfig = {
 
     type: "default",
 
+    /*
+      default
+      upload
+      color
+      gradient
+      none
+    */
+
     selected: "background-1",
 
     image: "assets/backgrounds/background-1.jpg",
 
+    imageUrl: "assets/backgrounds/background-1.jpg",
+
     uploadedImage: "",
+
+    imageFileName: "",
+
+    imageSource: "default",
 
     position: "center",
 
@@ -60,7 +130,19 @@ const defaultConfig = {
 
     repeat: "no-repeat",
 
+    attachment: "scroll",
+
     color: "#172033",
+
+    opacity: 1,
+
+    gradientEnabled: false,
+
+    gradientDirection: "135deg",
+
+    gradientStart: "#172033",
+
+    gradientEnd: "#344054",
 
     overlayEnabled: true,
 
@@ -76,6 +158,8 @@ const defaultConfig = {
 
   imageSection: {
 
+    enabled: true,
+
     showText: false,
 
     text: "Welcome back",
@@ -90,7 +174,12 @@ const defaultConfig = {
 
     textFont: "Inter, Arial, sans-serif",
 
-    textShadow: "0 4px 18px rgba(0,0,0,0.35)"
+    textShadow:
+      "0 4px 18px rgba(0,0,0,0.35)",
+
+    padding: 48,
+
+    contentPosition: "center"
   },
 
 
@@ -102,17 +191,55 @@ const defaultConfig = {
 
     showLogo: true,
 
+    logoEnabled: true,
+
     logoType: "default",
+
+    /*
+      default
+      upload
+      none
+    */
+
+    selectedLogo: "logo-1",
 
     logo: "assets/logos/logo-1.png",
 
+    logoUrl: "assets/logos/logo-1.png",
+
     uploadedLogo: "",
 
-    logoShape: "rounded",
+    logoFileName: "",
+
+    logoSource: "default",
+
+    logoShape: "circle",
+
+    /*
+      circle
+      ellipse
+      rounded
+      square
+      none
+    */
 
     logoPosition: "left",
 
+    /*
+      left
+      center
+      right
+    */
+
+    logoVerticalPosition: "top",
+
     logoSize: 64,
+
+    logoWidth: 64,
+
+    logoHeight: 64,
+
+    logoObjectFit: "contain",
 
     logoBorderEnabled: false,
 
@@ -126,27 +253,33 @@ const defaultConfig = {
 
     logoPadding: 0,
 
+    logoShadowEnabled: false,
+
+    logoShadow:
+      "0 8px 24px rgba(16,24,40,0.18)",
+
     showBrandName: true,
 
     brandName: "Your Brand",
 
-    showTitle: true,
+    brandNameColor: "#101828",
 
-    title: "Welcome back",
+    brandNameSize: 16,
 
-    showSubtitle: true,
+    brandNameWeight: 700,
 
-    subtitle: "Enter your details to access your account."
+    brandGap: 12
   },
 
 
   /* -------------------------------------------------------
-     TYPOGRAPHY
+     GLOBAL TYPOGRAPHY
   ------------------------------------------------------- */
 
   typography: {
 
-    fontFamily: "Inter, Arial, sans-serif",
+    fontFamily:
+      "Inter, Arial, sans-serif",
 
     titleColor: "#101828",
 
@@ -174,88 +307,793 @@ const defaultConfig = {
   },
 
 
-  /* -------------------------------------------------------
-     LOGIN IDENTIFIERS
-  ------------------------------------------------------- */
+  /* =======================================================
+     PAGE-SPECIFIC CUSTOMIZATION
+     
+     Each authentication page has its own independent
+     configuration.
+
+     pages.login
+     pages.signup
+     pages.forgotPassword
+     pages.otp
+  ======================================================= */
+
+  pages: {
+
+
+    /* =====================================================
+       LOGIN PAGE
+    ===================================================== */
+
+    login: {
+
+      enabled: true,
+
+      /* PAGE HEADER */
+
+      header: {
+
+        showTitle: true,
+
+        title: "Welcome back",
+
+        showSubtitle: true,
+
+        subtitle:
+          "Enter your details to access your account."
+      },
+
+
+      /* IDENTIFIER */
+
+      identifier: {
+
+        type: "email",
+
+        /*
+          email
+          mobile
+          username
+        */
+
+        allowed: {
+
+          email: true,
+
+          mobile: true,
+
+          username: false
+        },
+
+        showSwitcher: false,
+
+        switcherStyle: "buttons",
+
+        emailLabel: "Email",
+
+        emailPlaceholder:
+          "Enter your email",
+
+        mobileLabel:
+          "Mobile Number",
+
+        mobilePlaceholder:
+          "Enter your mobile number",
+
+        usernameLabel:
+          "Username",
+
+        usernamePlaceholder:
+          "Enter your username"
+      },
+
+
+      /* PASSWORD */
+
+      password: {
+
+        enabled: true,
+
+        label: "Password",
+
+        placeholder:
+          "Enter your password",
+
+        required: true,
+
+        showToggle: true,
+
+        showForgotPassword: true,
+
+        forgotPasswordText:
+          "Forgot password?"
+      },
+
+
+      /* REMEMBER ME */
+
+      rememberMe: {
+
+        enabled: false,
+
+        text: "Remember me",
+
+        defaultChecked: false
+      },
+
+
+      /* PRIMARY BUTTON */
+
+      button: {
+
+        enabled: true,
+
+        text: "Login",
+
+        action: "login"
+      },
+
+
+      /* OTP LOGIN */
+
+      otp: {
+
+        enabled: true,
+
+        showAsAlternative: true,
+
+        buttonText:
+          "Continue with OTP",
+
+        preferredMethod: "email"
+      },
+
+
+      /* MAGIC LINK */
+
+      magicLink: {
+
+        enabled: false,
+
+        text:
+          "Send me a magic link"
+      },
+
+
+      /* GET KEY */
+
+      getKey: {
+
+        enabled: true,
+
+        label: "Get key from",
+
+        options: [
+
+          "Authenticator",
+
+          "Email",
+
+          "SMS",
+
+          "WhatsApp"
+        ],
+
+        selected: "Email"
+      },
+
+
+      /* SOCIAL LOGIN */
+
+      social: {
+
+        enabled: true,
+
+        dividerText:
+          "or continue with",
+
+        showGoogle: true,
+
+        showLinkedIn: true,
+
+        showFacebook: false,
+
+        showGitHub: false,
+
+        layout: "grid"
+      },
+
+
+      /* BOTTOM NAVIGATION */
+
+      bottom: {
+
+        enabled: true,
+
+        text:
+          "Don't have an account?",
+
+        linkText:
+          "Create account",
+
+        linkTarget:
+          "signup"
+      }
+    },
+
+
+    /* =====================================================
+       SIGNUP PAGE
+    ===================================================== */
+
+    signup: {
+
+      enabled: true,
+
+
+      /* PAGE HEADER */
+
+      header: {
+
+        showTitle: true,
+
+        title:
+          "Create your account",
+
+        showSubtitle: true,
+
+        subtitle:
+          "Enter your details to create an account."
+      },
+
+
+      /* FIELDS */
+
+      fields: {
+
+        fullName: false,
+
+        username: true,
+
+        email: true,
+
+        mobile: true,
+
+        password: true,
+
+        confirmPassword: true
+      },
+
+
+      /* FIELD CUSTOMIZATION */
+
+      fullName: {
+
+        label: "Full Name",
+
+        placeholder:
+          "Enter your full name"
+      },
+
+
+      username: {
+
+        label: "Username",
+
+        placeholder:
+          "Choose a username"
+      },
+
+
+      email: {
+
+        label: "Email",
+
+        placeholder:
+          "Enter your email"
+      },
+
+
+      mobile: {
+
+        label:
+          "Mobile Number",
+
+        placeholder:
+          "Enter your mobile number"
+      },
+
+
+      password: {
+
+        label: "Password",
+
+        placeholder:
+          "Create a password",
+
+        showToggle: true,
+
+        showStrength: false,
+
+        strengthLabel:
+          "Password strength"
+      },
+
+
+      confirmPassword: {
+
+        label:
+          "Confirm Password",
+
+        placeholder:
+          "Confirm your password",
+
+        showToggle: true
+      },
+
+
+      /* TERMS */
+
+      terms: {
+
+        enabled: false,
+
+        required: true,
+
+        text:
+          "I agree to the Terms and Privacy Policy.",
+
+        termsText:
+          "Terms",
+
+        privacyText:
+          "Privacy Policy"
+      },
+
+
+      /* BUTTON */
+
+      button: {
+
+        enabled: true,
+
+        text:
+          "Create account",
+
+        action: "signup"
+      },
+
+
+      /* SOCIAL SIGNUP */
+
+      social: {
+
+        enabled: true,
+
+        dividerText:
+          "or sign up with",
+
+        showGoogle: true,
+
+        showLinkedIn: true,
+
+        showFacebook: false,
+
+        showGitHub: false,
+
+        layout: "grid"
+      },
+
+
+      /* BOTTOM */
+
+      bottom: {
+
+        enabled: true,
+
+        text:
+          "Already have an account?",
+
+        linkText:
+          "Login",
+
+        linkTarget:
+          "login"
+      }
+    },
+
+
+    /* =====================================================
+       FORGOT PASSWORD PAGE
+    ===================================================== */
+
+    forgotPassword: {
+
+      enabled: true,
+
+
+      /* HEADER */
+
+      header: {
+
+        showTitle: true,
+
+        title:
+          "Forgot password?",
+
+        showSubtitle: true,
+
+        subtitle:
+          "Enter your details and we will send you instructions to reset your password."
+      },
+
+
+      /* IDENTIFIER */
+
+      identifier: {
+
+        type: "email",
+
+        /*
+          email
+          mobile
+        */
+
+        allowEmail: true,
+
+        allowMobile: true,
+
+        showSwitcher: false,
+
+        emailLabel: "Email",
+
+        emailPlaceholder:
+          "Enter your email",
+
+        mobileLabel:
+          "Mobile Number",
+
+        mobilePlaceholder:
+          "Enter your mobile number"
+      },
+
+
+      /* BUTTON */
+
+      button: {
+
+        enabled: true,
+
+        text:
+          "Send reset link",
+
+        action:
+          "send-reset-link"
+      },
+
+
+      /* ALTERNATIVE */
+
+      showOtpOption: false,
+
+      otpOptionText:
+        "Verify using OTP",
+
+
+      /* BACK BUTTON */
+
+      back: {
+
+        enabled: true,
+
+        text:
+          "Back to login",
+
+        target:
+          "login"
+      }
+    },
+
+
+    /* =====================================================
+       OTP PAGE
+    ===================================================== */
+
+    otp: {
+
+      enabled: true,
+
+
+      /* HEADER */
+
+      header: {
+
+        showTitle: true,
+
+        title:
+          "Verify your account",
+
+        showSubtitle: true,
+
+        subtitle:
+          "Enter the verification code sent to you."
+      },
+
+
+      /* OTP INPUT */
+
+      input: {
+
+        length: 6,
+
+        /*
+          4
+          6
+          8
+        */
+
+        type: "numeric",
+
+        onlyDigits: true,
+
+        autoFocus: true,
+
+        autoSubmit: false,
+
+        boxStyle: "separate",
+
+        /*
+          separate
+          connected
+          underline
+        */
+
+        boxSize: 52,
+
+        boxGap: 10,
+
+        borderRadius: 12
+      },
+
+
+      /* DELIVERY METHOD */
+
+      delivery: {
+
+        showMethod: true,
+
+        showChangeMethod: true,
+
+        defaultMethod: "email",
+
+        /*
+          email
+          sms
+          whatsapp
+          authenticator
+        */
+
+        methods: {
+
+          email: true,
+
+          sms: true,
+
+          whatsapp: true,
+
+          authenticator: false
+        },
+
+        emailText:
+          "Get code from Email",
+
+        smsText:
+          "Get code from SMS",
+
+        whatsappText:
+          "Get code from WhatsApp",
+
+        authenticatorText:
+          "Get code from Authenticator",
+
+        changeMethodText:
+          "Change verification method"
+      },
+
+
+      /* BUTTON */
+
+      button: {
+
+        enabled: true,
+
+        text: "Verify",
+
+        action:
+          "verify-otp"
+      },
+
+
+      /* RESEND OTP */
+
+      resend: {
+
+        enabled: true,
+
+        text:
+          "Resend code",
+
+        timerEnabled: true,
+
+        timerSeconds: 30,
+
+        timerText:
+          "Resend available in {seconds}s",
+
+        showTimer:
+          true
+      },
+
+
+      /* BACK */
+
+      back: {
+
+        enabled: true,
+
+        text:
+          "Back to login",
+
+        target:
+          "login"
+      }
+    }
+  },
+
+
+  /* =======================================================
+     LEGACY LOGIN CONFIGURATION
+     
+     Kept for backward compatibility with existing JS files.
+  ======================================================= */
 
   login: {
 
     identifier: "email",
 
     allowedIdentifiers: {
+
       email: true,
+
       mobile: true,
+
       username: false
     },
 
     emailLabel: "Email",
 
-    emailPlaceholder: "Enter your email",
+    emailPlaceholder:
+      "Enter your email",
 
-    mobileLabel: "Mobile Number",
+    mobileLabel:
+      "Mobile Number",
 
-    mobilePlaceholder: "Enter your mobile number",
+    mobilePlaceholder:
+      "Enter your mobile number",
 
-    usernameLabel: "Username",
+    usernameLabel:
+      "Username",
 
-    usernamePlaceholder: "Enter your username",
+    usernamePlaceholder:
+      "Enter your username",
 
     showIdentifierSwitcher: false,
 
-    identifierSwitcherStyle: "buttons"
+    identifierSwitcherStyle:
+      "buttons"
   },
 
 
-  /* -------------------------------------------------------
-     AUTHENTICATION METHODS
-  ------------------------------------------------------- */
+  /* =======================================================
+     LEGACY AUTHENTICATION CONFIGURATION
+     
+     Kept for backward compatibility.
+  ======================================================= */
 
   authentication: {
-
-    /* Password */
 
     passwordEnabled: true,
 
     passwordLabel: "Password",
 
-    passwordPlaceholder: "Enter your password",
+    passwordPlaceholder:
+      "Enter your password",
 
     passwordRequired: true,
 
 
     /* OTP */
 
-    otpEnabled: false,
+    otpEnabled: true,
 
     otpLength: 6,
 
-    otpLabel: "Enter verification code",
+    otp: {
+
+      enabled: true,
+
+      length: 6,
+
+      defaultMethod: "email",
+
+      deliveryMethods: [
+
+        "email",
+
+        "sms",
+
+        "whatsapp"
+      ]
+    },
+
+    otpLabel:
+      "Enter verification code",
 
     otpPlaceholder: "",
 
+    otpOnlyDigits: true,
+
+    otpAutoFocus: true,
+
+    otpAutoSubmit: false,
+
+    otpBoxStyle: "separate",
+
     showOtpOnlyWhenSelected: true,
 
+    otpMethods: {
 
-    /* Magic Link */
+      email: true,
+
+      sms: true,
+
+      whatsapp: true,
+
+      authenticator: false
+    },
+
+    defaultOtpMethod: "email",
+
+
+    /* MAGIC LINK */
 
     magicLinkEnabled: false,
 
-    magicLinkText: "Send me a magic link",
+    magicLinkText:
+      "Send me a magic link",
 
 
-    /* Get Key */
+    /* GET KEY */
 
     getKeyEnabled: true,
 
-    getKeyLabel: "Get key from",
+    getKeyLabel:
+      "Get key from",
 
     getKeyOptions: [
+
       "Authenticator",
+
       "Email",
-      "SMS"
+
+      "SMS",
+
+      "WhatsApp"
     ],
 
-    selectedGetKey: "Authenticator"
+    selectedGetKey:
+      "Email"
   },
 
 
@@ -269,21 +1107,29 @@ const defaultConfig = {
 
     showForgotPassword: true,
 
-    forgotPasswordText: "Forgot password?",
+    forgotPasswordText:
+      "Forgot password?",
 
     rememberMeEnabled: false,
 
-    rememberMeText: "Remember me"
+    rememberMeText:
+      "Remember me",
+
+    passwordStrengthEnabled: false,
+
+    passwordStrengthLabel:
+      "Password strength"
   },
 
 
-  /* -------------------------------------------------------
-     PRIMARY BUTTON
-  ------------------------------------------------------- */
+  /* =======================================================
+     GLOBAL PRIMARY BUTTON DESIGN
+     
+     This controls the visual design of buttons across pages.
+     Individual pages control only their text and action.
+  ======================================================= */
 
   button: {
-
-    text: "Login",
 
     backgroundType: "gradient",
 
@@ -292,6 +1138,8 @@ const defaultConfig = {
     gradientStart: "#7f56d9",
 
     gradientEnd: "#6941c6",
+
+    gradientDirection: "135deg",
 
     textColor: "#ffffff",
 
@@ -311,12 +1159,13 @@ const defaultConfig = {
 
     shadowEnabled: true,
 
-    shadow: "0 10px 20px rgba(127, 86, 217, 0.20)"
+    shadow:
+      "0 10px 20px rgba(127, 86, 217, 0.20)"
   },
 
 
   /* -------------------------------------------------------
-     FORM INPUTS
+     FORM INPUT DESIGN
   ------------------------------------------------------- */
 
   inputs: {
@@ -331,7 +1180,8 @@ const defaultConfig = {
 
     focusBorderColor: "#7f56d9",
 
-    focusShadow: "0 0 0 4px rgba(127, 86, 217, 0.12)",
+    focusShadow:
+      "0 0 0 4px rgba(127, 86, 217, 0.12)",
 
     borderWidth: 1,
 
@@ -371,7 +1221,8 @@ const defaultConfig = {
 
     shadowEnabled: false,
 
-    shadow: "0 24px 70px rgba(16, 24, 40, 0.15)",
+    shadow:
+      "0 24px 70px rgba(16,24,40,0.15)",
 
     blurEnabled: false,
 
@@ -397,21 +1248,26 @@ const defaultConfig = {
 
     useGradient: true,
 
+    gradientDirection: "135deg",
+
     gradientStart: "#ffffff",
 
     gradientEnd: "#f3f6fb"
   },
 
 
-  /* -------------------------------------------------------
-     SOCIAL LOGIN
-  ------------------------------------------------------- */
+  /* =======================================================
+     LEGACY SOCIAL CONFIGURATION
+     
+     Backward compatibility.
+  ======================================================= */
 
   social: {
 
     enabled: true,
 
-    dividerText: "or continue with",
+    dividerText:
+      "or continue with",
 
     showGoogle: true,
 
@@ -437,21 +1293,28 @@ const defaultConfig = {
   },
 
 
-  /* -------------------------------------------------------
-     SIGNUP
-  ------------------------------------------------------- */
+  /* =======================================================
+     LEGACY PAGE CONFIGURATION
+     
+     These remain temporarily so older renderer code
+     continues to work.
+  ======================================================= */
 
   signup: {
 
     enabled: true,
 
-    bottomText: "Don't have an account?",
+    bottomText:
+      "Don't have an account?",
 
-    linkText: "Create account",
+    linkText:
+      "Create account",
 
-    title: "Create your account",
+    title:
+      "Create your account",
 
-    subtitle: "Enter your details to create an account.",
+    subtitle:
+      "Enter your details to create an account.",
 
     fields: {
 
@@ -466,43 +1329,53 @@ const defaultConfig = {
       confirmPassword: true
     },
 
-    usernameLabel: "Username",
+    usernameLabel:
+      "Username",
 
-    usernamePlaceholder: "Enter your username",
+    usernamePlaceholder:
+      "Enter your username",
 
-    emailLabel: "Email",
+    emailLabel:
+      "Email",
 
-    emailPlaceholder: "Enter your email",
+    emailPlaceholder:
+      "Enter your email",
 
-    mobileLabel: "Mobile Number",
+    mobileLabel:
+      "Mobile Number",
 
-    mobilePlaceholder: "Enter your mobile number",
+    mobilePlaceholder:
+      "Enter your mobile number",
 
-    passwordLabel: "Password",
+    passwordLabel:
+      "Password",
 
-    passwordPlaceholder: "Create a password",
+    passwordPlaceholder:
+      "Create a password",
 
-    confirmPasswordLabel: "Confirm Password",
+    confirmPasswordLabel:
+      "Confirm Password",
 
-    confirmPasswordPlaceholder: "Confirm your password",
+    confirmPasswordPlaceholder:
+      "Confirm your password",
 
-    buttonText: "Create account",
+    buttonText:
+      "Create account",
 
-    loginText: "Already have an account?",
+    loginText:
+      "Already have an account?",
 
-    loginLinkText: "Login"
+    loginLinkText:
+      "Login"
   },
 
-
-  /* -------------------------------------------------------
-     FORGOT PASSWORD PAGE
-  ------------------------------------------------------- */
 
   forgotPassword: {
 
     enabled: true,
 
-    title: "Forgot password?",
+    title:
+      "Forgot password?",
 
     subtitle:
       "Enter your email address and we will send you instructions to reset your password.",
@@ -511,30 +1384,54 @@ const defaultConfig = {
 
     emailLabel: "Email",
 
-    emailPlaceholder: "Enter your email",
+    emailPlaceholder:
+      "Enter your email",
 
-    buttonText: "Send reset link",
+    mobileLabel:
+      "Mobile Number",
 
-    backText: "Back to login"
+    mobilePlaceholder:
+      "Enter your mobile number",
+
+    buttonText:
+      "Send reset link",
+
+    backText:
+      "Back to login"
   },
 
 
-  /* -------------------------------------------------------
-     OTP PAGE
-  ------------------------------------------------------- */
-
   otpPage: {
 
-    title: "Verify your account",
+    enabled: true,
+
+    title:
+      "Verify your account",
 
     subtitle:
       "Enter the verification code sent to you.",
 
-    buttonText: "Verify",
+    buttonText:
+      "Verify",
 
     resendEnabled: true,
 
-    resendText: "Resend code"
+    resendText:
+      "Resend code",
+
+    resendTimerEnabled: true,
+
+    resendTimerSeconds: 30,
+
+    resendTimerText:
+      "Resend available in {seconds}s",
+
+    showDeliveryMethod: true,
+
+    showChangeMethod: true,
+
+    changeMethodText:
+      "Change verification method"
   },
 
 
@@ -591,7 +1488,31 @@ const defaultConfig = {
      CUSTOM CSS
   ------------------------------------------------------- */
 
-  customCSS: ""
+  customCSS: "",
+
+
+  /* -------------------------------------------------------
+     DOWNLOADED PROJECT
+  ------------------------------------------------------- */
+
+  download: {
+
+    includeHTML: true,
+
+    includeCSS: true,
+
+    includeJS: true,
+
+    includeAssets: true,
+
+    includeUploadedAssets: true,
+
+    includeDefaultAssets: true,
+
+    includeConfig: true,
+
+    generateProjectFolder: true
+  }
 };
 
 
@@ -599,7 +1520,8 @@ const defaultConfig = {
    ACTIVE CONFIGURATION
 ========================================================= */
 
-let config = deepClone(defaultConfig);
+let config =
+  deepClone(defaultConfig);
 
 
 /* =========================================================
@@ -607,6 +1529,13 @@ let config = deepClone(defaultConfig);
 ========================================================= */
 
 function deepClone(value) {
+
+  if (
+    value === undefined
+  ) {
+    return undefined;
+  }
+
   return JSON.parse(
     JSON.stringify(value)
   );
@@ -618,9 +1547,12 @@ function deepClone(value) {
 ========================================================= */
 
 function resetConfig() {
-  config = deepClone(defaultConfig);
 
-  window.config = config;
+  config =
+    deepClone(defaultConfig);
+
+  window.config =
+    config;
 
   return config;
 }
@@ -631,7 +1563,10 @@ function resetConfig() {
 ========================================================= */
 
 function getDefaultConfig() {
-  return deepClone(defaultConfig);
+
+  return deepClone(
+    defaultConfig
+  );
 }
 
 
@@ -640,20 +1575,32 @@ function getDefaultConfig() {
 ========================================================= */
 
 function setConfig(newConfig) {
+
   if (
     !newConfig ||
-    typeof newConfig !== "object"
+    typeof newConfig !==
+      "object"
   ) {
+
     console.warn(
       "Invalid configuration provided"
     );
 
-    return;
+    return false;
   }
 
-  config = newConfig;
+  config =
+    mergeConfig(
+      deepClone(defaultConfig),
+      newConfig
+    );
 
-  window.config = config;
+  synchronizePageCompatibility();
+
+  window.config =
+    config;
+
+  return true;
 }
 
 
@@ -662,6 +1609,7 @@ function setConfig(newConfig) {
 ========================================================= */
 
 function exportConfig() {
+
   return JSON.stringify(
     config,
     null,
@@ -675,7 +1623,9 @@ function exportConfig() {
 ========================================================= */
 
 function importConfig(jsonData) {
+
   try {
+
     const parsedConfig =
       typeof jsonData === "string"
         ? JSON.parse(jsonData)
@@ -683,19 +1633,25 @@ function importConfig(jsonData) {
 
     if (
       !parsedConfig ||
-      typeof parsedConfig !== "object"
+      typeof parsedConfig !==
+        "object"
     ) {
+
       throw new Error(
         "Invalid configuration"
       );
     }
 
-    config = mergeConfig(
-      deepClone(defaultConfig),
-      parsedConfig
-    );
+    config =
+      mergeConfig(
+        deepClone(defaultConfig),
+        parsedConfig
+      );
 
-    window.config = config;
+    synchronizePageCompatibility();
+
+    window.config =
+      config;
 
     return true;
 
@@ -712,6 +1668,92 @@ function importConfig(jsonData) {
 
 
 /* =========================================================
+   SYNCHRONIZE LEGACY + PAGE CONFIG
+========================================================= */
+
+function synchronizePageCompatibility() {
+
+  if (
+    !config.pages
+  ) {
+    return;
+  }
+
+  /* LOGIN */
+
+  if (
+    config.pages.login
+  ) {
+
+    const loginPage =
+      config.pages.login;
+
+    config.login.identifier =
+      loginPage.identifier?.type ||
+      config.login.identifier;
+
+    config.login.emailLabel =
+      loginPage.identifier?.emailLabel ||
+      config.login.emailLabel;
+
+    config.login.emailPlaceholder =
+      loginPage.identifier?.emailPlaceholder ||
+      config.login.emailPlaceholder;
+
+    config.login.mobileLabel =
+      loginPage.identifier?.mobileLabel ||
+      config.login.mobileLabel;
+
+    config.login.mobilePlaceholder =
+      loginPage.identifier?.mobilePlaceholder ||
+      config.login.mobilePlaceholder;
+
+    config.authentication.passwordEnabled =
+      loginPage.password?.enabled;
+
+    config.authentication.passwordLabel =
+      loginPage.password?.label ||
+      config.authentication.passwordLabel;
+
+    config.authentication.passwordPlaceholder =
+      loginPage.password?.placeholder ||
+      config.authentication.passwordPlaceholder;
+
+    config.button.text =
+      loginPage.button?.text ||
+      config.button.text;
+  }
+
+
+  /* OTP */
+
+  if (
+    config.pages.otp
+  ) {
+
+    const otp =
+      config.pages.otp;
+
+    config.authentication.otpLength =
+      otp.input?.length ||
+      config.authentication.otpLength;
+
+    config.authentication.otp.length =
+      otp.input?.length ||
+      config.authentication.otp.length;
+
+    config.authentication.defaultOtpMethod =
+      otp.delivery?.defaultMethod ||
+      config.authentication.defaultOtpMethod;
+
+    config.authentication.otp.defaultMethod =
+      otp.delivery?.defaultMethod ||
+      config.authentication.otp.defaultMethod;
+  }
+}
+
+
+/* =========================================================
    MERGE CONFIGURATION
 ========================================================= */
 
@@ -720,19 +1762,35 @@ function mergeConfig(
   source
 ) {
 
+  if (
+    !source ||
+    typeof source !==
+      "object"
+  ) {
+    return target;
+  }
+
   Object.keys(source).forEach(
     (key) => {
 
       if (
         source[key] &&
-        typeof source[key] === "object" &&
-        !Array.isArray(source[key])
+        typeof source[key] ===
+          "object" &&
+        !Array.isArray(
+          source[key]
+        )
       ) {
 
         if (
           !target[key] ||
-          typeof target[key] !== "object"
+          typeof target[key] !==
+            "object" ||
+          Array.isArray(
+            target[key]
+          )
         ) {
+
           target[key] = {};
         }
 
@@ -744,10 +1802,10 @@ function mergeConfig(
       } else {
 
         target[key] =
-          source[key];
-
+          deepClone(
+            source[key]
+          );
       }
-
     }
   );
 
@@ -763,7 +1821,8 @@ function getConfigByPath(path) {
 
   if (
     !path ||
-    typeof path !== "string"
+    typeof path !==
+      "string"
   ) {
     return undefined;
   }
@@ -774,7 +1833,9 @@ function getConfigByPath(path) {
   let current =
     config;
 
-  for (const key of keys) {
+  for (
+    const key of keys
+  ) {
 
     if (
       current === undefined ||
@@ -785,7 +1846,6 @@ function getConfigByPath(path) {
 
     current =
       current[key];
-
   }
 
   return current;
@@ -803,9 +1863,10 @@ function setConfigByPath(
 
   if (
     !path ||
-    typeof path !== "string"
+    typeof path !==
+      "string"
   ) {
-    return;
+    return false;
   }
 
   const keys =
@@ -825,8 +1886,13 @@ function setConfigByPath(
 
     if (
       !current[key] ||
-      typeof current[key] !== "object"
+      typeof current[key] !==
+        "object" ||
+      Array.isArray(
+        current[key]
+      )
     ) {
+
       current[key] = {};
     }
 
@@ -838,7 +1904,103 @@ function setConfigByPath(
     keys[keys.length - 1]
   ] = value;
 
-  window.config = config;
+  synchronizeChangedPath(
+    path,
+    value
+  );
+
+  window.config =
+    config;
+
+  return true;
+}
+
+
+/* =========================================================
+   SYNCHRONIZE CHANGED PATHS
+========================================================= */
+
+function synchronizeChangedPath(
+  path,
+  value
+) {
+
+  /* OTP LENGTH */
+
+  if (
+    path ===
+    "pages.otp.input.length"
+  ) {
+
+    config.authentication.otpLength =
+      Number(value);
+
+    config.authentication.otp.length =
+      Number(value);
+  }
+
+
+  /* OTP METHOD */
+
+  if (
+    path ===
+    "pages.otp.delivery.defaultMethod"
+  ) {
+
+    config.authentication.defaultOtpMethod =
+      value;
+
+    config.authentication.otp.defaultMethod =
+      value;
+  }
+
+
+  /* LOGIN TITLE */
+
+  if (
+    path ===
+    "pages.login.header.title"
+  ) {
+
+    config.branding.title =
+      value;
+  }
+
+
+  /* SIGNUP */
+
+  if (
+    path ===
+    "pages.signup.header.title"
+  ) {
+
+    config.signup.title =
+      value;
+  }
+
+
+  /* FORGOT PASSWORD */
+
+  if (
+    path ===
+    "pages.forgotPassword.header.title"
+  ) {
+
+    config.forgotPassword.title =
+      value;
+  }
+
+
+  /* OTP TITLE */
+
+  if (
+    path ===
+    "pages.otp.header.title"
+  ) {
+
+    config.otpPage.title =
+      value;
+  }
 }
 
 
@@ -883,6 +2045,7 @@ function loadConfigLocally() {
       );
 
     if (!savedConfig) {
+
       return false;
     }
 
@@ -932,6 +2095,8 @@ function clearLocalConfig() {
    INITIALIZE GLOBAL CONFIG
 ========================================================= */
 
+synchronizePageCompatibility();
+
 window.defaultConfig =
   defaultConfig;
 
@@ -967,7 +2132,9 @@ window.authConfig = {
 
   loadConfigLocally,
 
-  clearLocalConfig
+  clearLocalConfig,
+
+  synchronizePageCompatibility
 };
 
 
