@@ -9,7 +9,7 @@ class PreviewManager {
   constructor(options = {}) {
     this.previewSelector =
       options.previewSelector ||
-      "#preview-content";
+      "#previewRoot";
 
     this.deviceSelector =
       options.deviceSelector ||
@@ -2961,7 +2961,7 @@ document.addEventListener(
     window.previewManager =
       new PreviewManager({
         previewSelector:
-          "#preview-content",
+          "#previewRoot",
 
         deviceSelector:
           "[data-preview-device]",

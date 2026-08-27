@@ -19,7 +19,7 @@ class AuthPageRenderer {
     this.renderQueued = false;
 
     this.previewSelector =
-      "#preview-content";
+      "#previewRoot";
 
     this.initialized = false;
 

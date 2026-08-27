@@ -13,7 +13,7 @@ class FullscreenManager {
 
     this.previewContentSelector =
       options.previewContentSelector ||
-      "#preview-content";
+      "#previewRoot";
 
     this.fullscreenButtonSelector =
       options.fullscreenButtonSelector ||
@@ -434,7 +434,7 @@ document.addEventListener(
           "#preview",
 
         previewContentSelector:
-          "#preview-content",
+          "#previewRoot",
 
         fullscreenButtonSelector:
           "#fullscreen-btn"

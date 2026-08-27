@@ -1,8 +1,22 @@
 /* =========================================================
    AUTH PAGE BUILDER
-   File: css/layout.css
+   FILE: css/layout.css
 
-   Main application layout
+   Application Layout + Dynamic Preview Layout System
+
+   Supports:
+   - Builder workspace
+   - Sidebar
+   - Preview area
+   - Desktop / Tablet / Mobile preview
+   - Fullscreen preview
+   - Split layouts
+   - Centered layouts
+   - Image left / right
+   - Dynamic image width
+   - Dynamic form width
+   - Dynamic form positioning
+   - Dynamic vertical alignment
 ========================================================= */
 
 
@@ -11,16 +25,16 @@
 ========================================================= */
 
 .app {
-  width: 100%;
-  min-width: 0;
-  min-height: 100vh;
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
 
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  overflow: hidden;
+    overflow: hidden;
 
-  background: #f4f7fb;
+    background: #f4f7fb;
 }
 
 
@@ -29,33 +43,31 @@
 ========================================================= */
 
 .app-header {
-  height: 64px;
+    height: 64px;
 
-  flex-shrink: 0;
+    flex-shrink: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  gap: 20px;
+    gap: 20px;
 
-  padding: 0 24px;
+    padding: 0 24px;
 
-  position: relative;
-  z-index: 100;
+    position: relative;
+    z-index: 100;
 
-  border-bottom: 1px solid #e5eaf1;
+    border-bottom: 1px solid #e5eaf1;
 
-  background:
-    rgba(255, 255, 255, 0.96);
+    background: rgba(255, 255, 255, 0.96);
 
-  box-shadow:
-    0 2px 12px
-    rgba(15, 23, 42, 0.03);
+    box-shadow:
+        0 2px 12px
+        rgba(15, 23, 42, 0.03);
 
-  backdrop-filter: blur(14px);
-
-  -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 
@@ -64,81 +76,81 @@
 ========================================================= */
 
 .header-left {
-  min-width: 0;
+    min-width: 0;
 
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 
-  gap: 12px;
+    gap: 12px;
 }
 
 
 .app-brand {
-  display: flex;
-  align-items: center;
+    min-width: 0;
 
-  gap: 10px;
+    display: flex;
+    align-items: center;
 
-  min-width: 0;
+    gap: 10px;
 }
 
 
 .app-brand-icon {
-  width: 36px;
-  height: 36px;
+    width: 36px;
+    height: 36px;
 
-  display: grid;
-  place-items: center;
+    flex-shrink: 0;
 
-  flex-shrink: 0;
+    display: grid;
+    place-items: center;
 
-  color: #ffffff;
+    color: #ffffff;
 
-  font-size: 16px;
-  font-weight: 800;
+    font-size: 16px;
+    font-weight: 800;
 
-  border-radius: 10px;
+    border-radius: 10px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #7c3aed
-    );
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
 
-  box-shadow:
-    0 7px 18px
-    rgba(37, 99, 235, 0.22);
+    box-shadow:
+        0 7px 18px
+        rgba(37, 99, 235, 0.22);
 }
 
 
 .app-brand-content {
-  min-width: 0;
+    min-width: 0;
 }
 
 
 .app-brand-title {
-  margin: 0;
+    margin: 0;
 
-  color: #0f172a;
+    color: #0f172a;
 
-  font-size: 15px;
-  font-weight: 800;
+    font-size: 15px;
+    font-weight: 800;
 
-  letter-spacing: -0.02em;
+    letter-spacing: -0.02em;
 
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 
 .app-brand-subtitle {
-  margin: 2px 0 0;
+    margin: 2px 0 0;
 
-  color: #94a3b8;
+    color: #94a3b8;
 
-  font-size: 10px;
+    font-size: 10px;
 
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 
@@ -147,13 +159,13 @@
 ========================================================= */
 
 .header-center {
-  flex: 1;
+    flex: 1;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    min-width: 0;
 
-  min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
@@ -162,14 +174,13 @@
 ========================================================= */
 
 .header-right {
-  display: flex;
-  align-items: center;
+    flex-shrink: 0;
 
-  justify-content: flex-end;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 
-  gap: 8px;
-
-  flex-shrink: 0;
+    gap: 8px;
 }
 
 
@@ -178,17 +189,17 @@
 ========================================================= */
 
 .app-workspace {
-  flex: 1;
+    flex: 1;
 
-  min-height: 0;
+    min-height: 0;
 
-  display: grid;
+    display: grid;
 
-  grid-template-columns:
-    minmax(310px, 380px)
-    minmax(0, 1fr);
+    grid-template-columns:
+        minmax(310px, 380px)
+        minmax(0, 1fr);
 
-  overflow: hidden;
+    overflow: hidden;
 }
 
 
@@ -197,20 +208,20 @@
 ========================================================= */
 
 .customization-sidebar {
-  min-width: 0;
-  min-height: 0;
+    min-width: 0;
+    min-height: 0;
 
-  position: relative;
+    position: relative;
 
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  overflow: hidden;
+    overflow: hidden;
 
-  border-right:
-    1px solid #e2e8f0;
+    border-right:
+        1px solid #e2e8f0;
 
-  background: #ffffff;
+    background: #ffffff;
 }
 
 
@@ -219,43 +230,41 @@
 ========================================================= */
 
 .sidebar-header {
-  min-height: 62px;
+    min-height: 62px;
 
-  flex-shrink: 0;
+    flex-shrink: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  gap: 12px;
+    gap: 12px;
 
-  padding: 0 18px;
+    padding: 0 18px;
 
-  border-bottom:
-    1px solid #e2e8f0;
+    border-bottom:
+        1px solid #e2e8f0;
 
-  background:
-    rgba(255, 255, 255, 0.96);
+    background:
+        rgba(255, 255, 255, 0.96);
 }
 
 
 .sidebar-title {
-  margin: 0;
+    margin: 0;
 
-  color: #0f172a;
+    color: #0f172a;
 
-  font-size: 13px;
-  font-weight: 800;
-
-  letter-spacing: -0.01em;
+    font-size: 13px;
+    font-weight: 800;
 }
 
 
 .sidebar-header-actions {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 
-  gap: 6px;
+    gap: 6px;
 }
 
 
@@ -264,75 +273,74 @@
 ========================================================= */
 
 .sidebar-page-tabs {
-  min-height: 52px;
+    min-height: 52px;
 
-  flex-shrink: 0;
+    flex-shrink: 0;
 
-  display: grid;
+    display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
 
-  gap: 4px;
+    gap: 4px;
 
-  padding: 8px;
+    padding: 8px;
 
-  border-bottom:
-    1px solid #e2e8f0;
+    border-bottom:
+        1px solid #e2e8f0;
 
-  background:
-    #f8fafc;
+    background: #f8fafc;
 }
 
 
 .sidebar-page-tab {
-  min-width: 0;
+    min-width: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-  gap: 5px;
+    gap: 5px;
 
-  padding: 0 6px;
+    padding: 0 6px;
 
-  color: #64748b;
+    color: #64748b;
 
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 700;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
 
-  white-space: nowrap;
+    white-space: nowrap;
 
-  border: none;
-  border-radius: 8px;
+    border: none;
+    border-radius: 8px;
 
-  background: transparent;
+    background: transparent;
 
-  cursor: pointer;
+    cursor: pointer;
 
-  transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 
 .sidebar-page-tab:hover {
-  color: #2563eb;
+    color: #2563eb;
 
-  background: #eff6ff;
+    background: #eff6ff;
 }
 
 
 .sidebar-page-tab.active {
-  color: #2563eb;
+    color: #2563eb;
 
-  background: #ffffff;
+    background: #ffffff;
 
-  box-shadow:
-    0 3px 10px
-    rgba(15, 23, 42, 0.08);
+    box-shadow:
+        0 3px 10px
+        rgba(15, 23, 42, 0.08);
 }
 
 
@@ -341,14 +349,14 @@
 ========================================================= */
 
 .customization-scroll {
-  flex: 1;
+    flex: 1;
 
-  min-height: 0;
+    min-height: 0;
 
-  overflow-y: auto;
-  overflow-x: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 
-  padding: 14px;
+    padding: 14px;
 }
 
 
@@ -357,15 +365,15 @@
 ========================================================= */
 
 .sidebar-footer {
-  flex-shrink: 0;
+    flex-shrink: 0;
 
-  padding: 12px 14px;
+    padding: 12px 14px;
 
-  border-top:
-    1px solid #e2e8f0;
+    border-top:
+        1px solid #e2e8f0;
 
-  background:
-    rgba(255, 255, 255, 0.98);
+    background:
+        rgba(255, 255, 255, 0.98);
 }
 
 
@@ -374,18 +382,17 @@
 ========================================================= */
 
 .preview-area {
-  min-width: 0;
-  min-height: 0;
+    min-width: 0;
+    min-height: 0;
 
-  position: relative;
+    position: relative;
 
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  overflow: hidden;
+    overflow: hidden;
 
-  background:
-    #eef2f7;
+    background: #eef2f7;
 }
 
 
@@ -394,104 +401,106 @@
 ========================================================= */
 
 .preview-header {
-  min-height: 62px;
+    min-height: 62px;
 
-  flex-shrink: 0;
+    flex-shrink: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  gap: 14px;
+    gap: 14px;
 
-  padding: 0 18px;
+    padding: 0 18px;
 
-  border-bottom:
-    1px solid #dfe5ed;
+    position: relative;
+    z-index: 50;
 
-  background:
-    rgba(255, 255, 255, 0.9);
+    border-bottom:
+        1px solid #dfe5ed;
 
-  backdrop-filter:
-    blur(12px);
+    background:
+        rgba(255, 255, 255, 0.9);
 
-  -webkit-backdrop-filter:
-    blur(12px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 
 .preview-header-left {
-  min-width: 0;
+    min-width: 0;
 
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 
-  gap: 12px;
+    gap: 12px;
 }
 
 
 .preview-title-group {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  gap: 2px;
+    gap: 2px;
 }
 
 
 .preview-title {
-  margin: 0;
+    margin: 0;
 
-  color: #0f172a;
+    color: #0f172a;
 
-  font-size: 13px;
-  font-weight: 800;
+    font-size: 13px;
+    font-weight: 800;
 }
 
 
 .preview-subtitle {
-  margin: 0;
+    margin: 0;
 
-  color: #94a3b8;
+    color: #94a3b8;
 
-  font-size: 10px;
+    font-size: 10px;
 }
 
 
 .preview-header-right {
-  display: flex;
-  align-items: center;
+    flex-shrink: 0;
 
-  gap: 8px;
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
 }
 
 
 /* =========================================================
-   PREVIEW CANVAS AREA
+   PREVIEW CANVAS WRAPPER
 ========================================================= */
 
 .preview-canvas-wrapper {
-  flex: 1;
+    flex: 1;
 
-  min-width: 0;
-  min-height: 0;
+    min-width: 0;
+    min-height: 0;
 
-  position: relative;
+    position: relative;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-  overflow: auto;
+    overflow: auto;
 
-  padding:
-    clamp(12px, 2vw, 28px);
+    padding:
+        clamp(12px, 2vw, 28px);
 
-  background:
-    linear-gradient(
-      135deg,
-      #e9eef5,
-      #f4f7fb
-    );
+    background:
+        linear-gradient(
+            135deg,
+            #e9eef5,
+            #f4f7fb
+        );
 }
 
 
@@ -500,129 +509,123 @@
 ========================================================= */
 
 .preview-canvas {
-  position: relative;
+    position: relative;
 
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 
-  min-width: 0;
-  min-height: 0;
+    min-width: 0;
+    min-height: 0;
 
-  overflow: hidden;
+    overflow: hidden;
 
-  background: #ffffff;
+    background: #ffffff;
 
-  border-radius: 16px;
+    border-radius: 16px;
 
-  box-shadow:
-    0 18px 55px
-    rgba(15, 23, 42, 0.12);
+    box-shadow:
+        0 18px 55px
+        rgba(15, 23, 42, 0.12);
 
-  transition:
-    width 0.3s ease,
-    height 0.3s ease,
-    border-radius 0.3s ease,
-    box-shadow 0.3s ease;
+    transition:
+        width 0.3s ease,
+        height 0.3s ease,
+        border-radius 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 
 /* =========================================================
-   DESKTOP PREVIEW
+   DEVICE PREVIEW
 ========================================================= */
 
 .preview-canvas.device-desktop {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 
-  max-width: 1440px;
-  max-height: 900px;
+    max-width: 1440px;
+    max-height: 900px;
 }
 
-
-/* =========================================================
-   TABLET PREVIEW
-========================================================= */
 
 .preview-canvas.device-tablet {
-  width: min(820px, 90%);
-  height: min(100%, 900px);
+    width: min(820px, 90%);
+    height: auto;
 
-  aspect-ratio:
-    4 / 3;
+    aspect-ratio: 4 / 3;
 
-  border-radius: 18px;
+    max-height: 900px;
+
+    border-radius: 18px;
 }
 
-
-/* =========================================================
-   MOBILE PREVIEW
-========================================================= */
 
 .preview-canvas.device-mobile {
-  width: min(390px, 100%);
-  height: min(760px, 100%);
+    width: min(390px, 100%);
+    height: auto;
 
-  aspect-ratio:
-    390 / 760;
+    aspect-ratio: 390 / 760;
 
-  border-radius: 24px;
+    max-height: 100%;
 
-  box-shadow:
-    0 22px 60px
-    rgba(15, 23, 42, 0.18);
+    border-radius: 24px;
+
+    box-shadow:
+        0 22px 60px
+        rgba(15, 23, 42, 0.18);
 }
 
 
 /* =========================================================
-   DEVICE FRAME
+   MOBILE DEVICE FRAME
 ========================================================= */
 
 .preview-canvas.device-mobile::before {
-  content: "";
+    content: "";
 
-  width: 110px;
-  height: 18px;
+    width: 110px;
+    height: 18px;
 
-  position: absolute;
+    position: absolute;
 
-  top: 0;
-  left: 50%;
+    top: 0;
+    left: 50%;
 
-  z-index: 100;
+    z-index: 200;
 
-  border-radius:
-    0 0 12px 12px;
+    border-radius:
+        0 0 12px 12px;
 
-  background: #111827;
+    background: #111827;
 
-  transform:
-    translateX(-50%);
+    transform:
+        translateX(-50%);
 
-  pointer-events: none;
+    pointer-events: none;
 }
 
 
 .preview-canvas.device-mobile::after {
-  content: "";
+    content: "";
 
-  width: 7px;
-  height: 7px;
+    width: 7px;
+    height: 7px;
 
-  position: absolute;
+    position: absolute;
 
-  top: 5px;
-  left: 50%;
+    top: 5px;
+    left: 50%;
 
-  z-index: 101;
+    z-index: 201;
 
-  border-radius: 50%;
+    border-radius: 50%;
 
-  background: #334155;
+    background: #334155;
 
-  transform:
-    translateX(-50%);
+    transform:
+        translateX(-50%);
 
-  pointer-events: none;
+    pointer-events: none;
 }
 
 
@@ -631,49 +634,516 @@
 ========================================================= */
 
 .preview-status-bar {
-  min-height: 32px;
+    min-height: 32px;
 
-  flex-shrink: 0;
+    flex-shrink: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  gap: 12px;
+    gap: 12px;
 
-  padding: 0 18px;
+    padding: 0 18px;
 
-  color: #64748b;
+    color: #64748b;
 
-  font-size: 10px;
+    font-size: 10px;
 
-  border-top:
-    1px solid #dfe5ed;
+    border-top:
+        1px solid #dfe5ed;
 
-  background:
-    rgba(255, 255, 255, 0.92);
+    background:
+        rgba(255, 255, 255, 0.92);
 }
 
 
 .preview-status-left,
 .preview-status-right {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 
-  gap: 10px;
+    gap: 10px;
 }
 
 
 /* =========================================================
-   RESIZABLE SIDEBAR SUPPORT
+   AUTH PREVIEW ROOT
+
+   THIS IS THE IMPORTANT SECTION.
+
+   JavaScript should place layout classes on:
+
+   .auth-page
+
+   Examples:
+
+   layout-split
+   layout-centered
+   layout-image-left
+   layout-image-right
+
+   form-left
+   form-center
+   form-right
+========================================================= */
+
+.auth-page {
+    width: 100%;
+    height: 100%;
+
+    min-width: 0;
+    min-height: 0;
+
+    position: relative;
+
+    display: flex;
+
+    overflow: hidden;
+
+    background:
+        var(
+            --auth-page-background,
+            #ffffff
+        );
+
+    color:
+        var(
+            --auth-text-color,
+            #0f172a
+        );
+
+    font-family:
+        var(
+            --auth-font-family,
+            Inter, Arial, sans-serif
+        );
+
+    transition:
+        background 0.25s ease,
+        color 0.25s ease;
+}
+
+
+/* =========================================================
+   AUTH PAGE LAYOUT VARIABLES
+========================================================= */
+
+.auth-page {
+    --auth-image-width: 50%;
+
+    --auth-form-width: 420px;
+
+    --auth-content-padding: 48px;
+
+    --auth-form-horizontal-align: center;
+
+    --auth-form-vertical-align: center;
+
+    --auth-image-position: left;
+}
+
+
+/* =========================================================
+   AUTH VISUAL / IMAGE PANEL
+========================================================= */
+
+.auth-visual {
+    width:
+        var(
+            --auth-image-width,
+            50%
+        );
+
+    min-width: 0;
+
+    position: relative;
+
+    flex-shrink: 0;
+
+    overflow: hidden;
+
+    background:
+        var(
+            --auth-visual-background,
+            #f1f5f9
+        );
+}
+
+
+/* IMAGE */
+
+.auth-visual-image {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit:
+        var(
+            --auth-image-fit,
+            cover
+        );
+
+    object-position:
+        var(
+            --auth-image-position,
+            center
+        );
+}
+
+
+/* OVERLAY */
+
+.auth-visual-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        var(
+            --auth-image-overlay,
+            transparent
+        );
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   AUTH FORM SIDE
+========================================================= */
+
+.auth-content {
+    flex: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    display: flex;
+
+    align-items:
+        var(
+            --auth-form-vertical-align,
+            center
+        );
+
+    justify-content:
+        var(
+            --auth-form-horizontal-align,
+            center
+        );
+
+    padding:
+        var(
+            --auth-content-padding,
+            48px
+        );
+
+    overflow-y: auto;
+
+    background:
+        var(
+            --auth-content-background,
+            #ffffff
+        );
+}
+
+
+/* =========================================================
+   AUTH FORM WRAPPER
+========================================================= */
+
+.auth-form-wrapper {
+    width: 100%;
+
+    max-width:
+        var(
+            --auth-form-width,
+            420px
+        );
+
+    flex-shrink: 0;
+
+    transition:
+        max-width 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+/* =========================================================
+   SPLIT LAYOUT
+========================================================= */
+
+.auth-page.layout-split {
+    flex-direction: row;
+}
+
+
+.auth-page.layout-split
+.auth-visual {
+    order: 1;
+}
+
+
+.auth-page.layout-split
+.auth-content {
+    order: 2;
+}
+
+
+/* =========================================================
+   IMAGE LEFT
+========================================================= */
+
+.auth-page.layout-image-left {
+    flex-direction: row;
+}
+
+
+.auth-page.layout-image-left
+.auth-visual {
+    order: 1;
+}
+
+
+.auth-page.layout-image-left
+.auth-content {
+    order: 2;
+}
+
+
+/* =========================================================
+   IMAGE RIGHT
+========================================================= */
+
+.auth-page.layout-image-right {
+    flex-direction: row;
+}
+
+
+.auth-page.layout-image-right
+.auth-visual {
+    order: 2;
+}
+
+
+.auth-page.layout-image-right
+.auth-content {
+    order: 1;
+}
+
+
+/* =========================================================
+   CENTERED LAYOUT
+
+   Image is hidden.
+   Form occupies full preview.
+========================================================= */
+
+.auth-page.layout-centered {
+    display: flex;
+}
+
+
+.auth-page.layout-centered
+.auth-visual {
+    display: none;
+}
+
+
+.auth-page.layout-centered
+.auth-content {
+    width: 100%;
+    height: 100%;
+
+    flex: 1;
+}
+
+
+/* =========================================================
+   IMAGE ONLY BACKGROUND LAYOUT
+========================================================= */
+
+.auth-page.layout-background {
+    display: block;
+
+    background-size: cover;
+
+    background-position: center;
+
+    background-repeat: no-repeat;
+}
+
+
+.auth-page.layout-background
+.auth-visual {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 1;
+}
+
+
+.auth-page.layout-background
+.auth-content {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 2;
+
+    background:
+        var(
+            --auth-content-overlay-background,
+            rgba(255, 255, 255, 0.88)
+        );
+}
+
+
+/* =========================================================
+   FORM HORIZONTAL POSITIONS
+========================================================= */
+
+.auth-page.form-left
+.auth-content {
+    justify-content: flex-start;
+}
+
+
+.auth-page.form-center
+.auth-content {
+    justify-content: center;
+}
+
+
+.auth-page.form-right
+.auth-content {
+    justify-content: flex-end;
+}
+
+
+/* =========================================================
+   FORM VERTICAL POSITIONS
+========================================================= */
+
+.auth-page.form-top
+.auth-content {
+    align-items: flex-start;
+}
+
+
+.auth-page.form-middle
+.auth-content {
+    align-items: center;
+}
+
+
+.auth-page.form-bottom
+.auth-content {
+    align-items: flex-end;
+}
+
+
+/* =========================================================
+   IMAGE WIDTH PRESETS
+========================================================= */
+
+.auth-page.image-width-small {
+    --auth-image-width: 35%;
+}
+
+
+.auth-page.image-width-medium {
+    --auth-image-width: 50%;
+}
+
+
+.auth-page.image-width-large {
+    --auth-image-width: 65%;
+}
+
+
+.auth-page.image-width-full {
+    --auth-image-width: 100%;
+}
+
+
+/* =========================================================
+   FORM WIDTH PRESETS
+========================================================= */
+
+.auth-page.form-width-small {
+    --auth-form-width: 320px;
+}
+
+
+.auth-page.form-width-medium {
+    --auth-form-width: 420px;
+}
+
+
+.auth-page.form-width-large {
+    --auth-form-width: 540px;
+}
+
+
+.auth-page.form-width-full {
+    --auth-form-width: 100%;
+}
+
+
+/* =========================================================
+   CONTENT PADDING PRESETS
+========================================================= */
+
+.auth-page.padding-small {
+    --auth-content-padding: 24px;
+}
+
+
+.auth-page.padding-medium {
+    --auth-content-padding: 48px;
+}
+
+
+.auth-page.padding-large {
+    --auth-content-padding: 72px;
+}
+
+
+/* =========================================================
+   AUTH PAGE CUSTOM IMAGE WIDTH
+
+   JavaScript can dynamically do:
+
+   element.style.setProperty(
+       "--auth-image-width",
+       "40%"
+   );
+========================================================= */
+
+.auth-page[data-image-width] {
+    --auth-image-width:
+        attr(data-image-width);
+}
+
+
+/* =========================================================
+   RESIZABLE SIDEBAR
 ========================================================= */
 
 .customization-sidebar {
-  resize: horizontal;
+    resize: horizontal;
 
-  max-width: 520px;
+    max-width: 520px;
 
-  overflow: auto;
+    overflow: auto;
 }
 
 
@@ -682,107 +1152,122 @@
 ========================================================= */
 
 .app-workspace.sidebar-collapsed {
-  grid-template-columns:
-    0
-    minmax(0, 1fr);
+    grid-template-columns:
+        0
+        minmax(0, 1fr);
 }
 
 
 .app-workspace.sidebar-collapsed
 .customization-sidebar {
-  border-right: none;
+    width: 0;
 
-  opacity: 0;
+    padding: 0;
 
-  pointer-events: none;
+    border-right: none;
+
+    opacity: 0;
+
+    pointer-events: none;
 }
 
 
 /* =========================================================
-   FULL PREVIEW MODE
+   FULLSCREEN PREVIEW MODE
 ========================================================= */
 
 .app.preview-fullscreen {
-  position: fixed;
+    position: fixed;
 
-  inset: 0;
+    inset: 0;
 
-  z-index: 99999;
+    z-index: 99999;
 
-  width: 100vw;
-  height: 100vh;
+    width: 100vw;
+    height: 100vh;
+
+    min-height: 100vh;
 }
 
 
 .app.preview-fullscreen
 .app-header {
-  display: none;
+    display: none;
 }
 
 
 .app.preview-fullscreen
 .customization-sidebar {
-  display: none;
+    display: none;
 }
 
 
 .app.preview-fullscreen
 .app-workspace {
-  display: block;
+    display: block;
 
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 
 .app.preview-fullscreen
 .preview-area {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 
 .app.preview-fullscreen
 .preview-header {
-  position: absolute;
+    position: absolute;
 
-  top: 0;
-  left: 0;
-  right: 0;
+    top: 0;
+    left: 0;
+    right: 0;
 
-  z-index: 1000;
+    z-index: 1000;
 
-  background:
-    rgba(255, 255, 255, 0.88);
+    background:
+        rgba(255, 255, 255, 0.88);
 }
 
 
 .app.preview-fullscreen
 .preview-canvas-wrapper {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 
-  padding: 0;
+    padding: 0;
 }
 
 
 .app.preview-fullscreen
 .preview-canvas {
-  width: 100% !important;
-  height: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
 
-  max-width: none !important;
-  max-height: none !important;
+    max-width: none !important;
+    max-height: none !important;
 
-  border-radius: 0;
+    border-radius: 0;
 
-  box-shadow: none;
+    box-shadow: none;
+}
+
+
+/* Keep actual auth page behind fullscreen header */
+
+.app.preview-fullscreen
+.auth-page {
+    width: 100%;
+    height: 100%;
 }
 
 
 .app.preview-fullscreen
 .preview-status-bar {
-  display: none;
+    display: none;
 }
 
 
@@ -791,32 +1276,43 @@
 ========================================================= */
 
 .fullscreen-exit-button {
-  width: 42px;
-  height: 42px;
+    width: 42px;
+    height: 42px;
 
-  position: fixed;
+    position: fixed;
 
-  top: 14px;
-  right: 14px;
+    top: 14px;
+    right: 14px;
 
-  z-index: 100000;
+    z-index: 100000;
 
-  display: grid;
-  place-items: center;
+    display: grid;
+    place-items: center;
 
-  color: #334155;
+    color: #334155;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
 
-  background:
-    rgba(255, 255, 255, 0.94);
+    background:
+        rgba(255, 255, 255, 0.94);
 
-  box-shadow:
-    0 8px 24px
-    rgba(15, 23, 42, 0.12);
+    box-shadow:
+        0 8px 24px
+        rgba(15, 23, 42, 0.12);
 
-  cursor: pointer;
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.fullscreen-exit-button:hover {
+    background: #ffffff;
+
+    transform: scale(1.04);
 }
 
 
@@ -826,29 +1322,26 @@
 
 @media (min-width: 1600px) {
 
-  .app-workspace {
-    grid-template-columns:
-      400px
-      minmax(0, 1fr);
-  }
+    .app-workspace {
+        grid-template-columns:
+            400px
+            minmax(0, 1fr);
+    }
 
 
-  .app-header {
-    padding:
-      0 32px;
-  }
+    .app-header {
+        padding: 0 32px;
+    }
 
 
-  .preview-header {
-    padding:
-      0 24px;
-  }
+    .preview-header {
+        padding: 0 24px;
+    }
 
 
-  .customization-scroll {
-    padding:
-      18px;
-  }
+    .customization-scroll {
+        padding: 18px;
+    }
 
 }
 
@@ -859,172 +1352,268 @@
 
 @media (max-width: 1200px) {
 
-  .app-workspace {
-    grid-template-columns:
-      minmax(290px, 340px)
-      minmax(0, 1fr);
-  }
+    .app-workspace {
+        grid-template-columns:
+            minmax(290px, 340px)
+            minmax(0, 1fr);
+    }
 
 
-  .app-header {
-    padding:
-      0 16px;
-  }
+    .app-header {
+        padding: 0 16px;
+    }
 
 
-  .customization-scroll {
-    padding:
-      12px;
-  }
+    .customization-scroll {
+        padding: 12px;
+    }
 
 
-  .preview-canvas-wrapper {
-    padding:
-      16px;
-  }
+    .preview-canvas-wrapper {
+        padding: 16px;
+    }
+
+
+    .auth-content {
+        padding: 32px;
+    }
+
+
+    .auth-form-wrapper {
+        max-width:
+            min(
+                var(--auth-form-width, 420px),
+                100%
+            );
+    }
 
 }
 
 
 /* =========================================================
-   TABLET
+   TABLET APPLICATION
 ========================================================= */
 
 @media (max-width: 900px) {
 
-  .app-header {
-    height: 58px;
-  }
+    .app-header {
+        height: 58px;
+    }
 
 
-  .app-brand-subtitle {
-    display: none;
-  }
+    .app-brand-subtitle {
+        display: none;
+    }
 
 
-  .app-workspace {
-    grid-template-columns:
-      minmax(280px, 320px)
-      minmax(0, 1fr);
-  }
+    .app-workspace {
+        grid-template-columns:
+            minmax(280px, 320px)
+            minmax(0, 1fr);
+    }
 
 
-  .preview-header {
-    min-height: 56px;
+    .preview-header {
+        min-height: 56px;
 
-    padding:
-      0 12px;
-  }
-
-
-  .preview-title-group {
-    display: none;
-  }
+        padding: 0 12px;
+    }
 
 
-  .preview-canvas-wrapper {
-    padding: 12px;
-  }
+    .preview-title-group {
+        display: none;
+    }
 
 
-  .sidebar-page-tabs {
-    padding: 6px;
-  }
+    .preview-canvas-wrapper {
+        padding: 12px;
+    }
 
 
-  .sidebar-page-tab {
-    font-size: 9px;
-  }
+    .sidebar-page-tabs {
+        padding: 6px;
+    }
+
+
+    .sidebar-page-tab {
+        font-size: 9px;
+    }
+
+
+    .auth-content {
+        padding: 24px;
+    }
+
+
+    .auth-page.image-width-large {
+        --auth-image-width: 55%;
+    }
 
 }
 
 
 /* =========================================================
-   MOBILE APPLICATION
+   PREVIEW RESPONSIVE
 ========================================================= */
 
 @media (max-width: 760px) {
 
-  .app {
-    min-height:
-      100dvh;
-  }
+    .auth-page {
+        flex-direction: column;
+    }
 
 
-  .app-header {
-    height: 56px;
-
-    padding:
-      0 12px;
-  }
-
-
-  .app-brand-title {
-    font-size: 13px;
-  }
+    .auth-page.layout-image-left,
+    .auth-page.layout-image-right,
+    .auth-page.layout-split {
+        flex-direction: column;
+    }
 
 
-  .header-center {
-    display: none;
-  }
+    .auth-page.layout-image-left
+    .auth-visual,
+
+    .auth-page.layout-image-right
+    .auth-visual,
+
+    .auth-page.layout-split
+    .auth-visual {
+        width: 100%;
+        height: 38%;
+
+        order: 1;
+    }
 
 
-  .app-workspace {
-    display: flex;
-    flex-direction: column;
+    .auth-page.layout-image-left
+    .auth-content,
 
-    overflow: hidden;
-  }
+    .auth-page.layout-image-right
+    .auth-content,
 
+    .auth-page.layout-split
+    .auth-content {
+        width: 100%;
+        flex: 1;
 
-  .customization-sidebar {
-    width: 100%;
-    height: 52%;
-
-    max-width: none;
-
-    resize: none;
-
-    border-right: none;
-    border-bottom: 1px solid #e2e8f0;
-  }
+        order: 2;
+    }
 
 
-  .preview-area {
-    width: 100%;
+    .auth-page.form-left
+    .auth-content,
 
-    flex: 1;
-  }
-
-
-  .preview-header {
-    min-height: 50px;
-  }
+    .auth-page.form-right
+    .auth-content {
+        justify-content: center;
+    }
 
 
-  .preview-header-left {
-    gap: 8px;
-  }
+    .auth-page.form-top
+    .auth-content,
+
+    .auth-page.form-bottom
+    .auth-content {
+        align-items: center;
+    }
 
 
-  .preview-header-right {
-    gap: 4px;
-  }
+    .auth-content {
+        padding: 24px 18px;
+    }
 
 
-  .preview-canvas-wrapper {
-    padding: 10px;
-  }
+    .auth-form-wrapper {
+        max-width: 100%;
+    }
+
+}
 
 
-  .preview-canvas.device-desktop {
-    width: 100%;
-  }
+/* =========================================================
+   MOBILE APPLICATION UI
+========================================================= */
+
+@media (max-width: 760px) {
+
+    .app {
+        min-height: 100dvh;
+    }
 
 
-  .preview-status-bar {
-    display: none;
-  }
+    .app-header {
+        height: 56px;
+
+        padding: 0 12px;
+    }
+
+
+    .app-brand-title {
+        font-size: 13px;
+    }
+
+
+    .header-center {
+        display: none;
+    }
+
+
+    .app-workspace {
+        display: flex;
+        flex-direction: column;
+
+        overflow: hidden;
+    }
+
+
+    .customization-sidebar {
+        width: 100%;
+        height: 52%;
+
+        max-width: none;
+
+        resize: none;
+
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+
+    .preview-area {
+        width: 100%;
+
+        flex: 1;
+    }
+
+
+    .preview-header {
+        min-height: 50px;
+    }
+
+
+    .preview-header-left {
+        gap: 8px;
+    }
+
+
+    .preview-header-right {
+        gap: 4px;
+    }
+
+
+    .preview-canvas-wrapper {
+        padding: 10px;
+    }
+
+
+    .preview-canvas.device-desktop {
+        width: 100%;
+    }
+
+
+    .preview-status-bar {
+        display: none;
+    }
 
 }
 
@@ -1035,72 +1624,87 @@
 
 @media (max-width: 480px) {
 
-  .app-header {
-    padding:
-      0 8px;
-  }
+    .app-header {
+        padding: 0 8px;
+    }
 
 
-  .app-brand-icon {
-    width: 32px;
-    height: 32px;
+    .app-brand-icon {
+        width: 32px;
+        height: 32px;
 
-    border-radius: 9px;
-  }
-
-
-  .app-brand-title {
-    font-size: 12px;
-  }
+        border-radius: 9px;
+    }
 
 
-  .header-right {
-    gap: 4px;
-  }
+    .app-brand-title {
+        font-size: 12px;
+    }
 
 
-  .sidebar-header {
-    min-height: 54px;
-
-    padding:
-      0 12px;
-  }
+    .header-right {
+        gap: 4px;
+    }
 
 
-  .sidebar-page-tabs {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    .sidebar-header {
+        min-height: 54px;
 
-    min-height: auto;
-  }
-
-
-  .sidebar-page-tab {
-    min-height: 36px;
-  }
+        padding: 0 12px;
+    }
 
 
-  .customization-scroll {
-    padding: 10px;
-  }
+    .sidebar-page-tabs {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        min-height: auto;
+    }
 
 
-  .preview-canvas-wrapper {
-    padding: 6px;
-  }
+    .sidebar-page-tab {
+        min-height: 36px;
+    }
 
 
-  .preview-canvas.device-mobile {
-    width: min(100%, 350px);
-
-    border-radius: 18px;
-  }
+    .customization-scroll {
+        padding: 10px;
+    }
 
 
-  .preview-canvas.device-mobile::before {
-    width: 90px;
-    height: 14px;
-  }
+    .preview-canvas-wrapper {
+        padding: 6px;
+    }
+
+
+    .preview-canvas.device-mobile {
+        width: min(100%, 350px);
+
+        border-radius: 18px;
+    }
+
+
+    .preview-canvas.device-mobile::before {
+        width: 90px;
+        height: 14px;
+    }
+
+
+    .auth-content {
+        padding: 18px 14px;
+    }
+
+
+    .auth-page.layout-image-left
+    .auth-visual,
+
+    .auth-page.layout-image-right
+    .auth-visual,
+
+    .auth-page.layout-split
+    .auth-visual {
+        height: 32%;
+    }
 
 }
 
@@ -1111,29 +1715,31 @@
 
 @media (max-height: 650px) and (orientation: landscape) {
 
-  .app-header {
-    height: 50px;
-  }
+    .app-header {
+        height: 50px;
+    }
 
 
-  .customization-sidebar {
-    height: 100%;
+    .customization-sidebar {
+        height: 100%;
 
-    width: 300px;
+        width: 300px;
 
-    border-right: 1px solid #e2e8f0;
-    border-bottom: none;
-  }
+        border-right:
+            1px solid #e2e8f0;
 
-
-  .app-workspace {
-    flex-direction: row;
-  }
+        border-bottom: none;
+    }
 
 
-  .preview-header {
-    min-height: 48px;
-  }
+    .app-workspace {
+        flex-direction: row;
+    }
+
+
+    .preview-header {
+        min-height: 48px;
+    }
 
 }
 
@@ -1144,29 +1750,29 @@
 
 @media print {
 
-  .app-header,
-  .customization-sidebar,
-  .preview-header,
-  .preview-status-bar {
-    display: none !important;
-  }
+    .app-header,
+    .customization-sidebar,
+    .preview-header,
+    .preview-status-bar {
+        display: none !important;
+    }
 
 
-  .app-workspace,
-  .preview-area,
-  .preview-canvas-wrapper,
-  .preview-canvas {
-    width: 100% !important;
-    height: 100% !important;
+    .app-workspace,
+    .preview-area,
+    .preview-canvas-wrapper,
+    .preview-canvas {
+        width: 100% !important;
+        height: 100% !important;
 
-    overflow: visible !important;
-  }
+        overflow: visible !important;
+    }
 
 
-  .preview-canvas {
-    box-shadow: none !important;
+    .preview-canvas {
+        box-shadow: none !important;
 
-    border-radius: 0 !important;
-  }
+        border-radius: 0 !important;
+    }
 
 }
