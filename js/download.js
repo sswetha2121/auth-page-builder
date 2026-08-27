@@ -1,3328 +1,912 @@
 /* =========================================================
-   AUTH PAGE BUILDER
+   AUTH PAGE BUILDER - DOWNLOAD PACKAGE GENERATOR
    File: js/download.js
-
-   Package Download Manager
-
-   Generates a complete downloadable ZIP package containing:
-
-   - index.html
-   - CSS
-   - JavaScript
-   - Authentication configuration
-   - Customized logo
-   - Customized background
-   - Selected/uploaded assets
-   - README
 ========================================================= */
 
+(function (root, factory) {
+  if (typeof module !== "undefined" && module.exports) {
+    const templates = require("./templates.js");
+    const renderer = require("./renderer.js");
+    const utils = require("./utils.js");
+    module.exports = factory(templates, renderer, utils);
+  } else {
+    const downloadManager = factory(root.Templates, root.AuthPageRenderer, root.Utils);
+    root.DownloadManager = downloadManager;
+    root.downloadPackage = downloadManager.downloadPackage;
+  }
+})(typeof window !== "undefined" ? window : globalThis, function (Templates, Renderer, Utils) {
 
-class DownloadManager {
-  constructor(options = {}) {
-    this.getConfig =
-      typeof options.getConfig === "function"
-        ? options.getConfig
-        : () => options.config || {};
-
-    this.projectName =
-      options.projectName ||
-      "my-custom-auth-page";
-
-    this.onProgress =
-      typeof options.onProgress === "function"
-        ? options.onProgress
-        : null;
-
-    this.onComplete =
-      typeof options.onComplete === "function"
-        ? options.onComplete
-        : null;
-
-    this.onError =
-      typeof options.onError === "function"
-        ? options.onError
-        : null;
-
-    this.isDownloading = false;
+  function getCleanConfig() {
+    const state = window.state ? window.state.getState() : (window.config || {});
+    return JSON.parse(JSON.stringify(state));
   }
 
-
   /* =======================================================
-     MAIN DOWNLOAD METHOD
+     FETCH LOCAL ASSET AS BLOB / ARRAYBUFFER
   ======================================================= */
-
-  async download() {
-    if (this.isDownloading) {
-      return;
-    }
-
-    if (
-      typeof JSZip === "undefined"
-    ) {
-      const error =
-        new Error(
-          "JSZip is not loaded. Please include the JSZip library."
-        );
-
-      this.handleError(error);
-
-      return;
-    }
-
+  async function fetchAsset(url) {
     try {
-      this.isDownloading = true;
-
-      this.emitProgress(
-        "Preparing your authentication package...",
-        5
-      );
-
-      const config =
-        this.clone(
-          this.getConfig()
-        );
-
-      const zip =
-        new JSZip();
-
-      const safeProjectName =
-        this.getSafeProjectName(
-          config
-        );
-
-      const root =
-        zip.folder(
-          safeProjectName
-        );
-
-      if (!root) {
-        throw new Error(
-          "Unable to create ZIP package."
-        );
-      }
-
-
-      /* ===================================================
-         CREATE FOLDERS
-      =================================================== */
-
-      const cssFolder =
-        root.folder("css");
-
-      const jsFolder =
-        root.folder("js");
-
-      const assetsFolder =
-        root.folder("assets");
-
-      if (
-        !cssFolder ||
-        !jsFolder ||
-        !assetsFolder
-      ) {
-        throw new Error(
-          "Unable to create package folders."
-        );
-      }
-
-
-      this.emitProgress(
-        "Processing customized assets...",
-        15
-      );
-
-
-      /* ===================================================
-         PROCESS ASSETS
-      =================================================== */
-
-      const assetMap =
-        await this.processAssets(
-          config,
-          assetsFolder
-        );
-
-
-      this.emitProgress(
-        "Generating authentication configuration...",
-        35
-      );
-
-
-      /* ===================================================
-         REPLACE ASSET REFERENCES
-      =================================================== */
-
-      const exportConfig =
-        this.prepareExportConfig(
-          config,
-          assetMap
-        );
-
-
-      /* ===================================================
-         CONFIG FILE
-      =================================================== */
-
-      jsFolder.file(
-        "auth-config.js",
-        this.generateConfigFile(
-          exportConfig
-        )
-      );
-
-
-      this.emitProgress(
-        "Generating HTML...",
-        45
-      );
-
-
-      /* ===================================================
-         INDEX HTML
-      =================================================== */
-
-      root.file(
-        "index.html",
-        this.generateHTML(
-          exportConfig
-        )
-      );
-
-
-      this.emitProgress(
-        "Generating CSS...",
-        55
-      );
-
-
-      /* ===================================================
-         AUTH PAGE CSS
-      =================================================== */
-
-      cssFolder.file(
-        "auth-page.css",
-        this.generateAuthCSS()
-      );
-
-
-      cssFolder.file(
-        "responsive.css",
-        this.generateResponsiveCSS()
-      );
-
-
-      this.emitProgress(
-        "Generating authentication functionality...",
-        70
-      );
-
-
-      /* ===================================================
-         AUTH PAGE JAVASCRIPT
-      =================================================== */
-
-      jsFolder.file(
-        "auth-page.js",
-        this.generateAuthPageJS()
-      );
-
-
-      jsFolder.file(
-        "main.js",
-        this.generateMainJS()
-      );
-
-
-      this.emitProgress(
-        "Generating project documentation...",
-        80
-      );
-
-
-      /* ===================================================
-         README
-      =================================================== */
-
-      root.file(
-        "README.md",
-        this.generateReadme(
-          safeProjectName,
-          exportConfig
-        )
-      );
-
-
-      this.emitProgress(
-        "Building ZIP file...",
-        88
-      );
-
-
-      /* ===================================================
-         CREATE ZIP BLOB
-      =================================================== */
-
-      const blob =
-        await zip.generateAsync(
-          {
-            type: "blob",
-            compression: "DEFLATE",
-            compressionOptions: {
-              level: 6
-            }
-          },
-          (metadata) => {
-            const progress =
-              Math.round(
-                88 +
-                  metadata.percent * 0.12
-              );
-
-            this.emitProgress(
-              "Creating downloadable ZIP...",
-              progress
-            );
-          }
-        );
-
-
-      this.emitProgress(
-        "Starting download...",
-        100
-      );
-
-
-      /* ===================================================
-         BROWSER DOWNLOAD
-      =================================================== */
-
-      const fileName =
-        `${safeProjectName}.zip`;
-
-      this.triggerBrowserDownload(
-        blob,
-        fileName
-      );
-
-
-      this.isDownloading = false;
-
-      this.emitProgress(
-        "Package downloaded successfully.",
-        100
-      );
-
-
-      if (this.onComplete) {
-        this.onComplete({
-          fileName,
-          config: exportConfig
-        });
-      }
-
-    } catch (error) {
-      this.isDownloading = false;
-
-      this.handleError(error);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.arrayBuffer();
+    } catch (e) {
+      console.warn(`Could not fetch asset ${url}:`, e);
+      return null;
     }
   }
 
-
   /* =======================================================
-     PROCESS ASSETS
+     STANDALONE CSS GENERATOR
   ======================================================= */
-
-  async processAssets(
-    config,
-    assetsFolder
-  ) {
-    const assetMap = {
-      background: "",
-      logo: ""
-    };
-
-
-    /* =====================================================
-       BACKGROUND
-    ===================================================== */
-
-    const backgroundImage =
-      config?.background?.image;
-
-    if (backgroundImage) {
-      const backgroundFileName =
-        await this.addAsset(
-          assetsFolder,
-          backgroundImage,
-          "background"
-        );
-
-      if (backgroundFileName) {
-        assetMap.background =
-          `assets/${backgroundFileName}`;
-      }
-    }
-
-
-    /* =====================================================
-       LOGO
-    ===================================================== */
-
-    const logo =
-      config?.branding?.logo;
-
-    if (logo) {
-      const logoFileName =
-        await this.addAsset(
-          assetsFolder,
-          logo,
-          "logo"
-        );
-
-      if (logoFileName) {
-        assetMap.logo =
-          `assets/${logoFileName}`;
-      }
-    }
-
-
-    return assetMap;
-  }
-
-
-  /* =======================================================
-     ADD ASSET TO ZIP
-  ======================================================= */
-
-  async addAsset(
-    assetsFolder,
-    source,
-    name
-  ) {
-    if (!source) {
-      return "";
-    }
-
-
-    /* =====================================================
-       DATA URL
-       Uploaded image stored in browser
-    ===================================================== */
-
-    if (
-      source.startsWith(
-        "data:"
-      )
-    ) {
-      const asset =
-        this.dataURLToBlob(
-          source
-        );
-
-      const extension =
-        this.getExtensionFromMimeType(
-          asset.type
-        );
-
-      const fileName =
-        `${name}.${extension}`;
-
-      assetsFolder.file(
-        fileName,
-        asset.blob
-      );
-
-      return fileName;
-    }
-
-
-    /* =====================================================
-       LOCAL / RELATIVE ASSET
-       For project assets such as:
-       assets/backgrounds/forest.jpg
-    ===================================================== */
-
-    if (
-      !source.startsWith("http")
-    ) {
-      try {
-        const response =
-          await fetch(source);
-
-        if (!response.ok) {
-          throw new Error(
-            `Unable to load asset: ${source}`
-          );
-        }
-
-        const blob =
-          await response.blob();
-
-        const extension =
-          this.getExtensionFromMimeType(
-            blob.type,
-            source
-          );
-
-        const fileName =
-          `${name}.${extension}`;
-
-        assetsFolder.file(
-          fileName,
-          blob
-        );
-
-        return fileName;
-
-      } catch (error) {
-        console.warn(
-          "Asset could not be added:",
-          source,
-          error
-        );
-
-        return "";
-      }
-    }
-
-
-    /* =====================================================
-       REMOTE IMAGE URL
-    ===================================================== */
-
-    try {
-      const response =
-        await fetch(source);
-
-      if (!response.ok) {
-        throw new Error(
-          "Unable to fetch remote asset."
-        );
-      }
-
-      const blob =
-        await response.blob();
-
-      const extension =
-        this.getExtensionFromMimeType(
-          blob.type,
-          source
-        );
-
-      const fileName =
-        `${name}.${extension}`;
-
-      assetsFolder.file(
-        fileName,
-        blob
-      );
-
-      return fileName;
-
-    } catch (error) {
-      console.warn(
-        "Remote asset could not be included:",
-        source,
-        error
-      );
-
-      return "";
-    }
-  }
-
-
-  /* =======================================================
-     DATA URL TO BLOB
-  ======================================================= */
-
-  dataURLToBlob(dataURL) {
-    const parts =
-      dataURL.split(",");
-
-    const metadata =
-      parts[0];
-
-    const data =
-      parts[1];
-
-    const mimeMatch =
-      metadata.match(
-        /data:(.*?);base64/
-      );
-
-    const mimeType =
-      mimeMatch
-        ? mimeMatch[1]
-        : "image/png";
-
-    const binary =
-      atob(data);
-
-    const array =
-      new Uint8Array(
-        binary.length
-      );
-
-    for (
-      let i = 0;
-      i < binary.length;
-      i++
-    ) {
-      array[i] =
-        binary.charCodeAt(i);
-    }
-
-    return {
-      blob: new Blob(
-        [array],
-        {
-          type: mimeType
-        }
-      ),
-
-      type: mimeType
-    };
-  }
-
-
-  /* =======================================================
-     PREPARE CONFIG FOR EXPORT
-  ======================================================= */
-
-  prepareExportConfig(
-    config,
-    assetMap
-  ) {
-    const exportConfig =
-      this.clone(config);
-
-
-    /* =====================================================
-       BACKGROUND PATH
-    ===================================================== */
-
-    if (
-      assetMap.background
-    ) {
-      exportConfig.background.image =
-        assetMap.background;
-    }
-
-
-    /* =====================================================
-       LOGO PATH
-    ===================================================== */
-
-    if (
-      assetMap.logo
-    ) {
-      exportConfig.branding.logo =
-        assetMap.logo;
-    }
-
-
-    return exportConfig;
-  }
-
-
-  /* =======================================================
-     GENERATE CONFIG FILE
-  ======================================================= */
-
-  generateConfigFile(config) {
+  function generateStandaloneCSS(config) {
+    const dynamicVars = Renderer ? Renderer.computeStyleVariables(config) : "";
+    
+    // Core CSS rules for the generated page
     return `/* =========================================================
-   CUSTOM AUTHENTICATION CONFIGURATION
-
-   Generated by Auth Page Builder
-
-   You can manually modify this file.
-========================================================= */
-
-const authConfig = ${JSON.stringify(
-  config,
-  null,
-  2
-)};
-
-window.authConfig = authConfig;
-`;
-  }
-
-
-  /* =======================================================
-     GENERATE HTML
-  ======================================================= */
-
-  generateHTML(config) {
-    const projectTitle =
-      config?.branding?.brandName ||
-      "Authentication Page";
-
-    return `<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="description"
-    content="Custom authentication page"
-  >
-
-  <title>
-    ${this.escapeHTML(projectTitle)}
-  </title>
-
-  <link
-    rel="stylesheet"
-    href="css/auth-page.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="css/responsive.css"
-  >
-
-</head>
-
-<body>
-
-  <!-- Authentication Application -->
-  <main
-    id="auth-app"
-    class="auth-application"
-  ></main>
-
-
-  <!-- Configuration -->
-  <script src="js/auth-config.js"></script>
-
-
-  <!-- Authentication Page -->
-  <script src="js/auth-page.js"></script>
-
-
-  <!-- Application -->
-  <script src="js/main.js"></script>
-
-</body>
-
-</html>`;
-  }
-
-
-  /* =======================================================
-     AUTH PAGE CSS
-  ======================================================= */
-
-  generateAuthCSS() {
-    return `/* =========================================================
-   CUSTOM AUTHENTICATION PAGE
+   AUTH PAGE - STANDALONE STYLESHEET
    Generated by Auth Page Builder
 ========================================================= */
 
+${dynamicVars}
 
 * {
   box-sizing: border-box;
-}
-
-
-html,
-body {
-  width: 100%;
-  min-height: 100%;
   margin: 0;
+  padding: 0;
 }
 
-
-body {
-  font-family:
-    Inter,
-    Arial,
-    sans-serif;
-
-  background:
-    #f8fafc;
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: var(--auth-font-family, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  color: var(--auth-title-color, #0f172a);
+  background-color: var(--auth-background-color, #0f172a);
 }
 
-
-button,
-input {
-  font:
-    inherit;
+.auth-preview-root {
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  background-color: var(--auth-background-color, #0f172a);
 }
 
-
-button {
-  cursor:
-    pointer;
+.auth-preview-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  position: relative;
 }
 
+/* Layouts */
+.auth-preview-root.layout-split-left-image .auth-preview-shell { flex-direction: row; }
+.auth-preview-root.layout-split-right-image .auth-preview-shell { flex-direction: row-reverse; }
 
-.auth-application {
-  width:
-    100%;
-  min-height:
-    100vh;
+.auth-preview-root.layout-centered { background-color: var(--auth-background-color, #f8fafc); }
+.auth-preview-root.layout-centered .auth-image-section { display: none !important; }
+.auth-preview-root.layout-centered .auth-form-section { width: 100%; background: transparent; }
+
+.auth-preview-root.layout-full-background {
+  background-image: var(--auth-background-image, none);
+  background-size: var(--auth-background-size, cover);
+  background-position: var(--auth-background-position, center);
+  background-repeat: no-repeat;
+}
+.auth-preview-root.layout-full-background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--auth-overlay-color, #000000);
+  opacity: var(--auth-overlay-opacity, 0.35);
+  pointer-events: none;
+}
+.auth-preview-root.layout-full-background .auth-image-section { display: none !important; }
+.auth-preview-root.layout-full-background .auth-form-section { width: 100%; z-index: 2; background: transparent; }
+
+.auth-preview-root.layout-minimal { background-color: #ffffff; }
+.auth-preview-root.layout-minimal .auth-image-section { display: none !important; }
+.auth-preview-root.layout-minimal .auth-form-section { width: 100%; background: #ffffff; }
+.auth-preview-root.layout-minimal .auth-card {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 24px 0 !important;
 }
 
+.auth-preview-root.layout-card-left {
+  background-image: var(--auth-background-image, none);
+  background-size: var(--auth-background-size, cover);
+  background-position: var(--auth-background-position, center);
+}
+.auth-preview-root.layout-card-left::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--auth-overlay-color, #000000);
+  opacity: var(--auth-overlay-opacity, 0.35);
+  pointer-events: none;
+}
+.auth-preview-root.layout-card-left .auth-image-section { display: none !important; }
+.auth-preview-root.layout-card-left .auth-form-section { width: 100%; z-index: 2; background: transparent; justify-content: flex-start; padding-left: clamp(32px, 8vw, 120px); }
 
-/* =========================================================
-   MAIN PAGE
-========================================================= */
+.auth-preview-root.layout-card-right {
+  background-image: var(--auth-background-image, none);
+  background-size: var(--auth-background-size, cover);
+  background-position: var(--auth-background-position, center);
+}
+.auth-preview-root.layout-card-right::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--auth-overlay-color, #000000);
+  opacity: var(--auth-overlay-opacity, 0.35);
+  pointer-events: none;
+}
+.auth-preview-root.layout-card-right .auth-image-section { display: none !important; }
+.auth-preview-root.layout-card-right .auth-form-section { width: 100%; z-index: 2; background: transparent; justify-content: flex-end; padding-right: clamp(32px, 8vw, 120px); }
 
-.auth-page {
-  width:
-    100%;
-  min-height:
-    100vh;
-
-  display:
-    flex;
+/* Background Section */
+.auth-image-section {
+  flex: 0 0 var(--auth-image-width, 50%);
+  width: var(--auth-image-width, 50%);
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  background-color: var(--auth-background-color, #0f172a);
+  background-image: var(--auth-background-image, none);
+  background-size: var(--auth-background-size, cover);
+  background-position: var(--auth-background-position, center);
+  background-repeat: no-repeat;
 }
 
-
-/* =========================================================
-   BACKGROUND PANEL
-========================================================= */
-
-.auth-background-panel {
-  position:
-    relative;
-
-  width:
-    50%;
-
-  min-height:
-    100vh;
-
-  overflow:
-    hidden;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
+.auth-image-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--auth-overlay-color, #000000);
+  opacity: var(--auth-overlay-opacity, 0.35);
+  pointer-events: none;
 }
 
+.auth-image-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  padding: clamp(24px, 4vw, 56px);
+}
+.auth-image-content.position-top-left { align-items: flex-start; justify-content: flex-start; text-align: left; }
+.auth-image-content.position-top-center { align-items: flex-start; justify-content: center; text-align: center; }
+.auth-image-content.position-top-right { align-items: flex-start; justify-content: flex-end; text-align: right; }
+.auth-image-content.position-center-left { align-items: center; justify-content: flex-start; text-align: left; }
+.auth-image-content.position-center { align-items: center; justify-content: center; text-align: center; }
+.auth-image-content.position-center-right { align-items: center; justify-content: flex-end; text-align: right; }
+.auth-image-content.position-bottom-left { align-items: flex-end; justify-content: flex-start; text-align: left; }
+.auth-image-content.position-bottom-center { align-items: flex-end; justify-content: center; text-align: center; }
+.auth-image-content.position-bottom-right { align-items: flex-end; justify-content: flex-end; text-align: right; }
 
-.auth-background-overlay {
-  position:
-    absolute;
-
-  inset:
-    0;
+.auth-image-text-block { max-width: 480px; }
+.auth-image-text {
+  margin: 0 0 12px;
+  color: var(--auth-image-text-color, #ffffff);
+  font-size: clamp(22px, 3vw, 40px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.auth-image-subtext {
+  margin: 0;
+  color: var(--auth-image-text-color, #ffffff);
+  opacity: 0.85;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
-
-.auth-background-content {
-  position:
-    relative;
-
-  z-index:
-    2;
-
-  width:
-    100%;
-
-  padding:
-    60px;
-
-  color:
-    white;
+/* Form Section */
+.auth-form-section {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 100vh;
+  display: flex;
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 64px);
+  background-color: #f8fafc;
 }
 
+.auth-preview-root.form-horizontal-left .auth-form-section { justify-content: flex-start; }
+.auth-preview-root.form-horizontal-center .auth-form-section { justify-content: center; }
+.auth-preview-root.form-horizontal-right .auth-form-section { justify-content: flex-end; }
 
-.background-branding {
-  max-width:
-    560px;
-}
+.auth-preview-root.form-vertical-top .auth-form-section { align-items: flex-start; }
+.auth-preview-root.form-vertical-center .auth-form-section { align-items: center; }
+.auth-preview-root.form-vertical-bottom .auth-form-section { align-items: flex-end; }
 
-
-.background-branding h1 {
-  margin:
-    28px 0 14px;
-
-  font-size:
-    46px;
-
-  line-height:
-    1.1;
-}
-
-
-.background-branding p {
-  margin:
-    0;
-
-  max-width:
-    500px;
-
-  font-size:
-    18px;
-
-  line-height:
-    1.6;
-
-  opacity:
-    0.9;
-}
-
-
-/* =========================================================
-   FORM PANEL
-========================================================= */
-
-.auth-form-panel {
-  width:
-    50%;
-
-  min-height:
-    100vh;
-
-  padding:
-    40px;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  background:
-    #ffffff;
-}
-
-
-/* =========================================================
-   CARD
-========================================================= */
-
+/* Card */
 .auth-card {
-  width:
-    min(
-      100%,
-      var(--auth-card-width, 420px)
-    );
-
-  background:
-    var(
-      --auth-card-background,
-      #ffffff
-    );
-
-  color:
-    var(
-      --auth-text-color,
-      #0f172a
-    );
-
-  border-radius:
-    var(
-      --auth-card-radius,
-      18px
-    );
-
-  padding:
-    var(
-      --auth-card-padding,
-      42px
-    );
+  width: 100%;
+  max-width: var(--auth-card-width, 460px);
+  padding: var(--auth-card-padding, 40px);
+  border-radius: var(--auth-card-radius, 20px);
+  background-color: var(--auth-card-background, #ffffff);
+  opacity: var(--auth-card-opacity, 1);
+  border: var(--auth-card-border-width, 1px) solid var(--auth-card-border-color, #e2e8f0);
+  box-shadow: var(--auth-card-shadow, 0 20px 45px rgba(15, 23, 42, 0.10));
+  backdrop-filter: blur(var(--auth-card-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--auth-card-blur, 0px));
+  position: relative;
 }
 
+.auth-landing-link-bar { margin-bottom: 20px; }
+.auth-landing-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.auth-landing-link:hover { color: #2563eb; }
 
-.auth-card-transparent {
-  background:
-    transparent;
+/* Branding */
+.auth-branding-header { display: flex; flex-direction: column; margin-bottom: 24px; }
+.auth-branding-header.auth-logo-pos-left { align-items: flex-start; text-align: left; }
+.auth-branding-header.auth-logo-pos-center { align-items: center; text-align: center; }
+.auth-branding-header.auth-logo-pos-right { align-items: flex-end; text-align: right; }
 
-  box-shadow:
-    none;
+.auth-logo-box {
+  width: var(--auth-logo-size, 64px);
+  height: var(--auth-logo-size, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background-color: var(--auth-logo-bg, transparent);
+  border-radius: var(--auth-logo-radius, 50%);
+}
+.auth-logo-img { width: 100%; height: 100%; object-fit: contain; }
+.auth-logo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: calc(var(--auth-logo-size, 64px) * 0.4);
+}
+.auth-brand-title { font-size: 16px; font-weight: 700; color: var(--auth-title-color, #0f172a); }
+
+/* Typography */
+.auth-form-header { margin-bottom: 24px; }
+.auth-heading {
+  margin: 0 0 8px;
+  color: var(--auth-title-color, #0f172a);
+  font-size: var(--auth-title-size, 32px);
+  font-weight: var(--auth-title-weight, 700);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.auth-subheading {
+  margin: 0;
+  color: var(--auth-subtitle-color, #64748b);
+  font-size: var(--auth-subtitle-size, 15px);
+  line-height: 1.5;
 }
 
-
-.auth-shadow-none {
-  box-shadow:
-    none;
-}
-
-
-.auth-shadow-small {
-  box-shadow:
-    0 10px 25px
-    rgba(
-      15,
-      23,
-      42,
-      0.08
-    );
-}
-
-
-.auth-shadow-medium {
-  box-shadow:
-    0 24px 60px
-    rgba(
-      15,
-      23,
-      42,
-      0.14
-    );
-}
-
-
-.auth-shadow-large {
-  box-shadow:
-    0 30px 80px
-    rgba(
-      15,
-      23,
-      42,
-      0.2
-    );
-}
-
-
-/* =========================================================
-   BRANDING
-========================================================= */
-
-.auth-form-branding {
-  margin-bottom:
-    28px;
-}
-
-
-.auth-logo {
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  width:
-    64px;
-
-  height:
-    64px;
-
-  overflow:
-    hidden;
-
-  background:
-    var(
-      --auth-primary,
-      #2563eb
-    );
-
-  color:
-    white;
-
-  font-weight:
-    800;
-
-  letter-spacing:
-    0.04em;
-}
-
-
-.auth-logo img {
-  width:
-    100%;
-
-  height:
-    100%;
-
-  object-fit:
-    cover;
-}
-
-
-.auth-logo-circle {
-  border-radius:
-    50%;
-}
-
-
-.auth-logo-square {
-  border-radius:
-    12px;
-}
-
-
-.auth-logo-ellipse {
-  width:
-    92px;
-
-  border-radius:
-    999px;
-}
-
-
-.auth-logo-position-center {
-  display:
-    flex;
-
-  justify-content:
-    center;
-}
-
-
-.auth-logo-position-right {
-  display:
-    flex;
-
-  justify-content:
-    flex-end;
-}
-
-
-/* =========================================================
-   HEADING
-========================================================= */
-
-.auth-form-heading {
-  margin-bottom:
-    28px;
-}
-
-
-.auth-form-heading h2 {
-  margin:
-    0 0 10px;
-
-  font-size:
-    var(
-      --auth-title-size,
-      30px
-    );
-
-  line-height:
-    1.2;
-}
-
-
-.auth-form-heading p {
-  margin:
-    0;
-
-  font-size:
-    var(
-      --auth-subtitle-size,
-      14px
-    );
-
-  line-height:
-    1.6;
-
-  color:
-    var(
-      --auth-muted-text,
-      #64748b
-    );
-}
-
-
-/* =========================================================
-   FORM
-========================================================= */
-
-.auth-form {
-  display:
-    flex;
-
-  flex-direction:
-    column;
-
-  gap:
-    18px;
-}
-
-
-.auth-form-group {
-  display:
-    flex;
-
-  flex-direction:
-    column;
-
-  gap:
-    8px;
-}
-
-
-.auth-label {
-  font-size:
-    14px;
-
-  font-weight:
-    600;
-}
-
-
+/* Forms */
+.auth-main-form { display: flex; flex-direction: column; gap: 18px; }
+.auth-field-group { display: flex; flex-direction: column; gap: 7px; text-align: left; }
+.auth-label-row { display: flex; align-items: center; justify-content: space-between; }
+.auth-label { font-size: 13.5px; font-weight: 600; color: var(--auth-label-color, #475569); }
+.auth-input-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
 .auth-input {
-  width:
-    100%;
-
-  height:
-    50px;
-
-  padding:
-    0 15px;
-
-  border:
-    1px solid
-    var(
-      --auth-input-border,
-      #cbd5e1
-    );
-
-  border-radius:
-    10px;
-
-  outline:
-    none;
-
-  background:
-    var(
-      --auth-input-background,
-      #ffffff
-    );
-
-  color:
-    var(
-      --auth-input-text,
-      #0f172a
-    );
-
-  transition:
-    0.2s ease;
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--auth-body-color, #0f172a);
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  outline: none;
 }
-
-
 .auth-input:focus {
-  border-color:
-    var(
-      --auth-primary,
-      #2563eb
-    );
-
-  box-shadow:
-    0 0 0 3px
-    color-mix(
-      in srgb,
-      var(
-        --auth-primary,
-        #2563eb
-      )
-      15%,
-      transparent
-    );
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
 }
-
-
-.auth-password-wrapper {
-  position:
-    relative;
-}
-
-
-.auth-password-wrapper .auth-input {
-  padding-right:
-    72px;
-}
-
-
+.auth-input-password-wrapper .auth-input { padding-right: 42px; }
 .auth-password-toggle {
-  position:
-    absolute;
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #64748b;
+}
+.password-strength-bar {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.password-strength-fill { height: 100%; background: #10b981; }
 
-  top:
-    50%;
+.auth-checkbox-group { display: flex; align-items: center; margin-top: -4px; }
+.auth-checkbox-label { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: #475569; cursor: pointer; }
+.auth-checkbox { width: 17px; height: 17px; accent-color: #2563eb; }
 
-  right:
-    10px;
-
-  transform:
-    translateY(-50%);
-
-  border:
-    none;
-
-  background:
-    transparent;
-
-  color:
-    var(
-      --auth-link-color,
-      #2563eb
-    );
-
-  font-size:
-    13px;
-
-  font-weight:
-    600;
+/* Buttons */
+.auth-primary-btn {
+  width: 100%;
+  height: var(--auth-button-height, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  background: var(--auth-button-bg, #2563eb);
+  color: var(--auth-button-text, #ffffff);
+  border: none;
+  border-radius: var(--auth-button-radius, 10px);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: var(--auth-button-shadow, 0 4px 14px rgba(37, 99, 235, 0.28));
+  transition: all 0.15s ease;
+}
+.auth-primary-btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
-
-/* =========================================================
-   IDENTIFIER SELECTOR
-========================================================= */
-
-.auth-identifier-selector {
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(120px, 1fr)
-    );
-
-  gap:
-    10px;
+.auth-secondary-btn {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--auth-button-radius, 10px);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
+.auth-secondary-btn:hover { background: #e2e8f0; color: #0f172a; }
 
-
-.auth-identifier-option {
-  min-height:
-    44px;
-
-  padding:
-    10px;
-
-  border:
-    1px solid
-    var(
-      --auth-input-border,
-      #cbd5e1
-    );
-
-  border-radius:
-    10px;
-
-  background:
-    white;
-
-  color:
-    var(
-      --auth-muted-text,
-      #64748b
-    );
+.auth-whatsapp-btn {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1.5px solid #bbf7d0;
+  border-radius: var(--auth-button-radius, 10px);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
 }
+.auth-whatsapp-btn:hover { background: #dcfce7; }
 
+.auth-link { color: #2563eb; text-decoration: none; font-size: 13.5px; font-weight: 600; }
+.auth-link:hover { text-decoration: underline; }
+.auth-footer-nav { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; color: #64748b; margin-top: 6px; }
+.auth-back-center { justify-content: center; }
+.auth-back-link { display: inline-flex; align-items: center; gap: 6px; }
 
-.auth-identifier-option.active {
-  border-color:
-    var(
-      --auth-primary,
-      #2563eb
-    );
-
-  background:
-    var(
-      --auth-primary,
-      #2563eb
-    );
-
-  color:
-    white;
+/* Social */
+.auth-divider { position: relative; text-align: center; margin: 18px 0 14px; }
+.auth-divider::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; }
+.auth-divider span { position: relative; padding: 0 12px; background: var(--auth-card-background, #ffffff); color: #94a3b8; font-size: 12.5px; font-weight: 500; }
+.auth-social-buttons { display: flex; gap: 10px; }
+.auth-social-buttons.auth-social-layout-horizontal { flex-direction: row; }
+.auth-social-buttons.auth-social-layout-vertical { flex-direction: column; }
+.auth-social-buttons.auth-social-layout-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.auth-social-btn {
+  flex: 1;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  color: #334155;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
+.auth-social-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-
-/* =========================================================
-   LOGIN OPTIONS
-========================================================= */
-
-.auth-login-options {
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  gap:
-    15px;
+/* OTP */
+.otp-delivery-methods { margin-bottom: 20px; text-align: center; }
+.otp-delivery-label { display: block; font-size: 12.5px; font-weight: 600; color: #64748b; margin-bottom: 8px; }
+.otp-delivery-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.otp-delivery-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
 }
+.otp-delivery-pill.active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
 
-
-.auth-checkbox-label {
-  display:
-    inline-flex;
-
-  align-items:
-    center;
-
-  gap:
-    8px;
-
-  color:
-    var(
-      --auth-muted-text,
-      #64748b
-    );
-
-  font-size:
-    13px;
+.otp-boxes-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0 12px; }
+.otp-digit-box {
+  width: 48px;
+  height: 54px;
+  border-radius: 12px;
+  border: 2px solid #cbd5e1;
+  background-color: #ffffff;
+  text-align: center;
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  outline: none;
 }
-
-
-.auth-text-button {
-  border:
-    none;
-
-  padding:
-    0;
-
-  background:
-    transparent;
-
-  color:
-    var(
-      --auth-link-color,
-      #2563eb
-    );
-
-  font-weight:
-    600;
-}
-
-
-/* =========================================================
-   GET KEY
-========================================================= */
-
-.auth-get-key-section {
-  display:
-    flex;
-
-  flex-direction:
-    column;
-
-  gap:
-    10px;
-}
-
-
-.auth-get-key-header {
-  font-size:
-    14px;
-
-  font-weight:
-    600;
-}
-
-
-.auth-get-key-options {
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(140px, 1fr)
-    );
-
-  gap:
-    10px;
-}
-
-
-.auth-get-key-option {
-  min-height:
-    46px;
-
-  border:
-    1px solid
-    var(
-      --auth-input-border,
-      #cbd5e1
-    );
-
-  border-radius:
-    10px;
-
-  background:
-    white;
-}
-
-
-/* =========================================================
-   BUTTON
-========================================================= */
-
-.auth-primary-button {
-  width:
-    100%;
-
-  min-height:
-    52px;
-
-  border:
-    none;
-
-  border-radius:
-    10px;
-
-  background:
-    var(
-      --auth-primary,
-      #2563eb
-    );
-
-  color:
-    white;
-
-  font-weight:
-    700;
-
-  transition:
-    0.2s ease;
-}
-
-
-.auth-primary-button:hover {
-  background:
-    var(
-      --auth-primary-hover,
-      #1d4ed8
-    );
-
-  transform:
-    translateY(-1px);
-}
-
-
-/* =========================================================
-   OTP
-========================================================= */
-
-.auth-otp-container {
-  display:
-    flex;
-
-  justify-content:
-    space-between;
-
-  gap:
-    8px;
-
-  margin:
-    25px 0;
-}
-
-
-.auth-otp-input {
-  width:
-    48px;
-
-  height:
-    54px;
-
-  text-align:
-    center;
-
-  font-size:
-    20px;
-
-  border:
-    1px solid
-    var(
-      --auth-input-border,
-      #cbd5e1
-    );
-
-  border-radius:
-    10px;
-
-  outline:
-    none;
-}
-
-
-/* =========================================================
-   SOCIAL LOGIN
-========================================================= */
-
-.auth-social-section {
-  margin-top:
-    26px;
-}
-
-
-.auth-divider {
-  position:
-    relative;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  margin:
-    20px 0;
-}
-
-
-.auth-divider::before {
-  content:
-    "";
-
-  position:
-    absolute;
-
-  width:
-    100%;
-
-  height:
-    1px;
-
-  background:
-    #e2e8f0;
-}
-
-
-.auth-divider span {
-  position:
-    relative;
-
-  z-index:
-    1;
-
-  padding:
-    0 12px;
-
-  background:
-    var(
-      --auth-card-background,
-      #ffffff
-    );
-
-  color:
-    var(
-      --auth-muted-text,
-      #64748b
-    );
-
-  font-size:
-    12px;
-}
-
-
-.auth-social-buttons {
-  display:
-    flex;
-
-  flex-direction:
-    column;
-
-  gap:
-    10px;
-}
-
-
-.auth-social-button {
-  width:
-    100%;
-
-  min-height:
-    48px;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  gap:
-    10px;
-
-  border:
-    1px solid
-    #e2e8f0;
-
-  border-radius:
-    10px;
-
-  background:
-    white;
-
-  font-weight:
-    600;
-}
-
-
-.social-icon {
-  width:
-    24px;
-
-  height:
-    24px;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  font-weight:
-    800;
-}
-
-
-/* =========================================================
-   PAGE SWITCH
-========================================================= */
-
-.auth-page-switch {
-  display:
-    flex;
-
-  justify-content:
-    center;
-
-  gap:
-    7px;
-
-  margin-top:
-    24px;
-
-  font-size:
-    14px;
-
-  color:
-    var(
-      --auth-muted-text,
-      #64748b
-    );
-}
-
-
-.auth-back-button {
-  margin-bottom:
-    24px;
-
-  border:
-    none;
-
-  padding:
-    0;
-
-  background:
-    transparent;
-
-  color:
-    var(
-      --auth-link-color,
-      #2563eb
-    );
-
-  font-weight:
-    600;
+.otp-boxes-container[data-otp-count="8"] .otp-digit-box { width: 38px; height: 46px; font-size: 20px; }
+.otp-digit-box:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18); }
+
+.otp-resend-row { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13.5px; color: #64748b; margin-bottom: 4px; }
+.otp-resend-btn { background: none; border: none; color: #2563eb; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.otp-resend-btn:disabled { color: #94a3b8; cursor: not-allowed; }
+
+/* Custom User CSS */
+${config.customCSS || ""}
+
+@media (max-width: 768px) {
+  .auth-preview-shell { flex-direction: column !important; }
+  .auth-image-section { display: none !important; }
+  .auth-form-section { width: 100% !important; padding: 24px 16px !important; }
+  .auth-card { padding: 28px 20px !important; max-width: 100% !important; }
 }
 `;
   }
 
-
   /* =======================================================
-     RESPONSIVE CSS
+     STANDALONE JAVASCRIPT RUNTIME FOR ZIP
   ======================================================= */
-
-  generateResponsiveCSS() {
+  function generateStandaloneAppJS() {
     return `/* =========================================================
-   RESPONSIVE AUTHENTICATION PAGE
+   AUTH PAGE - STANDALONE RUNTIME
+   Generated by Auth Page Builder
 ========================================================= */
 
+(function () {
+  const config = window.AUTH_CONFIG || {};
 
-@media (
-  max-width: 900px
-) {
+  document.addEventListener("DOMContentLoaded", () => {
+    initNavigation();
+    initPasswordToggle();
+    initOtpInputs();
+    initOtpResend();
+    initDeliveryPills();
+    initFormSubmit();
+  });
 
-  .auth-page {
-    min-height:
-      100vh;
+  // 1. Navigation between Login / Signup / Forgot Password / OTP
+  function initNavigation() {
+    document.addEventListener("click", (e) => {
+      const navLink = e.target.closest("[data-auth-nav]");
+      if (!navLink) return;
+      e.preventDefault();
 
-    flex-direction:
-      column;
+      const targetPage = navLink.dataset.authNav;
+      const wrappers = document.querySelectorAll(".auth-page-form-wrapper");
+      wrappers.forEach(w => {
+        w.style.display = (w.dataset.page === targetPage) ? "block" : "none";
+      });
+
+      // Special check if navigating to OTP with specific delivery method
+      if (navLink.dataset.otpMethod === "whatsapp") {
+        const whatsappPill = document.querySelector('[data-otp-delivery="whatsapp"]');
+        if (whatsappPill) whatsappPill.click();
+      }
+    });
   }
 
+  // 2. Password visibility toggle
+  function initPasswordToggle() {
+    document.addEventListener("click", (e) => {
+      const toggle = e.target.closest("[data-toggle-password]");
+      if (!toggle) return;
+      e.preventDefault();
 
-  .auth-background-panel,
-  .auth-form-panel {
-    width:
-      100%;
+      const wrapper = toggle.closest(".auth-input-password-wrapper");
+      const input = wrapper ? wrapper.querySelector("input") : null;
+      if (!input) return;
+
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+    });
   }
 
-
-  .auth-background-panel {
-    min-height:
-      280px;
-  }
-
-
-  .auth-form-panel {
-    min-height:
-      auto;
-
-    padding:
-      30px 20px 50px;
-  }
-
-
-  .auth-background-content {
-    padding:
-      35px 25px;
-  }
-
-
-  .background-branding h1 {
-    font-size:
-      34px;
-  }
-}
-
-
-@media (
-  max-width: 600px
-) {
-
-  .auth-form-panel {
-    padding:
-      20px 14px 35px;
-  }
-
-
-  .auth-card {
-    width:
-      100%;
-
-    padding:
-      26px 20px;
-
-    border-radius:
-      16px;
-  }
-
-
-  .auth-login-options {
-    flex-direction:
-      column;
-
-    align-items:
-      flex-start;
-  }
-
-
-  .auth-otp-input {
-    width:
-      42px;
-
-    height:
-      48px;
-  }
-
-
-  .background-branding h1 {
-    font-size:
-      30px;
-  }
-
-
-  .background-branding p {
-    font-size:
-      15px;
-  }
-}
-`;
-  }
-
-
-  /* =======================================================
-     AUTH PAGE JAVASCRIPT
-  ======================================================= */
-
-  generateAuthPageJS() {
-    return `/* =========================================================
-   CUSTOM AUTH PAGE
-   Runtime Authentication UI
-========================================================= */
-
-
-class AuthPage {
-
-  constructor(
-    container,
-    config
-  ) {
-
-    this.container =
-      typeof container === "string"
-        ? document.querySelector(container)
-        : container;
-
-    this.config =
-      config;
-
-    this.currentPage =
-      config.page?.activePage ||
-      "login";
-
-    this.identifierType =
-      "email";
-
-    this.passwordVisible =
-      false;
-
-    this.render();
-  }
-
-
-  render() {
-
-    if (!this.container) {
-      return;
-    }
-
-    this.applyVariables();
-
-    this.container.innerHTML =
-      this.renderPage();
-
-    this.attachEvents();
-  }
-
-
-  applyVariables() {
-
-    const root =
-      this.container;
-
-    const config =
-      this.config;
-
-    root.style.setProperty(
-      "--auth-primary",
-      config.colors.primary
-    );
-
-    root.style.setProperty(
-      "--auth-primary-hover",
-      config.colors.primaryHover
-    );
-
-    root.style.setProperty(
-      "--auth-card-background",
-      config.card.backgroundColor
-    );
-
-    root.style.setProperty(
-      "--auth-text-color",
-      config.card.textColor
-    );
-
-    root.style.setProperty(
-      "--auth-input-background",
-      config.colors.inputBackground
-    );
-
-    root.style.setProperty(
-      "--auth-input-border",
-      config.colors.inputBorder
-    );
-
-    root.style.setProperty(
-      "--auth-input-text",
-      config.colors.inputText
-    );
-
-    root.style.setProperty(
-      "--auth-muted-text",
-      config.colors.mutedText
-    );
-
-    root.style.setProperty(
-      "--auth-link-color",
-      config.colors.linkColor
-    );
-
-    root.style.setProperty(
-      "--auth-card-width",
-      config.card.width + "px"
-    );
-
-    root.style.setProperty(
-      "--auth-card-padding",
-      config.card.padding + "px"
-    );
-
-    root.style.setProperty(
-      "--auth-card-radius",
-      config.card.borderRadius + "px"
-    );
-
-    root.style.setProperty(
-      "--auth-title-size",
-      config.typography.titleSize + "px"
-    );
-
-    root.style.setProperty(
-      "--auth-subtitle-size",
-      config.typography.subtitleSize + "px"
-    );
-  }
-
-
-  renderPage() {
-
-    const layout =
-      this.config.layout;
-
-    const background =
-      this.renderBackground();
-
-    const form =
-      this.renderFormPanel();
-
-    const content =
-      layout.backgroundSide === "right"
-        ? form + background
-        : background + form;
-
-    return \`
-      <div class="auth-page">
-        \${content}
-      </div>
-    \`;
-  }
-
-
-  renderBackground() {
-
-    const background =
-      this.config.background;
-
-    const branding =
-      this.config.branding;
-
-    if (!background.showPanel) {
-      return "";
-    }
-
-    let style =
-      \`background:\${background.color};\`;
-
-    if (background.type === "image" &&
-        background.image) {
-
-      style =
-        \`
-          background-image:
-            url('\${background.image}');
-
-          background-size:
-            \${background.size};
-
-          background-position:
-            \${background.position};
-
-          background-repeat:
-            no-repeat;
-        \`;
-    }
-
-    return \`
-      <section
-        class="auth-background-panel"
-        style="\${style}"
-      >
-
-        <div
-          class="auth-background-overlay"
-          style="
-            background:
-              \${background.overlayColor};
-
-            opacity:
-              \${background.overlayOpacity};
-          "
-        ></div>
-
-        <div class="auth-background-content">
-
-          <div class="background-branding">
-
-            \${branding.showLogo
-              ? this.renderLogo()
-              : ""
-            }
-
-            \${branding.showBrandName
-              ? \`
-                <h1>
-                  \${branding.brandName}
-                </h1>
-
-                <p>
-                  \${branding.subtitle}
-                </p>
-              \`
-              : ""
-            }
-
-          </div>
-
-        </div>
-
-      </section>
-    \`;
-  }
-
-
-  renderLogo() {
-
-    const branding =
-      this.config.branding;
-
-    if (branding.logo) {
-
-      return \`
-        <div
-          class="
-            auth-logo
-            auth-logo-\${branding.logoStyle}
-          "
-        >
-
-          <img
-            src="\${branding.logo}"
-            alt="Logo"
-          >
-
-        </div>
-      \`;
-    }
-
-    return \`
-      <div
-        class="
-          auth-logo
-          auth-logo-\${branding.logoStyle}
-        "
-      >
-
-        <span>
-          \${branding.logoText}
-        </span>
-
-      </div>
-    \`;
-  }
-
-
-  renderFormPanel() {
-
-    return \`
-      <section class="auth-form-panel">
-
-        <div
-          class="
-            auth-card
-            auth-shadow-\${this.config.card.shadow}
-          "
-        >
-
-          \${this.renderCurrentForm()}
-
-        </div>
-
-      </section>
-    \`;
-  }
-
-
-  renderCurrentForm() {
-
-    if (
-      this.currentPage === "signup"
-    ) {
-      return this.renderSignup();
-    }
-
-    if (
-      this.currentPage === "forgot"
-    ) {
-      return this.renderForgotPassword();
-    }
-
-    if (
-      this.currentPage === "otp"
-    ) {
-      return this.renderOTP();
-    }
-
-    return this.renderLogin();
-  }
-
-
-  renderLogin() {
-
-    const login =
-      this.config.login;
-
-    return \`
-      <div class="auth-form-content">
-
-        <div class="auth-form-heading">
-
-          <h2>
-            Welcome back
-          </h2>
-
-          <p>
-            Login to access your account
-          </p>
-
-        </div>
-
-
-        <form id="login-form">
-
-          <div class="auth-form-group">
-
-            <label class="auth-label">
-              \${this.identifierType === "email"
-                ? "Email Address"
-                : "Mobile Number"
-              }
-            </label>
-
-            <input
-              class="auth-input"
-
-              id="login-identifier"
-
-              type="\${this.identifierType === "email"
-                ? "email"
-                : "tel"
-              }"
-
-              placeholder="\${this.identifierType === "email"
-                ? "Enter your email address"
-                : "Enter your mobile number"
-              }"
-            >
-
-          </div>
-
-
-          \${login.showIdentifierSelector
-            ? this.renderIdentifierSelector()
-            : ""
+  // 3. OTP Digits Input Auto-advance
+  function initOtpInputs() {
+    const boxes = document.querySelectorAll(".otp-digit-box");
+    boxes.forEach((box, idx) => {
+      box.addEventListener("input", () => {
+        const val = box.value.replace(/\\D/g, "");
+        box.value = val ? val[0] : "";
+        if (box.value && idx < boxes.length - 1) {
+          boxes[idx + 1].focus();
+        }
+      });
+
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && !box.value && idx > 0) {
+          boxes[idx - 1].focus();
+        } else if (e.key === "ArrowLeft" && idx > 0) {
+          boxes[idx - 1].focus();
+        } else if (e.key === "ArrowRight" && idx < boxes.length - 1) {
+          boxes[idx + 1].focus();
+        }
+      });
+
+      box.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData("text").replace(/\\D/g, "");
+        if (!pasteData) return;
+        const digits = pasteData.split("");
+        digits.forEach((digit, i) => {
+          if (idx + i < boxes.length) {
+            boxes[idx + i].value = digit;
           }
+        });
+        const nextFocus = Math.min(idx + digits.length, boxes.length - 1);
+        boxes[nextFocus].focus();
+      });
+    });
+  }
 
+  // 4. OTP Resend Countdown
+  function initOtpResend() {
+    const resendBtn = document.getElementById("otpResendButton");
+    if (!resendBtn) return;
 
-          \${this.renderAuthenticationMethod()}
+    let countdown = Number(config.pages?.otp?.resendSeconds) || 30;
+    const countdownSpan = resendBtn.querySelector(".otp-countdown-timer");
+    resendBtn.disabled = true;
 
+    const timer = setInterval(() => {
+      countdown -= 1;
+      if (countdownSpan) countdownSpan.textContent = \`(\${countdown}s)\`;
+      if (countdown <= 0) {
+        clearInterval(timer);
+        resendBtn.disabled = false;
+        if (countdownSpan) countdownSpan.textContent = "";
+      }
+    }, 1000);
+  }
 
-          <div class="auth-login-options">
+  // 5. OTP Delivery Method Selector
+  function initDeliveryPills() {
+    const pills = document.querySelectorAll("[data-otp-delivery]");
+    pills.forEach(pill => {
+      pill.addEventListener("click", (e) => {
+        e.preventDefault();
+        pills.forEach(p => p.classList.remove("active"));
+        pill.classList.add("active");
+      });
+    });
+  }
 
-            \${login.showRememberMe
-              ? \`
-                <label class="auth-checkbox-label">
+  // 6. Form Submission & Post-Auth Redirection
+  function initFormSubmit() {
+    const forms = document.querySelectorAll(".auth-main-form");
+    forms.forEach(form => {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const redirectUrl = config.redirectUrl || config.urls?.redirectUrl || "https://customerwebsite.com/dashboard";
+        
+        // Show success indicator on submit button
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.innerHTML = "<span>Authenticated! Redirecting...</span>";
+          submitBtn.disabled = true;
+        }
 
-                  <input
-                    type="checkbox"
-                  >
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 800);
+      });
+    });
+  }
+})();
+`;
+  }
 
-                  <span>
-                    Remember me
-                  </span>
+  /* =======================================================
+     STANDALONE INDEX.HTML GENERATOR FOR ZIP
+  ======================================================= */
+  function generateStandaloneIndexHTML(config) {
+    const brandName = Utils.escapeHtml(config.branding?.brandName || "Authentication");
+    const activePage = config.activePage || "login";
 
-                </label>
-              \`
-              : ""
-            }
+    // Generate HTML for all 4 pages so customer can switch seamlessly
+    const loginHTML = Templates.generateLoginPage(config);
+    const signupHTML = Templates.generateSignupPage(config);
+    const forgotHTML = Templates.generateForgotPasswordPage(config);
+    const otpHTML = Templates.generateOtpPage(config);
 
+    const layout = config.layout || {};
+    const layoutType = layout.type || "split-left-image";
+    const formHPos = layout.formHorizontalAlignment || "center";
+    const formVPos = layout.formVerticalAlignment || "center";
 
-            \${login.showForgotPassword
-              ? \`
-                <button
-                  type="button"
+    const imageSection = config.imageSection || {};
+    const showBackgroundText = imageSection.showText !== false;
+    const bgHeading = Utils.escapeHtml(imageSection.text || "Experience the next generation of authentication.");
+    const bgSubtext = Utils.escapeHtml(imageSection.subtext || "Fast, secure, and beautifully customized for your brand.");
+    const bgPosClass = `position-${imageSection.textPosition || 'center'}`;
 
-                  class="auth-text-button"
+    const landingUrl = config.urls?.landingPageUrl || "";
 
-                  data-page="forgot"
-                >
-                  Forgot password?
-                </button>
-              \`
-              : ""
-            }
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${brandName} - Authentication</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
 
-          </div>
-
-
-          <button
-            class="auth-primary-button"
-            type="submit"
-          >
-            \${login.loginButtonText}
-          </button>
-
-        </form>
-
-
-        \${this.renderSocialLogin()}
-
-
-        \${this.config.signup.enabled
-          ? \`
-            <div class="auth-page-switch">
-
-              <span>
-                Don't have an account?
-              </span>
-
-              <button
-                class="auth-text-button"
-                type="button"
-                data-page="signup"
-              >
-                Create Account
-              </button>
-
+  <div class="auth-preview-root layout-${layoutType} form-horizontal-${formHPos} form-vertical-${formVPos}">
+    <div class="auth-preview-shell">
+      
+      <!-- Visual Image / Background Section -->
+      <div class="auth-image-section">
+        <div class="auth-image-overlay"></div>
+        ${showBackgroundText ? `
+          <div class="auth-image-content ${bgPosClass}">
+            <div class="auth-image-text-block">
+              <h2 class="auth-image-text">${bgHeading}</h2>
+              ${bgSubtext ? `<p class="auth-image-subtext">${bgSubtext}</p>` : ""}
             </div>
-          \`
-          : ""
-        }
-
+          </div>
+        ` : ""}
       </div>
-    \`;
-  }
 
+      <!-- Auth Form Section -->
+      <div class="auth-form-section">
+        <div class="auth-card">
+          ${landingUrl ? `
+            <div class="auth-landing-link-bar">
+              <a href="${Utils.escapeHtml(landingUrl)}" class="auth-landing-link">
+                ← Back to Website
+              </a>
+            </div>
+          ` : ""}
 
-  renderIdentifierSelector() {
+          ${Templates.generateLogo(config)}
 
-    return \`
-      <div class="auth-identifier-selector">
-
-        <button
-          type="button"
-
-          class="
-            auth-identifier-option
-            \${this.identifierType === "email"
-              ? "active"
-              : ""
-            }
-          "
-
-          data-identifier="email"
-        >
-          Email
-        </button>
-
-        <button
-          type="button"
-
-          class="
-            auth-identifier-option
-            \${this.identifierType === "mobile"
-              ? "active"
-              : ""
-            }
-          "
-
-          data-identifier="mobile"
-        >
-          Mobile Number
-        </button>
-
-      </div>
-    \`;
-  }
-
-
-  renderAuthenticationMethod() {
-
-    const login =
-      this.config.login;
-
-    if (
-      login.defaultAuthentication === "otp" &&
-      login.authenticationMethods.otp
-    ) {
-
-      return \`
-        <div class="auth-get-key-section">
-
-          <div class="auth-get-key-header">
-            Get key from
+          <div class="auth-page-container">
+            <div style="display: ${activePage === 'login' ? 'block' : 'none'};">
+              ${loginHTML}
+            </div>
+            <div style="display: ${activePage === 'signup' ? 'block' : 'none'};">
+              ${signupHTML}
+            </div>
+            <div style="display: ${activePage === 'forgotPassword' ? 'block' : 'none'};">
+              ${forgotHTML}
+            </div>
+            <div style="display: ${activePage === 'otp' ? 'block' : 'none'};">
+              ${otpHTML}
+            </div>
           </div>
 
-          <button
-            type="button"
-
-            class="auth-get-key-option"
-
-            data-page="otp"
-          >
-            Email / SMS OTP
-          </button>
-
         </div>
-      \`;
-    }
-
-    return \`
-      <div class="auth-form-group">
-
-        <label class="auth-label">
-          Password
-        </label>
-
-        <div class="auth-password-wrapper">
-
-          <input
-            class="auth-input"
-
-            id="login-password"
-
-            type="\${this.passwordVisible
-              ? "text"
-              : "password"
-            }"
-
-            placeholder="Enter your password"
-          >
-
-          <button
-            type="button"
-
-            class="auth-password-toggle"
-
-            id="password-toggle"
-          >
-            \${this.passwordVisible
-              ? "Hide"
-              : "Show"
-            }
-          </button>
-
-        </div>
-
       </div>
-    \`;
+
+    </div>
+  </div>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>`;
   }
 
-
-  renderSignup() {
-
-    const fields =
-      this.config.signup.fields;
-
-    return \`
-      <button
-        type="button"
-
-        class="auth-back-button"
-
-        data-page="login"
-      >
-        ← Back
-      </button>
-
-
-      <div class="auth-form-heading">
-
-        <h2>
-          Create your account
-        </h2>
-
-        <p>
-          Fill in your details to get started
-        </p>
-
-      </div>
-
-
-      <form id="signup-form">
-
-        \${fields.username
-          ? this.renderInput(
-              "username",
-              "Username",
-              "Enter your username",
-              "text"
-            )
-          : ""
-        }
-
-        \${fields.email
-          ? this.renderInput(
-              "email",
-              "Email Address",
-              "Enter your email",
-              "email"
-            )
-          : ""
-        }
-
-        \${fields.mobile
-          ? this.renderInput(
-              "mobile",
-              "Mobile Number",
-              "Enter your mobile number",
-              "tel"
-            )
-          : ""
-        }
-
-        \${fields.password
-          ? this.renderInput(
-              "password",
-              "Password",
-              "Create password",
-              "password"
-            )
-          : ""
-        }
-
-        \${fields.confirmPassword
-          ? this.renderInput(
-              "confirm-password",
-              "Confirm Password",
-              "Confirm password",
-              "password"
-            )
-          : ""
-        }
-
-        <button
-          class="auth-primary-button"
-          type="submit"
-        >
-          \${this.config.signup.buttonText}
-        </button>
-
-      </form>
-
-
-      <div class="auth-page-switch">
-
-        <span>
-          Already have an account?
-        </span>
-
-        <button
-          class="auth-text-button"
-          type="button"
-          data-page="login"
-        >
-          Login
-        </button>
-
-      </div>
-    \`;
-  }
-
-
-  renderInput(
-    id,
-    label,
-    placeholder,
-    type
-  ) {
-
-    return \`
-      <div class="auth-form-group">
-
-        <label class="auth-label">
-          \${label}
-        </label>
-
-        <input
-          class="auth-input"
-
-          id="\${id}"
-
-          type="\${type}"
-
-          placeholder="\${placeholder}"
-        >
-
-      </div>
-    \`;
-  }
-
-
-  renderForgotPassword() {
-
-    return \`
-      <button
-        type="button"
-
-        class="auth-back-button"
-
-        data-page="login"
-      >
-        ← Back to login
-      </button>
-
-
-      <div class="auth-form-heading">
-
-        <h2>
-          Forgot password?
-        </h2>
-
-        <p>
-          Enter your email or mobile number
-          to receive a verification key.
-        </p>
-
-      </div>
-
-
-      <form id="forgot-form">
-
-        <div class="auth-form-group">
-
-          <label class="auth-label">
-            Email or Mobile Number
-          </label>
-
-          <input
-            class="auth-input"
-
-            type="text"
-
-            placeholder="
-              Enter email or mobile number
-            "
-          >
-
-        </div>
-
-        <button
-          class="auth-primary-button"
-          type="submit"
-        >
-          Send Verification Key
-        </button>
-
-      </form>
-    \`;
-  }
-
-
-  renderOTP() {
-
-    const length =
-      this.config.login.otpLength || 6;
-
-    let inputs =
-      "";
-
-    for (
-      let index = 0;
-      index < length;
-      index++
-    ) {
-
-      inputs += \`
-        <input
-          type="text"
-
-          maxlength="1"
-
-          inputmode="numeric"
-
-          class="auth-otp-input"
-        >
-      \`;
-    }
-
-    return \`
-      <button
-        type="button"
-
-        class="auth-back-button"
-
-        data-page="login"
-      >
-        ← Back to login
-      </button>
-
-
-      <div class="auth-form-heading">
-
-        <h2>
-          Verify your account
-        </h2>
-
-        <p>
-          Enter the verification code
-          sent to you.
-        </p>
-
-      </div>
-
-
-      <div class="auth-otp-container">
-
-        \${inputs}
-
-      </div>
-
-
-      <button
-        class="auth-primary-button"
-        type="button"
-      >
-        Verify
-      </button>
-    \`;
-  }
-
-
-  renderSocialLogin() {
-
-    const social =
-      this.config.social;
-
-    if (!social.enabled) {
-      return "";
-    }
-
-    let buttons =
-      "";
-
-    if (
-      social.providers.google
-    ) {
-
-      buttons += \`
-        <button
-          class="auth-social-button"
-          type="button"
-        >
-          G
-          Continue with Google
-        </button>
-      \`;
-    }
-
-    if (
-      social.providers.facebook
-    ) {
-
-      buttons += \`
-        <button
-          class="auth-social-button"
-          type="button"
-        >
-          f
-          Continue with Facebook
-        </button>
-      \`;
-    }
-
-    if (
-      social.providers.apple
-    ) {
-
-      buttons += \`
-        <button
-          class="auth-social-button"
-          type="button"
-        >
-          
-          Continue with Apple
-        </button>
-      \`;
-    }
-
-    if (!buttons) {
-      return "";
-    }
-
-    return \`
-      <div class="auth-social-section">
-
-        <div class="auth-divider">
-
-          <span>
-            \${social.title}
-          </span>
-
-        </div>
-
-        <div class="auth-social-buttons">
-
-          \${buttons}
-
-        </div>
-
-      </div>
-    \`;
-  }
-
-
-  attachEvents() {
-
-    this.container
-      .querySelectorAll(
-        "[data-page]"
-      )
-      .forEach((button) => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            this.currentPage =
-              button.dataset.page;
-
-            this.render();
-          }
-        );
-      });
-
-
-    this.container
-      .querySelectorAll(
-        "[data-identifier]"
-      )
-      .forEach((button) => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            this.identifierType =
-              button.dataset.identifier;
-
-            this.render();
-          }
-        );
-      });
-
-
-    const passwordToggle =
-      this.container.querySelector(
-        "#password-toggle"
-      );
-
-    if (passwordToggle) {
-
-      passwordToggle.addEventListener(
-        "click",
-        () => {
-
-          this.passwordVisible =
-            !this.passwordVisible;
-
-          this.render();
-        }
-      );
-    }
-
-
-    const loginForm =
-      this.container.querySelector(
-        "#login-form"
-      );
-
-    if (loginForm) {
-
-      loginForm.addEventListener(
-        "submit",
-        (event) => {
-
-          event.preventDefault();
-
-          console.log(
-            "Login submitted"
-          );
-        }
-      );
-    }
-
-
-    const signupForm =
-      this.container.querySelector(
-        "#signup-form"
-      );
-
-    if (signupForm) {
-
-      signupForm.addEventListener(
-        "submit",
-        (event) => {
-
-          event.preventDefault();
-
-          console.log(
-            "Signup submitted"
-          );
-        }
-      );
-    }
-
-
-    const forgotForm =
-      this.container.querySelector(
-        "#forgot-form"
-      );
-
-    if (forgotForm) {
-
-      forgotForm.addEventListener(
-        "submit",
-        (event) => {
-
-          event.preventDefault();
-
-          this.currentPage =
-            "otp";
-
-          this.render();
-        }
-      );
-    }
-  }
-}
-
-
-window.AuthPage =
-  AuthPage;
+  /* =======================================================
+     README GENERATOR
+  ======================================================= */
+  function generateReadme(config) {
+    return `# ${config.branding?.brandName || "Auth Page"} - Customized Authentication Package
+
+Generated by **Auth Page Builder**.
+
+## Quick Start
+1. Open \`index.html\` directly in any modern web browser.
+2. The authentication forms (Login, Signup, Forgot Password, OTP) work out-of-the-box.
+
+## Configured URLs
+- **Customer Landing Page URL**: \`${config.urls?.landingPageUrl || "Not configured"}\`
+- **Post-Authentication Redirect URL**: \`${config.urls?.redirectUrl || "https://customerwebsite.com/dashboard"}\`
+
+Upon form submission, the authentication page will simulate verification and redirect to your **Post-Authentication Redirect URL**.
+
+## File Structure
+\`\`\`
+generated-auth-page/
+  ├── index.html       # Main authentication page
+  ├── css/
+  │   └── styles.css   # Complete self-contained styling
+  ├── js/
+  │   ├── config.js    # Embedded JSON configuration
+  │   └── app.js       # Client runtime & validation
+  ├── assets/          # All background, logo & icon assets
+  ├── config.json      # Raw configuration
+  └── README.md        # Documentation
+\`\`\`
+
+## Integration
+To integrate into your website:
+- Copy this entire folder into your web server's static directory.
+- Link users from \`${config.urls?.landingPageUrl || "your site"}\` to \`index.html\`.
 `;
   }
 
-
   /* =======================================================
-     MAIN JAVASCRIPT
+     MAIN DOWNLOAD FUNCTION (ZIP CREATION)
   ======================================================= */
-
-  generateMainJS() {
-    return `/* =========================================================
-   AUTHENTICATION PAGE INITIALIZATION
-========================================================= */
-
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    const app =
-      document.querySelector(
-        "#auth-app"
-      );
-
-    if (!app) {
+  async function downloadPackage() {
+    if (typeof JSZip === "undefined") {
+      alert("JSZip library is loading. Please try again in a moment.");
       return;
     }
 
-
-    const authPage =
-      new AuthPage(
-        app,
-        window.authConfig
-      );
-
-
-    window.authPage =
-      authPage;
-
-
-    /* =====================================================
-       BACKEND INTEGRATION EXAMPLE
-
-       Replace these events with your API calls.
-
-       Example:
-
-       fetch("/api/login", {
-         method: "POST",
-         headers: {
-           "Content-Type":
-             "application/json"
-         },
-         body:
-           JSON.stringify(data)
-       });
-
-    ===================================================== */
-  }
-);
-`;
-  }
-
-
-  /* =======================================================
-     README
-  ======================================================= */
-
-  generateReadme(
-    projectName,
-    config
-  ) {
-    return `# ${projectName}
-
-This authentication page was generated using the Auth Page Builder.
-
-## Included Features
-
-- Customized login page
-- Email login
-- Mobile number login
-- Password authentication
-- OTP authentication
-- OTP verification screen
-- Forgot password screen
-- Signup screen
-- Username field
-- Email field
-- Mobile number field
-- Password field
-- Confirm password field
-- Social login UI
-- Customized logo
-- Customized background
-- Responsive desktop layout
-- Responsive mobile layout
-
-## Folder Structure
-
-\`\`\`
-${projectName}/
-
-├── index.html
-│
-├── css/
-│   ├── auth-page.css
-│   └── responsive.css
-│
-├── js/
-│   ├── auth-config.js
-│   ├── auth-page.js
-│   └── main.js
-│
-└── assets/
-    ├── background.*
-    └── logo.*
-\`\`\`
-
-## How To Use
-
-Open \`index.html\` in a browser.
-
-For production use:
-
-1. Copy the HTML, CSS and JavaScript files into your project.
-2. Keep the \`assets\` folder.
-3. Connect login/signup forms to your backend API.
-4. Replace the example form handlers with your authentication API endpoints.
-
-## Configuration
-
-All generated customization settings are stored in:
-
-\`\`\`
-js/auth-config.js
-\`\`\`
-
-You can modify:
-
-- Colors
-- Fonts
-- Logo
-- Background
-- Layout
-- Login settings
-- Signup fields
-- OTP settings
-- Social login visibility
-
-## Backend Integration
-
-The generated package contains the complete frontend authentication UI.
-
-To make authentication fully functional, connect the forms to your backend:
-
-\`\`\`javascript
-fetch("/api/login", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    email,
-    password
-  })
-});
-\`\`\`
-
-## Generated Configuration
-
-Primary color: ${config?.colors?.primary || "Default"}
-
-Background type: ${config?.background?.type || "Default"}
-
-Authentication mode: ${
-  config?.login?.defaultAuthentication ||
-  "Password"
-}
-
-OTP enabled: ${
-  config?.login?.authenticationMethods?.otp
-    ? "Yes"
-    : "No"
-}
-
-Password enabled: ${
-  config?.login?.authenticationMethods?.password
-    ? "Yes"
-    : "No"
-}
-`;
-  }
-
-
-  /* =======================================================
-     TRIGGER BROWSER DOWNLOAD
-  ======================================================= */
-
-  triggerBrowserDownload(
-    blob,
-    fileName
-  ) {
-    const url =
-      URL.createObjectURL(
-        blob
-      );
-
-    const link =
-      document.createElement(
-        "a"
-      );
-
-    link.href =
-      url;
-
-    link.download =
-      fileName;
-
-    link.style.display =
-      "none";
-
-    document.body.appendChild(
-      link
-    );
-
-    link.click();
-
-
-    setTimeout(
-      () => {
-
-        document.body.removeChild(
-          link
-        );
-
-        URL.revokeObjectURL(
-          url
-        );
-
-      },
-      1000
-    );
-  }
-
-
-  /* =======================================================
-     SAFE PROJECT NAME
-  ======================================================= */
-
-  getSafeProjectName(config) {
-    const source =
-      config?.project?.name ||
-      config?.branding?.brandName ||
-      this.projectName;
-
-    return (
-      source
-        .toLowerCase()
-        .trim()
-        .replace(
-          /[^a-z0-9]+/g,
-          "-"
-        )
-        .replace(
-          /^-|-$/g,
-          ""
-        ) ||
-      "my-custom-auth-page"
-    );
-  }
-
-
-  /* =======================================================
-     MIME TYPE TO EXTENSION
-  ======================================================= */
-
-  getExtensionFromMimeType(
-    mimeType,
-    source = ""
-  ) {
-    const mimeMap = {
-      "image/png": "png",
-      "image/jpeg": "jpg",
-      "image/jpg": "jpg",
-      "image/webp": "webp",
-      "image/gif": "gif",
-      "image/svg+xml": "svg"
-    };
-
-    if (
-      mimeMap[mimeType]
-    ) {
-      return mimeMap[mimeType];
+    if (Utils.showToast) {
+      Utils.showToast("Building customized package...", "info", 2000);
     }
 
-    const match =
-      source.match(
-        /\.([a-zA-Z0-9]+)(?:\?|$)/
-      );
+    try {
+      const config = getCleanConfig();
+      const zip = new JSZip();
+      const folder = zip.folder("generated-auth-page");
 
-    if (match) {
-      return match[1];
-    }
+      const cssFolder = folder.folder("css");
+      const jsFolder = folder.folder("js");
+      const assetsFolder = folder.folder("assets");
+      const bgFolder = assetsFolder.folder("backgrounds");
+      const logoFolder = assetsFolder.folder("logos");
+      const iconFolder = assetsFolder.folder("icons");
 
-    return "png";
-  }
+      // Asset mapping for relative paths inside ZIP
+      const exportConfig = JSON.parse(JSON.stringify(config));
 
-
-  /* =======================================================
-     PROGRESS
-  ======================================================= */
-
-  emitProgress(
-    message,
-    percentage
-  ) {
-    if (this.onProgress) {
-      this.onProgress({
-        message,
-        percentage
-      });
-    }
-
-    document.dispatchEvent(
-      new CustomEvent(
-        "auth-builder:download-progress",
-        {
-          detail: {
-            message,
-            percentage
-          }
+      // 1. Process Background Image
+      if (config.background?.uploadedImage && config.background.uploadedImage.startsWith("data:")) {
+        const base64Data = config.background.uploadedImage.split(",")[1];
+        if (base64Data) {
+          bgFolder.file("background-custom.png", base64Data, { base64: true });
+          exportConfig.background.image = "./assets/backgrounds/background-custom.png";
+          exportConfig.background.uploadedImage = "./assets/backgrounds/background-custom.png";
         }
-      )
-    );
-  }
+      } else if (config.background?.image && !config.background.image.startsWith("data:")) {
+        const bgData = await fetchAsset(config.background.image);
+        if (bgData) {
+          const filename = config.background.image.split("/").pop() || "background.jpg";
+          bgFolder.file(filename, bgData);
+          exportConfig.background.image = `./assets/backgrounds/${filename}`;
+        }
+      }
 
+      // 2. Process Logo Image
+      if (config.branding?.uploadedLogo && config.branding.uploadedLogo.startsWith("data:")) {
+        const base64Data = config.branding.uploadedLogo.split(",")[1];
+        if (base64Data) {
+          logoFolder.file("logo-custom.png", base64Data, { base64: true });
+          exportConfig.branding.logo = "./assets/logos/logo-custom.png";
+          exportConfig.branding.uploadedLogo = "./assets/logos/logo-custom.png";
+        }
+      } else if (config.branding?.logo && !config.branding.logo.startsWith("data:")) {
+        const logoData = await fetchAsset(config.branding.logo);
+        if (logoData) {
+          const filename = config.branding.logo.split("/").pop() || "logo.png";
+          logoFolder.file(filename, logoData);
+          exportConfig.branding.logo = `./assets/logos/${filename}`;
+        }
+      }
 
-  /* =======================================================
-     ERROR
-  ======================================================= */
+      // 3. Build config.json
+      const configJSON = {
+        landingPageUrl: exportConfig.urls?.landingPageUrl || "",
+        redirectUrl: exportConfig.urls?.redirectUrl || "",
+        authentication: exportConfig.authentication || {},
+        branding: exportConfig.branding || {},
+        layout: exportConfig.layout || {},
+        background: exportConfig.background || {},
+        card: exportConfig.card || {},
+        typography: exportConfig.typography || {},
+        button: exportConfig.button || {},
+        social: exportConfig.social || {},
+        pages: exportConfig.pages || {}
+      };
+      folder.file("config.json", JSON.stringify(configJSON, null, 2));
 
-  handleError(error) {
-    console.error(
-      "Download failed:",
-      error
-    );
+      // 4. Build js/config.js & js/app.js
+      jsFolder.file("config.js", `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`);
+      jsFolder.file("app.js", generateStandaloneAppJS());
 
-    if (this.onError) {
-      this.onError(error);
+      // 5. Build css/styles.css
+      cssFolder.file("styles.css", generateStandaloneCSS(exportConfig));
+
+      // 6. Build index.html
+      folder.file("index.html", generateStandaloneIndexHTML(exportConfig));
+
+      // 7. Build README.md
+      folder.file("README.md", generateReadme(exportConfig));
+
+      // 8. Generate ZIP Blob and trigger download
+      const content = await zip.generateAsync({ type: "blob" });
+      if (typeof document !== "undefined" && document.createElement) {
+        const a = document.createElement("a");
+        const url = (typeof URL !== "undefined" && URL.createObjectURL) ? URL.createObjectURL(content) : "#";
+        a.href = url;
+        a.download = "generated-auth-page.zip";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (a.parentNode) document.body.removeChild(a);
+          if (typeof URL !== "undefined" && URL.revokeObjectURL && url !== "#") {
+            URL.revokeObjectURL(url);
+          }
+        }, 1000);
+      }
+
+      if (Utils.showToast) {
+        Utils.showToast("Your authentication package has been downloaded!", "success");
+      }
+    } catch (err) {
+      console.error("ZIP Generation error:", err);
+      if (Utils.showToast) {
+        Utils.showToast("Failed to generate ZIP package.", "error");
+      }
     }
-
-    alert(
-      `Unable to create package: ${error.message}`
-    );
   }
 
-
-  /* =======================================================
-     ESCAPE HTML
-  ======================================================= */
-
-  escapeHTML(value) {
-    const div =
-      document.createElement(
-        "div"
-      );
-
-    div.textContent =
-      String(
-        value || ""
-      );
-
-    return div.innerHTML;
-  }
-
-
-  /* =======================================================
-     CLONE
-  ======================================================= */
-
-  clone(value) {
-    if (
-      value === undefined
-    ) {
-      return undefined;
-    }
-
-    return JSON.parse(
-      JSON.stringify(value)
-    );
-  }
-}
-
-
-/* =========================================================
-   GLOBAL EXPORT
-========================================================= */
-
-window.DownloadManager =
-  DownloadManager;
+  return {
+    downloadPackage,
+    generateStandaloneCSS,
+    generateStandaloneAppJS,
+    generateStandaloneIndexHTML,
+    generateReadme
+  };
+});

@@ -1,1581 +1,586 @@
 /* =========================================================
-   AUTH PAGE BUILDER
+   AUTH PAGE BUILDER - TEMPLATE GENERATOR
    File: js/templates.js
-
-   TEMPLATE GENERATOR
-
-   Supports:
-   - Login
-   - Signup
-   - Forgot Password
-   - OTP
-   - 4 / 6 / 8 digit OTP
-   - Email / Mobile / WhatsApp OTP
-   - Password authentication
-   - Social login
-   - Dynamic branding
-   - Dynamic colors
-   - Uploaded logo support
-   - Page-specific customization
 ========================================================= */
 
-
-/* =========================================================
-   TEMPLATE UTILITIES
-========================================================= */
-
-function escapeHTML(value = "") {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-
-function getValue(object, path, fallback = "") {
-  if (!object || !path) {
-    return fallback;
+(function (root, factory) {
+  if (typeof module !== "undefined" && module.exports) {
+    const utils = require("./utils.js");
+    module.exports = factory(utils);
+  } else {
+    root.Templates = factory(root.Utils || {});
   }
+})(typeof window !== "undefined" ? window : globalThis, function (Utils) {
 
-  const keys = String(path).split(".");
-  let current = object;
+  const escapeHtml = Utils.escapeHtml || function (s) {
+    if (s === null || s === undefined) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
 
-  for (const key of keys) {
-    if (
-      current === undefined ||
-      current === null ||
-      !Object.prototype.hasOwnProperty.call(current, key)
-    ) {
-      return fallback;
+  /* =======================================================
+     ICONS (INLINE SVG)
+  ======================================================= */
+  const ICONS = {
+    google: `<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>`,
+    apple: `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.87-.96.04-2.13.64-2.79 1.41-.57.65-1.06 1.71-.98 2.76 1.07.08 2.14-.55 2.76-1.3z"/></svg>`,
+    facebook: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+    github: `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>`,
+    linkedin: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#0A66C2"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.64 1.64 0 1 0-.02-3.28 1.64 1.64 0 0 0 .02 3.28M5.07 18.5h2.79v-8.37H5.07v8.37z"/></svg>`,
+    whatsapp: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#25D366"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.275-.1-.476-.15-.676.15-.2.301-.776.979-.951 1.18-.175.201-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.675-2.085-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.201-.301.301-.502.1-.201.05-.376-.025-.526-.075-.15-.677-1.633-.927-2.235-.244-.587-.492-.507-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.275.301-1.052 1.028-1.052 2.508 0 1.48 1.077 2.909 1.228 3.11.15.2 2.12 3.238 5.136 4.542.717.31 1.277.496 1.713.635.72.229 1.375.197 1.893.12.577-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.275-.201-.576-.351zm-5.452 7.558h-.008a10.024 10.024 0 0 1-5.118-1.398l-.367-.218-3.805.998 1.016-3.71-.24-.381a10.015 10.015 0 0 1-1.536-5.292c0-5.535 4.504-10.04 10.045-10.04 2.684 0 5.207 1.046 7.104 2.945a10.007 10.007 0 0 1 2.942 7.098c0 5.538-4.505 10.042-10.033 10.042zm8.517-18.552A11.936 11.936 0 0 0 12.02 0C5.393 0 .02 5.373.02 12a11.96 11.96 0 0 0 1.83 6.388L0 24l5.772-1.815A11.97 11.97 0 0 0 12.02 24c6.626 0 12-5.373 12-12 0-3.206-1.248-6.22-3.515-8.612z"/></svg>`,
+    email: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`,
+    sms: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+    eye: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+    eyeOff: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`,
+    shieldCheck: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>`,
+    arrowLeft: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`
+  };
+
+  /* =======================================================
+     BRANDING & LOGO
+  ======================================================= */
+  function generateLogo(config) {
+    const branding = config.branding || {};
+    if (branding.showLogo === false) {
+      return "";
     }
 
-    current = current[key];
-  }
+    const brandName = escapeHtml(branding.brandName || "Your Brand");
+    const shape = branding.logoShape || "circle";
+    const position = branding.logoPosition || "center";
+    const logoSrc = branding.uploadedLogo || branding.logo || branding.selectedLogo || "";
 
-  return current === undefined || current === null
-    ? fallback
-    : current;
-}
+    const initials = brandName
+      .split(" ")
+      .map(w => w[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "YB";
 
+    let logoMarkup = "";
+    if (logoSrc) {
+      logoMarkup = `
+        <div class="auth-logo-box auth-logo-shape-${shape}">
+          <img src="${escapeHtml(logoSrc)}" alt="${brandName}" class="auth-logo-img"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="auth-logo-fallback" style="display: none;">
+            <span>${initials}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      logoMarkup = `
+        <div class="auth-logo-box auth-logo-shape-${shape}">
+          <div class="auth-logo-fallback">
+            <span>${initials}</span>
+          </div>
+        </div>
+      `;
+    }
 
-function getBoolean(object, path, fallback = false) {
-  const value = getValue(object, path, fallback);
-
-  if (typeof value === "string") {
-    return value.toLowerCase() === "true";
-  }
-
-  return Boolean(value);
-}
-
-
-function getArray(object, path, fallback = []) {
-  const value = getValue(object, path, fallback);
-
-  return Array.isArray(value)
-    ? value
-    : fallback;
-}
-
-
-function getConfig() {
-  if (
-    window.AuthState &&
-    typeof window.AuthState.getConfig === "function"
-  ) {
-    return window.AuthState.getConfig();
-  }
-
-  if (
-    window.state &&
-    typeof window.state.getConfig === "function"
-  ) {
-    return window.state.getConfig();
-  }
-
-  if (window.state && window.state.config) {
-    return window.state.config;
-  }
-
-  return {};
-}
-
-
-/* =========================================================
-   NORMALIZE PAGE NAME
-========================================================= */
-
-function normalizePageName(pageName) {
-  const page = String(pageName || "login")
-    .toLowerCase()
-    .replace(/[\s_-]+/g, "");
-
-  const aliases = {
-    login: "login",
-    signin: "login",
-
-    signup: "signup",
-    register: "signup",
-
-    forgot: "forgotPassword",
-    forgotpassword: "forgotPassword",
-
-    otp: "otp",
-    verification: "otp",
-    verify: "otp"
-  };
-
-  return aliases[page] || "login";
-}
-
-
-/* =========================================================
-   GET PAGE CONFIG
-
-   Supports both:
-   config.login
-
-   and
-
-   config.pages.login
-========================================================= */
-
-function getPageConfig(config, pageName) {
-  const page = normalizePageName(pageName);
-
-  const directConfig =
-    config[page] || {};
-
-  const pagesConfig =
-    config.pages &&
-    config.pages[page]
-      ? config.pages[page]
-      : {};
-
-  return {
-    ...directConfig,
-    ...pagesConfig
-  };
-}
-
-
-/* =========================================================
-   GET BRANDING
-========================================================= */
-
-function getBranding(config) {
-  return config.branding || {};
-}
-
-
-/* =========================================================
-   GET COLORS
-========================================================= */
-
-function getColors(config) {
-  return config.colors || {};
-}
-
-
-/* =========================================================
-   GET CARD CONFIG
-========================================================= */
-
-function getCardConfig(config) {
-  return config.card || {};
-}
-
-
-/* =========================================================
-   LOGO TEMPLATE
-========================================================= */
-
-function getLogoTemplate(config) {
-  const branding = getBranding(config);
-
-  const logo =
-    branding.uploadedLogo ||
-    branding.logoUrl ||
-    branding.logo ||
-    branding.image ||
-    "";
-
-  const brandName =
-    branding.brandName ||
-    branding.name ||
-    "";
-
-  const logoWidth =
-    Number(branding.logoWidth) || 120;
-
-  if (!logo && !brandName) {
-    return "";
-  }
-
-  const logoHTML = logo
-    ? `
-      <div class="auth-brand-logo">
-        <img
-          src="${escapeHTML(logo)}"
-          alt="Brand logo"
-          style="max-width:${logoWidth}px;"
-        />
+    return `
+      <div class="auth-branding-header auth-logo-pos-${position}">
+        ${logoMarkup}
+        ${brandName ? `<span class="auth-brand-title">${brandName}</span>` : ""}
       </div>
-    `
-    : "";
-
-  const brandHTML = brandName
-    ? `
-      <div class="auth-brand-name">
-        ${escapeHTML(brandName)}
-      </div>
-    `
-    : "";
-
-  return `
-    <div class="auth-branding">
-      ${logoHTML}
-      ${brandHTML}
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   PAGE HEADER TEMPLATE
-========================================================= */
-
-function getPageHeader(
-  title = "",
-  subtitle = ""
-) {
-  const titleHTML = title
-    ? `
-      <h1 class="auth-page-title">
-        ${escapeHTML(title)}
-      </h1>
-    `
-    : "";
-
-  const subtitleHTML = subtitle
-    ? `
-      <p class="auth-page-subtitle">
-        ${escapeHTML(subtitle)}
-      </p>
-    `
-    : "";
-
-  return `
-    <div class="auth-page-header">
-      ${titleHTML}
-      ${subtitleHTML}
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   IDENTIFIER FIELD
-========================================================= */
-
-function getIdentifierField(config, options = {}) {
-  const login = getPageConfig(config, "login");
-
-  const identifierTypes =
-    options.identifierTypes ||
-    login.identifierTypes ||
-    login.identifierOptions ||
-    getArray(
-      config,
-      "authentication.identifierTypes",
-      ["email"]
-    );
-
-  const types = Array.isArray(identifierTypes)
-    ? identifierTypes
-    : ["email"];
-
-  const defaultType =
-    types.includes("email")
-      ? "email"
-      : types[0] || "email";
-
-  const label =
-    options.label ||
-    login.identifierLabel ||
-    "Email Address";
-
-  const placeholder =
-    options.placeholder ||
-    login.identifierPlaceholder ||
-    "Enter your email";
-
-  const showSelector =
-    options.showSelector !== undefined
-      ? options.showSelector
-      : login.showIdentifierSelector !== false &&
-        types.length > 1;
-
-  let selectorHTML = "";
-
-  if (showSelector) {
-    selectorHTML = `
-      <select
-        class="auth-identifier-type"
-        id="identifier-type"
-        aria-label="Identifier type"
-      >
-        ${types
-          .map((type) => {
-            const selected =
-              type === defaultType
-                ? "selected"
-                : "";
-
-            return `
-              <option
-                value="${escapeHTML(type)}"
-                ${selected}
-              >
-                ${escapeHTML(
-                  formatIdentifierType(type)
-                )}
-              </option>
-            `;
-          })
-          .join("")}
-      </select>
     `;
   }
 
-  return `
-    <div class="auth-field-group auth-identifier-group">
-
-      ${
-        showSelector
-          ? `
-            <div class="auth-identifier-selector">
-              ${selectorHTML}
-            </div>
-          `
-          : ""
-      }
-
-      <label
-        class="auth-label"
-        for="auth-identifier"
-      >
-        ${escapeHTML(label)}
-      </label>
-
-      <input
-        id="auth-identifier"
-        class="auth-input"
-        type="${
-          defaultType === "email"
-            ? "email"
-            : "text"
-        }"
-        placeholder="${escapeHTML(placeholder)}"
-        autocomplete="${
-          defaultType === "email"
-            ? "email"
-            : "username"
-        }"
-      />
-
-    </div>
-  `;
-}
-
-
-function formatIdentifierType(type) {
-  const map = {
-    email: "Email",
-    mobile: "Mobile",
-    phone: "Phone Number",
-    whatsapp: "WhatsApp"
-  };
-
-  return map[type] || type;
-}
-
-
-/* =========================================================
-   PASSWORD FIELD
-========================================================= */
-
-function getPasswordField(options = {}) {
-  const {
-    id = "auth-password",
-    label = "Password",
-    placeholder = "Enter your password",
-    showToggle = true
-  } = options;
-
-  return `
-    <div class="auth-field-group">
-
-      <label
-        class="auth-label"
-        for="${escapeHTML(id)}"
-      >
-        ${escapeHTML(label)}
-      </label>
-
-      <div class="auth-password-wrapper">
-
-        <input
-          id="${escapeHTML(id)}"
-          class="auth-input auth-password-input"
-          type="password"
-          placeholder="${escapeHTML(placeholder)}"
-          autocomplete="current-password"
-        />
-
-        ${
-          showToggle
-            ? `
-              <button
-                type="button"
-                class="auth-password-toggle"
-                data-password-toggle="${escapeHTML(id)}"
-                aria-label="Show password"
-              >
-                👁
-              </button>
-            `
-            : ""
-        }
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   AUTH METHOD SELECTOR
-========================================================= */
-
-function getAuthenticationMethodSelector(config) {
-  const login =
-    getPageConfig(config, "login");
-
-  const methods =
-    login.authenticationMethods || {};
-
-  const passwordEnabled =
-    methods.password !== false &&
-    getBoolean(
-      config,
-      "authentication.password.enabled",
-      true
-    );
-
-  const otpEnabled =
-    methods.otp === true ||
-    getBoolean(
-      config,
-      "authentication.otp.enabled",
-      true
-    );
-
-  const magicLinkEnabled =
-    methods.magicLink === true ||
-    getBoolean(
-      config,
-      "authentication.magicLink.enabled",
-      false
-    );
-
-  const availableMethods = [];
-
-  if (passwordEnabled) {
-    availableMethods.push({
-      value: "password",
-      label: "Password"
-    });
-  }
-
-  if (otpEnabled) {
-    availableMethods.push({
-      value: "otp",
-      label: "OTP"
-    });
-  }
-
-  if (magicLinkEnabled) {
-    availableMethods.push({
-      value: "magicLink",
-      label: "Magic Link"
-    });
-  }
-
-  if (availableMethods.length <= 1) {
-    return "";
-  }
-
-  const defaultMethod =
-    login.defaultAuthentication ||
-    availableMethods[0].value;
-
-  return `
-    <div class="auth-method-selector">
-
-      ${availableMethods
-        .map((method) => {
-          const active =
-            method.value === defaultMethod
-              ? "active"
-              : "";
-
-          return `
-            <button
-              type="button"
-              class="auth-method-button ${active}"
-              data-auth-method="${escapeHTML(method.value)}"
-            >
-              ${escapeHTML(method.label)}
-            </button>
-          `;
-        })
-        .join("")}
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   LOGIN PAGE
-========================================================= */
-
-function getLoginTemplate(config = getConfig()) {
-  const login =
-    getPageConfig(config, "login");
-
-  const title =
-    login.title ||
-    "Welcome back";
-
-  const subtitle =
-    login.subtitle ||
-    "Sign in to continue";
-
-  const buttonText =
-    login.buttonText ||
-    login.loginButtonText ||
-    "Sign In";
-
-  const showRememberMe =
-    login.showRememberMe !== false;
-
-  const showForgotPassword =
-    login.showForgotPassword !== false;
-
-  const showSignup =
-    login.showSignup !== false;
-
-  const showPassword =
-    login.showPassword !== false;
-
-  return `
-    <div
-      class="auth-page auth-login-page"
-      data-page="login"
-    >
-
-      ${getLogoTemplate(config)}
-
-      ${getPageHeader(
-        title,
-        subtitle
-      )}
-
-      ${getAuthenticationMethodSelector(config)}
-
-      <form
-        class="auth-form"
-        id="login-form"
-        autocomplete="on"
-      >
-
-        ${getIdentifierField(config)}
-
-        ${
-          showPassword
-            ? `
-              <div
-                class="auth-password-method"
-                data-auth-content="password"
-              >
-                ${getPasswordField({
-                  id: "login-password",
-                  label: "Password",
-                  placeholder: "Enter your password"
-                })}
-              </div>
-            `
-            : ""
-        }
-
-        ${
-          getOtpLoginMethodTemplate(config)
-        }
-
-        ${
-          showRememberMe ||
-          showForgotPassword
-            ? `
-              <div class="auth-login-options">
-
-                ${
-                  showRememberMe
-                    ? `
-                      <label class="auth-checkbox-label">
-                        <input
-                          type="checkbox"
-                          id="remember-me"
-                        />
-                        <span>
-                          Remember me
-                        </span>
-                      </label>
-                    `
-                    : ""
-                }
-
-                ${
-                  showForgotPassword
-                    ? `
-                      <button
-                        type="button"
-                        class="auth-text-button"
-                        data-page-action="forgotPassword"
-                      >
-                        ${escapeHTML(
-                          login.forgotPasswordText ||
-                          "Forgot password?"
-                        )}
-                      </button>
-                    `
-                    : ""
-                }
-
-              </div>
-            `
-            : ""
-        }
-
-        <button
-          type="submit"
-          class="auth-primary-button"
-          id="login-submit-button"
-        >
-          ${escapeHTML(buttonText)}
-        </button>
-
-      </form>
-
-      ${getSocialLoginTemplate(config)}
-
-      ${
-        showSignup
-          ? `
-            <div class="auth-page-footer">
-
-              <span>
-                ${escapeHTML(
-                  login.signupPrompt ||
-                  "New here?"
-                )}
-              </span>
-
-              <button
-                type="button"
-                class="auth-text-button"
-                data-page-action="signup"
-              >
-                ${escapeHTML(
-                  login.signupButtonText ||
-                  "Create Account"
-                )}
-              </button>
-
-            </div>
-          `
-          : ""
-      }
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   OTP LOGIN METHOD
-========================================================= */
-
-function getOtpLoginMethodTemplate(config) {
-  const login =
-    getPageConfig(config, "login");
-
-  const otpEnabled =
-    login.authenticationMethods &&
-    login.authenticationMethods.otp === true;
-
-  const globalOtpEnabled =
-    getBoolean(
-      config,
-      "authentication.otp.enabled",
-      true
-    );
-
-  if (!otpEnabled && !globalOtpEnabled) {
-    return "";
-  }
-
-  return `
-    <div
-      class="auth-otp-method"
-      data-auth-content="otp"
-      hidden
-    >
-
-      <div class="auth-field-group">
-
-        <label
-          class="auth-label"
-          for="login-otp-identifier"
-        >
-          Email or Mobile Number
-        </label>
-
-        <input
-          id="login-otp-identifier"
-          class="auth-input"
-          type="text"
-          placeholder="Enter your email or mobile number"
-        />
-
-      </div>
-
-      <button
-        type="button"
-        class="auth-secondary-button"
-        data-page-action="otp"
-      >
-        Continue with OTP
+  /* =======================================================
+     SOCIAL LOGIN
+  ======================================================= */
+  function generateSocialLogin(config) {
+    const social = config.social || {};
+    if (!social.enabled) return "";
+
+    const providers = social.providers || {};
+    const layout = social.layout || "horizontal";
+    const dividerText = escapeHtml(social.dividerText || "or continue with");
+
+    const enabledList = [];
+    if (providers.google) enabledList.push({ id: "google", name: "Google", icon: ICONS.google });
+    if (providers.apple) enabledList.push({ id: "apple", name: "Apple", icon: ICONS.apple });
+    if (providers.github) enabledList.push({ id: "github", name: "GitHub", icon: ICONS.github });
+    if (providers.facebook) enabledList.push({ id: "facebook", name: "Facebook", icon: ICONS.facebook });
+    if (providers.linkedin) enabledList.push({ id: "linkedin", name: "LinkedIn", icon: ICONS.linkedin });
+
+    if (enabledList.length === 0) return "";
+
+    const buttons = enabledList.map(item => `
+      <button type="button" class="auth-social-btn auth-social-${item.id}" data-provider="${item.id}" aria-label="Sign in with ${item.name}">
+        <span class="auth-social-icon">${item.icon}</span>
+        <span class="auth-social-text">${item.name}</span>
       </button>
+    `).join("");
 
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   SIGNUP PAGE
-========================================================= */
-
-function getSignupTemplate(config = getConfig()) {
-  const signup =
-    getPageConfig(config, "signup");
-
-  const fields =
-    signup.fields || {};
-
-  const title =
-    signup.title ||
-    "Create account";
-
-  const subtitle =
-    signup.subtitle ||
-    "Create your account to get started";
-
-  const buttonText =
-    signup.buttonText ||
-    "Create Account";
-
-  return `
-    <div
-      class="auth-page auth-signup-page"
-      data-page="signup"
-    >
-
-      ${getLogoTemplate(config)}
-
-      ${getPageHeader(
-        title,
-        subtitle
-      )}
-
-      <form
-        class="auth-form"
-        id="signup-form"
-      >
-
-        ${
-          fields.fullName !== false
-            ? getTextField({
-                id: "signup-full-name",
-                label: "Full Name",
-                placeholder: "Enter your full name",
-                autocomplete: "name"
-              })
-            : ""
-        }
-
-        ${
-          fields.username === true
-            ? getTextField({
-                id: "signup-username",
-                label: "Username",
-                placeholder: "Choose a username",
-                autocomplete: "username"
-              })
-            : ""
-        }
-
-        ${
-          fields.email !== false
-            ? getTextField({
-                id: "signup-email",
-                type: "email",
-                label: "Email Address",
-                placeholder: "Enter your email",
-                autocomplete: "email"
-              })
-            : ""
-        }
-
-        ${
-          fields.mobile === true
-            ? getTextField({
-                id: "signup-mobile",
-                type: "tel",
-                label: "Mobile Number",
-                placeholder: "Enter your mobile number",
-                autocomplete: "tel"
-              })
-            : ""
-        }
-
-        ${
-          fields.password !== false
-            ? getPasswordField({
-                id: "signup-password",
-                label: "Password",
-                placeholder: "Create a password"
-              })
-            : ""
-        }
-
-        ${
-          fields.confirmPassword !== false
-            ? getPasswordField({
-                id: "signup-confirm-password",
-                label: "Confirm Password",
-                placeholder: "Confirm your password"
-              })
-            : ""
-        }
-
-        <button
-          type="submit"
-          class="auth-primary-button"
-          id="signup-submit-button"
-        >
-          ${escapeHTML(buttonText)}
-        </button>
-
-      </form>
-
-      ${getSocialLoginTemplate(config)}
-
-      <div class="auth-page-footer">
-
-        <span>
-          ${escapeHTML(
-            signup.loginPrompt ||
-            "Already have an account?"
-          )}
-        </span>
-
-        <button
-          type="button"
-          class="auth-text-button"
-          data-page-action="login"
-        >
-          ${escapeHTML(
-            signup.loginButtonText ||
-            "Sign In"
-          )}
-        </button>
-
+    return `
+      <div class="auth-social-section">
+        <div class="auth-divider">
+          <span>${dividerText}</span>
+        </div>
+        <div class="auth-social-buttons auth-social-layout-${layout}">
+          ${buttons}
+        </div>
       </div>
+    `;
+  }
 
-    </div>
-  `;
-}
+  /* =======================================================
+     PAGE: LOGIN
+  ======================================================= */
+  function generateLoginPage(config) {
+    const pageConfig = config.pages?.login || {};
+    const title = escapeHtml(pageConfig.title || "Welcome back");
+    const subtitle = escapeHtml(pageConfig.subtitle || "Sign in to continue to your account");
+    const buttonText = escapeHtml(pageConfig.buttonText || "Sign In");
 
+    const emailEnabled = pageConfig.emailEnabled !== false;
+    const mobileEnabled = Boolean(pageConfig.mobileEnabled);
+    const usernameEnabled = Boolean(pageConfig.usernameEnabled);
+    const passwordEnabled = pageConfig.passwordEnabled !== false;
+    const otpEnabled = pageConfig.otpEnabled !== false;
+    const rememberMeEnabled = Boolean(pageConfig.rememberMeEnabled);
+    const forgotPasswordEnabled = pageConfig.forgotPasswordEnabled !== false;
+    const signupEnabled = pageConfig.signupEnabled !== false;
+    const whatsappEnabled = Boolean(config.authentication?.otp?.whatsappEnabled);
 
-/* =========================================================
-   FORGOT PASSWORD PAGE
-========================================================= */
+    // Identifier placeholder logic
+    const identifierParts = [];
+    if (emailEnabled) identifierParts.push("Email");
+    if (usernameEnabled) identifierParts.push("Username");
+    if (mobileEnabled) identifierParts.push("Phone");
+    const identifierLabel = identifierParts.join(" / ") || "Email address";
 
-function getForgotPasswordTemplate(
-  config = getConfig()
-) {
-  const forgotPassword =
-    getPageConfig(
-      config,
-      "forgotPassword"
-    );
+    return `
+      <div class="auth-page-form-wrapper" data-page="login">
+        <div class="auth-form-header">
+          <h1 class="auth-heading">${title}</h1>
+          ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
+        </div>
 
-  const title =
-    forgotPassword.title ||
-    "Forgot password?";
-
-  const subtitle =
-    forgotPassword.subtitle ||
-    "Enter your email or mobile number and we will help you reset your password.";
-
-  const buttonText =
-    forgotPassword.buttonText ||
-    "Send Reset Link";
-
-  const backButtonText =
-    forgotPassword.backButtonText ||
-    "Back to login";
-
-  return `
-    <div
-      class="auth-page auth-forgot-password-page"
-      data-page="forgotPassword"
-    >
-
-      ${getLogoTemplate(config)}
-
-      ${getPageHeader(
-        title,
-        subtitle
-      )}
-
-      <form
-        class="auth-form"
-        id="forgot-password-form"
-      >
-
-        ${getTextField({
-          id: "forgot-identifier",
-          type: "text",
-          label: "Email or Mobile Number",
-          placeholder: "Enter your email or mobile number",
-          autocomplete: "username"
-        })}
-
-        <button
-          type="submit"
-          class="auth-primary-button"
-          id="forgot-password-submit-button"
-        >
-          ${escapeHTML(buttonText)}
-        </button>
-
-      </form>
-
-      <div class="auth-page-footer">
-
-        <button
-          type="button"
-          class="auth-text-button"
-          data-page-action="login"
-        >
-          ← ${escapeHTML(backButtonText)}
-        </button>
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   OTP PAGE
-========================================================= */
-
-function getOTPTemplate(config = getConfig()) {
-  const otp =
-    getPageConfig(config, "otp");
-
-  const otpLength =
-    getOtpLength(config, otp);
-
-  const title =
-    otp.title ||
-    "Verify your identity";
-
-  const subtitle =
-    otp.subtitle ||
-    "Enter the verification code sent to you.";
-
-  const buttonText =
-    otp.buttonText ||
-    otp.verificationButtonText ||
-    "Verify OTP";
-
-  const resendEnabled =
-    otp.resendEnabled !== false;
-
-  const resendText =
-    otp.resendText ||
-    "Resend OTP";
-
-  const backButtonText =
-    otp.backButtonText ||
-    "Back to login";
-
-  const deliveryMethods =
-    getOtpDeliveryMethods(config, otp);
-
-  return `
-    <div
-      class="auth-page auth-otp-page"
-      data-page="otp"
-    >
-
-      ${getLogoTemplate(config)}
-
-      ${getPageHeader(
-        title,
-        subtitle
-      )}
-
-      ${getOtpDeliveryMethodSelector(
-        deliveryMethods
-      )}
-
-      <form
-        class="auth-form"
-        id="otp-form"
-      >
-
-        ${getOtpInputs(
-          otpLength
-        )}
-
-        <button
-          type="submit"
-          class="auth-primary-button"
-          id="otp-submit-button"
-        >
-          ${escapeHTML(buttonText)}
-        </button>
-
-      </form>
-
-      ${
-        resendEnabled
-          ? `
-            <div class="auth-otp-resend">
-
-              <span
-                id="otp-resend-message"
-              >
-                Didn't receive the code?
-              </span>
-
-              <button
-                type="button"
-                class="auth-text-button"
-                id="resend-otp-button"
-                data-resend-seconds="${
-                  Number(
-                    otp.resendSeconds
-                  ) || 30
-                }"
-              >
-                ${escapeHTML(resendText)}
-              </button>
-
+        <form class="auth-main-form" id="authLoginForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'login') : null;">
+          
+          <div class="auth-field-group">
+            <label class="auth-label" for="loginIdentifier">${identifierLabel}</label>
+            <div class="auth-input-wrapper">
+              <input type="${emailEnabled && !usernameEnabled && !mobileEnabled ? 'email' : 'text'}" 
+                     id="loginIdentifier" 
+                     name="identifier" 
+                     class="auth-input" 
+                     placeholder="name@company.com" 
+                     required />
             </div>
-          `
-          : ""
-      }
+          </div>
 
-      <div class="auth-page-footer">
-
-        <button
-          type="button"
-          class="auth-text-button"
-          data-page-action="login"
-        >
-          ← ${escapeHTML(backButtonText)}
-        </button>
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   OTP LENGTH
-========================================================= */
-
-function getOtpLength(config, otp) {
-  const candidates = [
-    otp.length,
-    getValue(config, "otp.input.length"),
-    getValue(config, "login.otpLength"),
-    getValue(config, "authentication.otp.length")
-  ];
-
-  for (const candidate of candidates) {
-    const length = Number(candidate);
-
-    if (
-      length === 4 ||
-      length === 6 ||
-      length === 8
-    ) {
-      return length;
-    }
-  }
-
-  return 6;
-}
-
-
-/* =========================================================
-   OTP DELIVERY METHODS
-========================================================= */
-
-function getOtpDeliveryMethods(config, otp) {
-  const candidates = [
-    otp.deliveryMethods,
-    getValue(config, "otp.input.methods"),
-    getValue(
-      config,
-      "authentication.otp.deliveryMethods"
-    )
-  ];
-
-  for (const methods of candidates) {
-    if (
-      Array.isArray(methods) &&
-      methods.length > 0
-    ) {
-      return methods;
-    }
-  }
-
-  return [
-    "email",
-    "sms",
-    "whatsapp"
-  ];
-}
-
-
-/* =========================================================
-   OTP DELIVERY METHOD SELECTOR
-========================================================= */
-
-function getOtpDeliveryMethodSelector(methods = []) {
-  if (
-    !Array.isArray(methods) ||
-    methods.length <= 1
-  ) {
-    return "";
-  }
-
-  const labels = {
-    email: "Email",
-    sms: "SMS",
-    whatsapp: "WhatsApp",
-    authenticator: "Authenticator"
-  };
-
-  return `
-    <div class="auth-otp-delivery-methods">
-
-      ${methods
-        .map((method, index) => {
-          const active =
-            index === 0
-              ? "active"
-              : "";
-
-          return `
-            <button
-              type="button"
-              class="auth-delivery-method ${active}"
-              data-otp-delivery="${escapeHTML(method)}"
-            >
-              ${escapeHTML(
-                labels[method] || method
-              )}
-            </button>
-          `;
-        })
-        .join("")}
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   OTP INPUTS
-========================================================= */
-
-function getOtpInputs(length = 6) {
-  const inputs = [];
-
-  for (let index = 0; index < length; index += 1) {
-    inputs.push(`
-      <input
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        maxlength="1"
-        class="auth-otp-input"
-        data-otp-index="${index}"
-        aria-label="OTP digit ${index + 1}"
-        autocomplete="one-time-code"
-      />
-    `);
-  }
-
-  return `
-    <div
-      class="auth-otp-inputs"
-      data-otp-length="${length}"
-    >
-      ${inputs.join("")}
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   SOCIAL LOGIN
-========================================================= */
-
-function getSocialLoginTemplate(config) {
-  const social =
-    config.social || {};
-
-  const providers =
-    social.providers || {};
-
-  const authSocial =
-    getValue(
-      config,
-      "authentication.social",
-      {}
-    );
-
-  const enabled =
-    social.enabled !== false;
-
-  if (!enabled) {
-    return "";
-  }
-
-  const providerConfig = [
-    {
-      id: "google",
-      label: "Google",
-      enabled:
-        providers.google === true ||
-        getBoolean(
-          authSocial,
-          "google.enabled",
-          false
-        )
-    },
-    {
-      id: "linkedin",
-      label: "LinkedIn",
-      enabled:
-        providers.linkedin === true ||
-        getBoolean(
-          authSocial,
-          "linkedin.enabled",
-          false
-        )
-    },
-    {
-      id: "github",
-      label: "GitHub",
-      enabled:
-        providers.github === true ||
-        getBoolean(
-          authSocial,
-          "github.enabled",
-          false
-        )
-    },
-    {
-      id: "facebook",
-      label: "Facebook",
-      enabled:
-        providers.facebook === true ||
-        getBoolean(
-          authSocial,
-          "facebook.enabled",
-          false
-        )
-    },
-    {
-      id: "apple",
-      label: "Apple",
-      enabled:
-        providers.apple === true ||
-        getBoolean(
-          authSocial,
-          "apple.enabled",
-          false
-        )
-    }
-  ].filter(
-    (provider) =>
-      provider.enabled
-  );
-
-  if (
-    providerConfig.length === 0
-  ) {
-    return "";
-  }
-
-  return `
-    <div class="auth-social-section">
-
-      <div class="auth-divider">
-        <span>
-          ${escapeHTML(
-            social.title ||
-            "OR CONTINUE WITH"
-          )}
-        </span>
-      </div>
-
-      <div
-        class="auth-social-buttons auth-social-${escapeHTML(
-          social.layout || "vertical"
-        )}"
-      >
-
-        ${providerConfig
-          .map(
-            (provider) => `
-              <button
-                type="button"
-                class="auth-social-button"
-                data-social-provider="${provider.id}"
-              >
-                ${getProviderIcon(provider.id)}
-                <span>
-                  Continue with ${escapeHTML(provider.label)}
-                </span>
+          ${passwordEnabled ? `
+          <div class="auth-field-group">
+            <div class="auth-label-row">
+              <label class="auth-label" for="loginPassword">Password</label>
+              ${forgotPasswordEnabled ? `
+                <a href="#forgot" class="auth-link auth-link-forgot" data-auth-nav="forgotPassword">Forgot password?</a>
+              ` : ""}
+            </div>
+            <div class="auth-input-wrapper auth-input-password-wrapper">
+              <input type="password" 
+                     id="loginPassword" 
+                     name="password" 
+                     class="auth-input" 
+                     placeholder="••••••••" 
+                     required />
+              <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
+                ${ICONS.eye}
               </button>
-            `
-          )
-          .join("")}
+            </div>
+          </div>
+          ` : ""}
+
+          ${rememberMeEnabled ? `
+          <div class="auth-checkbox-group">
+            <label class="auth-checkbox-label">
+              <input type="checkbox" id="loginRememberMe" name="rememberMe" class="auth-checkbox" />
+              <span>Remember me for 30 days</span>
+            </label>
+          </div>
+          ` : ""}
+
+          <div class="auth-button-group">
+            <button type="submit" class="auth-primary-btn" id="loginSubmitBtn">
+              <span>${buttonText}</span>
+            </button>
+          </div>
+
+          ${otpEnabled ? `
+          <div class="auth-alt-auth-group">
+            <button type="button" class="auth-secondary-btn" data-auth-nav="otp">
+              ${ICONS.sms}
+              <span>Continue with OTP</span>
+            </button>
+          </div>
+          ` : ""}
+
+          ${whatsappEnabled ? `
+          <div class="auth-whatsapp-badge-row">
+            <button type="button" class="auth-whatsapp-btn" data-auth-nav="otp" data-otp-method="whatsapp">
+              ${ICONS.whatsapp}
+              <span>Get OTP via WhatsApp</span>
+            </button>
+          </div>
+          ` : ""}
+
+          ${generateSocialLogin(config)}
+
+          ${signupEnabled ? `
+          <div class="auth-footer-nav">
+            <span>Don't have an account?</span>
+            <a href="#signup" class="auth-link auth-link-action" data-auth-nav="signup">Create account</a>
+          </div>
+          ` : ""}
+        </form>
+      </div>
+    `;
+  }
+
+  /* =======================================================
+     PAGE: SIGNUP
+  ======================================================= */
+  function generateSignupPage(config) {
+    const pageConfig = config.pages?.signup || {};
+    const title = escapeHtml(pageConfig.title || "Create account");
+    const subtitle = escapeHtml(pageConfig.subtitle || "Enter your details to create an account");
+    const buttonText = escapeHtml(pageConfig.buttonText || "Create Account");
+    const fields = pageConfig.fields || {
+      fullName: true,
+      username: true,
+      email: true,
+      mobile: true,
+      password: true,
+      confirmPassword: true
+    };
+
+    return `
+      <div class="auth-page-form-wrapper" data-page="signup">
+        <div class="auth-form-header">
+          <h1 class="auth-heading">${title}</h1>
+          ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
+        </div>
+
+        <form class="auth-main-form" id="authSignupForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'signup') : null;">
+          
+          ${fields.fullName ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupName">Full Name</label>
+            <input type="text" id="signupName" name="fullName" class="auth-input" placeholder="Alex Morgan" required />
+          </div>
+          ` : ""}
+
+          ${fields.username ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupUsername">Username</label>
+            <input type="text" id="signupUsername" name="username" class="auth-input" placeholder="alexmorgan" required />
+          </div>
+          ` : ""}
+
+          ${fields.email ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupEmail">Email Address</label>
+            <input type="email" id="signupEmail" name="email" class="auth-input" placeholder="alex@company.com" required />
+          </div>
+          ` : ""}
+
+          ${fields.mobile ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupMobile">Mobile Number</label>
+            <input type="tel" id="signupMobile" name="mobile" class="auth-input" placeholder="+1 (555) 234-5678" />
+          </div>
+          ` : ""}
+
+          ${fields.password ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupPassword">Password</label>
+            <div class="auth-input-wrapper auth-input-password-wrapper">
+              <input type="password" id="signupPassword" name="password" class="auth-input" placeholder="Minimum 8 characters" required />
+              <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
+                ${ICONS.eye}
+              </button>
+            </div>
+            <div class="password-strength-bar">
+              <div class="password-strength-fill" style="width: 70%;"></div>
+            </div>
+          </div>
+          ` : ""}
+
+          ${fields.confirmPassword ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupConfirmPassword">Confirm Password</label>
+            <div class="auth-input-wrapper auth-input-password-wrapper">
+              <input type="password" id="signupConfirmPassword" name="confirmPassword" class="auth-input" placeholder="Repeat your password" required />
+              <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
+                ${ICONS.eye}
+              </button>
+            </div>
+          </div>
+          ` : ""}
+
+          <div class="auth-button-group">
+            <button type="submit" class="auth-primary-btn" id="signupSubmitBtn">
+              <span>${buttonText}</span>
+            </button>
+          </div>
+
+          ${generateSocialLogin(config)}
+
+          <div class="auth-footer-nav">
+            <span>Already have an account?</span>
+            <a href="#login" class="auth-link auth-link-action" data-auth-nav="login">Sign in</a>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  /* =======================================================
+     PAGE: FORGOT PASSWORD
+  ======================================================= */
+  function generateForgotPasswordPage(config) {
+    const pageConfig = config.pages?.forgotPassword || {};
+    const title = escapeHtml(pageConfig.title || "Forgot password?");
+    const subtitle = escapeHtml(pageConfig.subtitle || "Enter your email or mobile number to receive reset instructions");
+    const buttonText = escapeHtml(pageConfig.buttonText || "Send Reset Link");
+
+    return `
+      <div class="auth-page-form-wrapper" data-page="forgotPassword">
+        <div class="auth-form-header">
+          <h1 class="auth-heading">${title}</h1>
+          ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
+        </div>
+
+        <form class="auth-main-form" id="authForgotForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'forgotPassword') : null;">
+          
+          <div class="auth-field-group">
+            <label class="auth-label" for="forgotIdentifier">Email or Phone Number</label>
+            <input type="text" id="forgotIdentifier" name="identifier" class="auth-input" placeholder="name@company.com" required />
+          </div>
+
+          <div class="auth-button-group">
+            <button type="submit" class="auth-primary-btn" id="forgotSubmitBtn">
+              <span>${buttonText}</span>
+            </button>
+          </div>
+
+          <div class="auth-footer-nav auth-back-center">
+            <a href="#login" class="auth-link auth-back-link" data-auth-nav="login">
+              ${ICONS.arrowLeft}
+              <span>Back to login</span>
+            </a>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  /* =======================================================
+     PAGE: OTP VERIFICATION
+  ======================================================= */
+  function generateOtpPage(config) {
+    const pageConfig = config.pages?.otp || {};
+    const title = escapeHtml(pageConfig.title || "Verify your identity");
+    const subtitle = escapeHtml(pageConfig.subtitle || "Enter the verification code sent to your device");
+    const buttonText = escapeHtml(pageConfig.buttonText || "Verify OTP");
+
+    const length = Number(pageConfig.length) || 6;
+    const resendEnabled = pageConfig.resendEnabled !== false;
+    const resendText = escapeHtml(pageConfig.resendText || "Resend OTP");
+    const resendSeconds = Number(pageConfig.resendSeconds) || 30;
+
+    const otpAuth = config.authentication?.otp || {};
+    const emailDelivery = otpAuth.emailEnabled !== false;
+    const smsDelivery = otpAuth.smsEnabled !== false;
+    const whatsappDelivery = Boolean(otpAuth.whatsappEnabled);
+
+    // Delivery Options Pills
+    const deliveryPills = [];
+    if (emailDelivery) {
+      deliveryPills.push(`
+        <button type="button" class="otp-delivery-pill active" data-otp-delivery="email">
+          ${ICONS.email}
+          <span>Email</span>
+        </button>
+      `);
+    }
+    if (smsDelivery) {
+      deliveryPills.push(`
+        <button type="button" class="otp-delivery-pill ${!emailDelivery ? 'active' : ''}" data-otp-delivery="sms">
+          ${ICONS.sms}
+          <span>SMS</span>
+        </button>
+      `);
+    }
+    if (whatsappDelivery) {
+      deliveryPills.push(`
+        <button type="button" class="otp-delivery-pill ${!emailDelivery && !smsDelivery ? 'active' : ''}" data-otp-delivery="whatsapp">
+          ${ICONS.whatsapp}
+          <span>WhatsApp</span>
+        </button>
+      `);
+    }
+
+    // Dynamic OTP input boxes
+    const boxes = [];
+    for (let i = 0; i < length; i++) {
+      boxes.push(`
+        <input type="text" 
+               class="otp-digit-box" 
+               data-otp-index="${i}" 
+               maxlength="1" 
+               inputmode="numeric" 
+               pattern="[0-9]*" 
+               autocomplete="one-time-code" 
+               required />
+      `);
+    }
+
+    return `
+      <div class="auth-page-form-wrapper" data-page="otp">
+        <div class="auth-form-header">
+          <h1 class="auth-heading">${title}</h1>
+          ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
+        </div>
+
+        ${deliveryPills.length > 1 ? `
+        <div class="otp-delivery-methods">
+          <span class="otp-delivery-label">Get code via:</span>
+          <div class="otp-delivery-group">
+            ${deliveryPills.join("")}
+          </div>
+        </div>
+        ` : ""}
+
+        <form class="auth-main-form" id="authOtpForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'otp') : null;">
+          
+          <div class="otp-boxes-container" data-otp-count="${length}">
+            ${boxes.join("")}
+          </div>
+
+          ${resendEnabled ? `
+          <div class="otp-resend-row">
+            <span class="otp-resend-prompt">Didn't receive code?</span>
+            <button type="button" class="otp-resend-btn" id="otpResendButton" data-countdown="${resendSeconds}">
+              <span>${resendText}</span>
+              <span class="otp-countdown-timer">(${resendSeconds}s)</span>
+            </button>
+          </div>
+          ` : ""}
+
+          <div class="auth-button-group">
+            <button type="submit" class="auth-primary-btn" id="otpSubmitBtn">
+              <span>${buttonText}</span>
+            </button>
+          </div>
+
+          <div class="auth-footer-nav auth-back-center">
+            <a href="#login" class="auth-link auth-back-link" data-auth-nav="login">
+              ${ICONS.arrowLeft}
+              <span>Back to sign in</span>
+            </a>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  /* =======================================================
+     COMPLETE AUTH PAGE SHELL GENERATOR
+  ======================================================= */
+  function generateAuthShell(config, pageName = "login") {
+    const page = pageName || config.activePage || "login";
+    let pageHTML = "";
+
+    switch (page) {
+      case "signup":
+        pageHTML = generateSignupPage(config);
+        break;
+      case "forgotPassword":
+        pageHTML = generateForgotPasswordPage(config);
+        break;
+      case "otp":
+        pageHTML = generateOtpPage(config);
+        break;
+      case "login":
+      default:
+        pageHTML = generateLoginPage(config);
+        break;
+    }
+
+    const layout = config.layout || {};
+    const layoutType = layout.type || "split-left-image";
+    const formHPos = layout.formHorizontalAlignment || "center";
+    const formVPos = layout.formVerticalAlignment || "center";
+
+    const imageSection = config.imageSection || {};
+    const showBackgroundText = imageSection.showText !== false;
+    const bgHeading = escapeHtml(imageSection.text || "Experience the next generation of authentication.");
+    const bgSubtext = escapeHtml(imageSection.subtext || "Fast, secure, and beautifully customized for your brand.");
+    const bgPosClass = `position-${imageSection.textPosition || 'center'}`;
+
+    const landingUrl = config.urls?.landingPageUrl || "";
+
+    return `
+      <div class="auth-preview-root layout-${layoutType} form-horizontal-${formHPos} form-vertical-${formVPos}">
+        
+        <div class="auth-preview-shell">
+          
+          <!-- Background / Visual Section -->
+          <div class="auth-image-section">
+            <div class="auth-image-overlay"></div>
+            ${showBackgroundText ? `
+              <div class="auth-image-content ${bgPosClass}">
+                <div class="auth-image-text-block">
+                  <h2 class="auth-image-text">${bgHeading}</h2>
+                  ${bgSubtext ? `<p class="auth-image-subtext">${bgSubtext}</p>` : ""}
+                </div>
+              </div>
+            ` : ""}
+          </div>
+
+          <!-- Form & Content Section -->
+          <div class="auth-form-section">
+            <div class="auth-card">
+              ${landingUrl ? `
+                <div class="auth-landing-link-bar">
+                  <a href="${escapeHtml(landingUrl)}" target="_blank" rel="noopener noreferrer" class="auth-landing-link">
+                    ${ICONS.arrowLeft}
+                    <span>Back to Website</span>
+                  </a>
+                </div>
+              ` : ""}
+              
+              ${generateLogo(config)}
+
+              <div class="auth-page-container">
+                ${pageHTML}
+              </div>
+            </div>
+          </div>
+
+        </div>
 
       </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   SOCIAL ICONS
-========================================================= */
-
-function getProviderIcon(provider) {
-  const icons = {
-    google: "G",
-    linkedin: "in",
-    github: "⌘",
-    facebook: "f",
-    apple: "●"
-  };
-
-  return `
-    <span
-      class="auth-social-icon auth-social-${escapeHTML(provider)}"
-    >
-      ${icons[provider] || "•"}
-    </span>
-  `;
-}
-
-
-/* =========================================================
-   GENERIC TEXT FIELD
-========================================================= */
-
-function getTextField(options = {}) {
-  const {
-    id = "",
-    type = "text",
-    label = "",
-    placeholder = "",
-    autocomplete = ""
-  } = options;
-
-  return `
-    <div class="auth-field-group">
-
-      ${
-        label
-          ? `
-            <label
-              class="auth-label"
-              for="${escapeHTML(id)}"
-            >
-              ${escapeHTML(label)}
-            </label>
-          `
-          : ""
-      }
-
-      <input
-        id="${escapeHTML(id)}"
-        class="auth-input"
-        type="${escapeHTML(type)}"
-        placeholder="${escapeHTML(placeholder)}"
-        autocomplete="${escapeHTML(autocomplete)}"
-      />
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   PAGE TEMPLATE SWITCHER
-========================================================= */
-
-function getPageTemplate(
-  pageName,
-  config = getConfig()
-) {
-  const page =
-    normalizePageName(pageName);
-
-  switch (page) {
-    case "signup":
-      return getSignupTemplate(config);
-
-    case "forgotPassword":
-      return getForgotPasswordTemplate(config);
-
-    case "otp":
-      return getOTPTemplate(config);
-
-    case "login":
-    default:
-      return getLoginTemplate(config);
+    `;
   }
-}
 
-
-/* =========================================================
-   GET CURRENT PAGE TEMPLATE
-========================================================= */
-
-function getCurrentPageTemplate(
-  config = getConfig()
-) {
-  const currentPage =
-    config.currentPage ||
-    getValue(
-      config,
-      "page.activePage",
-      "login"
-    );
-
-  return getPageTemplate(
-    currentPage,
-    config
-  );
-}
-
-
-/* =========================================================
-   EXPORT ALL TEMPLATES
-========================================================= */
-
-window.AuthTemplates = {
-
-  getPageTemplate,
-
-  getCurrentPageTemplate,
-
-  getLoginTemplate,
-
-  getSignupTemplate,
-
-  getForgotPasswordTemplate,
-
-  getOTPTemplate,
-
-  getOtpInputs,
-
-  getOtpLength,
-
-  getOtpDeliveryMethods,
-
-  getLogoTemplate,
-
-  getPageHeader,
-
-  getIdentifierField,
-
-  getPasswordField,
-
-  getAuthenticationMethodSelector,
-
-  getSocialLoginTemplate,
-
-  getTextField,
-
-  normalizePageName,
-
-  escapeHTML
-};
-
-
-/* =========================================================
-   BACKWARD COMPATIBILITY
-========================================================= */
-
-window.getLoginTemplate =
-  getLoginTemplate;
-
-window.getSignupTemplate =
-  getSignupTemplate;
-
-window.getForgotPasswordTemplate =
-  getForgotPasswordTemplate;
-
-window.getOTPTemplate =
-  getOTPTemplate;
-
-window.getPageTemplate =
-  getPageTemplate;
-
-window.getCurrentPageTemplate =
-  getCurrentPageTemplate;
+  return {
+    ICONS,
+    generateLogo,
+    generateSocialLogin,
+    generateLoginPage,
+    generateSignupPage,
+    generateForgotPasswordPage,
+    generateOtpPage,
+    generateAuthShell
+  };
+});

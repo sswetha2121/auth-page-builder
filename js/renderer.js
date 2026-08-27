@@ -1,1006 +1,336 @@
 /* =========================================================
-   AUTH PAGE BUILDER
+   AUTH PAGE BUILDER - RENDERER & STYLE ENGINE
    File: js/renderer.js
-
-   Central Render Coordinator
-
-   Responsibilities:
-   - Coordinate rendering between state and preview
-   - Prevent duplicate render loops
-   - Render updated customer configuration
-   - Handle Login / Signup / Forgot Password / OTP pages
-   - Sync layout and customization updates
-   - Expose compatibility functions for other JS files
 ========================================================= */
 
-class AuthPageRenderer {
-  constructor() {
-    this.isRendering = false;
-    this.renderQueued = false;
-
-    this.previewSelector =
-      "#previewRoot";
-
-    this.initialized = false;
-
-    this.init();
+(function (root, factory) {
+  if (typeof module !== "undefined" && module.exports) {
+    const templates = require("./templates.js");
+    const utils = require("./utils.js");
+    module.exports = factory(templates, utils);
+  } else {
+    const renderer = factory(root.Templates, root.Utils);
+    root.AuthPageRenderer = renderer;
+    root.renderPreview = renderer.renderPreview;
   }
+})(typeof window !== "undefined" ? window : globalThis, function (Templates, Utils) {
 
+  let otpCountdownInterval = null;
 
   /* =======================================================
-     INITIALIZATION
+     COMPUTE DYNAMIC CSS VARIABLES
   ======================================================= */
+  function computeStyleVariables(config) {
+    const layout = config.layout || {};
+    const background = config.background || {};
+    const branding = config.branding || {};
+    const card = config.card || {};
+    const typography = config.typography || {};
+    const button = config.button || {};
+    const imageSection = config.imageSection || {};
 
-  init() {
-    if (this.initialized) {
-      return;
+    const imageWidth = Number(layout.imageWidth) || 50;
+
+    // Background image calculation
+    let bgImg = "none";
+    if (background.uploadedImage) {
+      bgImg = `url("${background.uploadedImage}")`;
+    } else if (background.image) {
+      bgImg = `url("${background.image}")`;
+    } else if (background.selected) {
+      bgImg = `url("${background.selected}")`;
     }
 
-    this.initialized = true;
+    const overlayOpacity = background.overlayEnabled !== false 
+      ? ((Number(background.overlayOpacity) || 0) / 100)
+      : 0;
 
-    this.bindEvents();
+    // Button Background
+    let buttonBg = button.backgroundColor || "#2563eb";
+    if (button.backgroundType === "gradient") {
+      const gStart = button.gradientStart || buttonBg;
+      const gEnd = button.gradientEnd || "#4f46e5";
+      buttonBg = `linear-gradient(135deg, ${gStart}, ${gEnd})`;
+    }
 
-    this.waitForPreviewManager();
+    // Card Opacity & Enabled
+    const cardOpacity = (card.opacity !== undefined ? Number(card.opacity) : 100) / 100;
+    const cardBgColor = card.backgroundColor || "#ffffff";
+    const cardEnabled = card.enabled !== false;
+
+    // Logo shape radius
+    let logoRadius = "50%";
+    if (branding.logoShape === "square") logoRadius = "0px";
+    else if (branding.logoShape === "rounded") logoRadius = "14px";
+    else if (branding.logoShape === "ellipse") logoRadius = "50% / 35%";
+
+    return `
+      :root, .auth-preview-root {
+        /* Layout */
+        --auth-image-width: ${imageWidth}%;
+        --auth-form-width: ${Number(layout.formWidth) || 460}px;
+        --auth-content-padding: ${Number(layout.contentPadding) || 48}px;
+
+        /* Background */
+        --auth-background-image: ${bgImg};
+        --auth-background-color: ${background.color || "#0f172a"};
+        --auth-background-position: ${background.position || "center"};
+        --auth-background-size: ${background.size || "cover"};
+        --auth-overlay-color: ${background.overlayColor || "#000000"};
+        --auth-overlay-opacity: ${overlayOpacity};
+
+        /* Branding & Logo */
+        --auth-logo-size: ${Number(branding.logoSize) || 64}px;
+        --auth-logo-radius: ${logoRadius};
+        --auth-logo-bg: ${branding.logoBackgroundEnabled ? (branding.logoBackgroundColor || "#ffffff") : "transparent"};
+
+        /* Card */
+        --auth-card-enabled: ${cardEnabled ? "1" : "0"};
+        --auth-card-background: ${cardEnabled ? cardBgColor : "transparent"};
+        --auth-card-opacity: ${cardEnabled ? cardOpacity : 1};
+        --auth-card-width: ${Number(card.width) || 460}px;
+        --auth-card-radius: ${cardEnabled ? (Number(card.borderRadius) || 20) : 0}px;
+        --auth-card-border-width: ${cardEnabled ? (Number(card.borderWidth) || 1) : 0}px;
+        --auth-card-border-color: ${card.borderColor || "#e2e8f0"};
+        --auth-card-shadow: ${cardEnabled && card.shadowEnabled ? "0 20px 45px rgba(15, 23, 42, 0.10)" : "none"};
+        --auth-card-blur: ${cardEnabled && card.blurEnabled ? "18px" : "0px"};
+        --auth-card-padding: ${cardEnabled ? (Number(card.padding) || 40) : 0}px;
+
+        /* Typography */
+        --auth-font-family: ${typography.fontFamily || "Inter, sans-serif"};
+        --auth-title-color: ${typography.titleColor || "#0f172a"};
+        --auth-title-size: ${Number(typography.titleSize) || 32}px;
+        --auth-title-weight: ${typography.titleWeight || 700};
+        --auth-subtitle-color: ${typography.subtitleColor || "#64748b"};
+        --auth-subtitle-size: ${Number(typography.subtitleSize) || 15}px;
+        --auth-body-color: ${typography.bodyColor || "#334155"};
+        --auth-label-color: ${typography.labelColor || "#475569"};
+
+        /* Button */
+        --auth-button-bg: ${buttonBg};
+        --auth-button-text: ${button.textColor || "#ffffff"};
+        --auth-button-radius: ${Number(button.borderRadius) || 10}px;
+        --auth-button-height: ${Number(button.height) || 48}px;
+        --auth-button-shadow: ${button.shadow ? "0 4px 14px rgba(37, 99, 235, 0.28)" : "none"};
+
+        /* Image Section Text */
+        --auth-image-text-color: ${imageSection.textColor || "#ffffff"};
+      }
+    `;
   }
 
-
   /* =======================================================
-     WAIT FOR PREVIEW
+     INJECT DYNAMIC STYLES
   ======================================================= */
+  function injectStyles(config) {
+    if (typeof document === "undefined") return;
 
-  waitForPreviewManager() {
-    let attempts = 0;
+    let styleEl = document.getElementById("authDynamicPreviewStyles");
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "authDynamicPreviewStyles";
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = computeStyleVariables(config);
 
-    const maxAttempts = 50;
-
-    const timer =
-      setInterval(() => {
-
-        attempts += 1;
-
-        if (
-          window.previewManager &&
-          typeof window.previewManager.render ===
-            "function"
-        ) {
-          clearInterval(timer);
-
-          this.render();
-
-          return;
-        }
-
-        if (
-          attempts >= maxAttempts
-        ) {
-          clearInterval(timer);
-
-          console.warn(
-            "PreviewManager was not initialized."
-          );
-        }
-
-      }, 100);
+    // Custom CSS
+    let customEl = document.getElementById("authCustomCSSStyles");
+    if (!customEl) {
+      customEl = document.createElement("style");
+      customEl.id = "authCustomCSSStyles";
+      document.head.appendChild(customEl);
+    }
+    customEl.textContent = config.customCSS || "";
   }
 
-
   /* =======================================================
-     EVENTS
+     ATTACH INTERACTIVE PREVIEW BEHAVIORS
   ======================================================= */
+  function attachInteractiveBehaviors(container, config) {
+    if (!container) return;
 
-  bindEvents() {
+    // 1. Password toggle
+    const passwordToggles = container.querySelectorAll("[data-toggle-password]");
+    passwordToggles.forEach(toggle => {
+      toggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        const wrapper = toggle.closest(".auth-input-password-wrapper");
+        const input = wrapper ? wrapper.querySelector("input") : null;
+        if (!input) return;
 
-    /*
-      Configuration update events
-    */
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        toggle.innerHTML = isPassword ? Templates.ICONS.eyeOff : Templates.ICONS.eye;
+      });
+    });
 
-    const renderEvents = [
-      "auth-builder:config-updated",
-      "auth-builder:state-updated",
-      "auth-builder:customization-updated",
-      "auth-builder:layout-updated",
-      "auth-builder:branding-updated",
-      "auth-builder:background-updated",
-      "auth-builder:page-config-updated"
-    ];
+    // 2. Navigation switches (e.g. from Login to Signup / Forgot / OTP)
+    const navLinks = container.querySelectorAll("[data-auth-nav]");
+    navLinks.forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const targetPage = link.dataset.authNav;
+        if (targetPage && window.state && typeof window.state.setActivePage === "function") {
+          window.state.setActivePage(targetPage);
+        }
+      });
+    });
 
-    renderEvents.forEach(
-      (eventName) => {
+    // 3. OTP Delivery method switches
+    const deliveryPills = container.querySelectorAll("[data-otp-delivery]");
+    deliveryPills.forEach(pill => {
+      pill.addEventListener("click", (e) => {
+        e.preventDefault();
+        deliveryPills.forEach(p => p.classList.remove("active"));
+        pill.classList.add("active");
+        const method = pill.dataset.otpDelivery;
+        if (Utils.showToast) {
+          Utils.showToast(`Verification code delivery set to: ${method.toUpperCase()}`, "info", 2000);
+        }
+      });
+    });
 
-        document.addEventListener(
-          eventName,
-          () => {
-            this.requestRender();
+    // 4. OTP Digit Inputs Auto-Advance & Navigation
+    const otpBoxes = container.querySelectorAll(".otp-digit-box");
+    otpBoxes.forEach((box, idx) => {
+      box.addEventListener("input", (e) => {
+        const val = box.value.replace(/\D/g, "");
+        box.value = val ? val[0] : "";
+        if (box.value && idx < otpBoxes.length - 1) {
+          otpBoxes[idx + 1].focus();
+        }
+      });
+
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && !box.value && idx > 0) {
+          otpBoxes[idx - 1].focus();
+        } else if (e.key === "ArrowLeft" && idx > 0) {
+          otpBoxes[idx - 1].focus();
+        } else if (e.key === "ArrowRight" && idx < otpBoxes.length - 1) {
+          otpBoxes[idx + 1].focus();
+        }
+      });
+
+      box.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const pasteData = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "");
+        if (!pasteData) return;
+        const digits = pasteData.split("");
+        digits.forEach((digit, i) => {
+          if (idx + i < otpBoxes.length) {
+            otpBoxes[idx + i].value = digit;
           }
-        );
+        });
+        const nextFocus = Math.min(idx + digits.length, otpBoxes.length - 1);
+        otpBoxes[nextFocus].focus();
+      });
+    });
 
-      }
-    );
-
-
-    /*
-      Page changed
-    */
-
-    document.addEventListener(
-      "auth-builder:page-changed",
-      () => {
-        this.requestRender();
-      }
-    );
-
-
-    /*
-      Preview refresh request
-    */
-
-    document.addEventListener(
-      "auth-builder:rerender-preview",
-      () => {
-        this.requestRender();
-      }
-    );
-
-
-    /*
-      Layout refresh
-    */
-
-    document.addEventListener(
-      "auth-builder:layout-changed",
-      () => {
-        this.requestRender();
-      }
-    );
-
-
-    /*
-      Browser resize
-    */
-
-    window.addEventListener(
-      "resize",
-      () => {
-        this.applyResponsivePreview();
-      }
-    );
-  }
-
-
-  /* =======================================================
-     REQUEST RENDER
-
-     Prevents many events from creating multiple renders.
-  ======================================================= */
-
-  requestRender() {
-    if (this.renderQueued) {
-      return;
-    }
-
-    this.renderQueued = true;
-
-    requestAnimationFrame(
-      () => {
-
-        this.renderQueued =
-          false;
-
-        this.render();
-      }
-    );
-  }
-
-
-  /* =======================================================
-     MAIN RENDER
-  ======================================================= */
-
-  render() {
-    if (this.isRendering) {
-      return;
-    }
-
-    this.isRendering =
-      true;
-
-    try {
-
-      /*
-        PreviewManager owns the actual
-        HTML preview generation.
-      */
-
-      if (
-        window.previewManager &&
-        typeof window.previewManager.render ===
-          "function"
-      ) {
-
-        window.previewManager.render();
-
-      } else {
-
-        console.warn(
-          "PreviewManager is not available."
-        );
-
+    // 5. OTP Resend Timer
+    const resendBtn = container.querySelector("#otpResendButton");
+    if (resendBtn) {
+      if (otpCountdownInterval) {
+        clearInterval(otpCountdownInterval);
+        otpCountdownInterval = null;
       }
 
+      let remaining = Number(config.pages?.otp?.resendSeconds) || 30;
+      const countdownSpan = resendBtn.querySelector(".otp-countdown-timer");
+      resendBtn.disabled = true;
 
-      /*
-        Apply final layout classes
-      */
+      otpCountdownInterval = setInterval(() => {
+        remaining -= 1;
+        if (countdownSpan) {
+          countdownSpan.textContent = `(${remaining}s)`;
+        }
+        if (remaining <= 0) {
+          clearInterval(otpCountdownInterval);
+          otpCountdownInterval = null;
+          resendBtn.disabled = false;
+          if (countdownSpan) countdownSpan.textContent = "";
+        }
+      }, 1000);
 
-      this.applyPreviewLayout();
-
-
-      /*
-        Apply responsive state
-      */
-
-      this.applyResponsivePreview();
-
-
-      /*
-        Notify other modules
-      */
-
-      document.dispatchEvent(
-        new CustomEvent(
-          "auth-builder:render-complete",
-          {
-            detail: {
-              renderer: this
+      resendBtn.addEventListener("click", () => {
+        if (remaining <= 0) {
+          if (Utils.showToast) {
+            Utils.showToast("New verification code sent!", "success");
+          }
+          // Restart countdown
+          remaining = Number(config.pages?.otp?.resendSeconds) || 30;
+          resendBtn.disabled = true;
+          if (countdownSpan) countdownSpan.textContent = `(${remaining}s)`;
+          otpCountdownInterval = setInterval(() => {
+            remaining -= 1;
+            if (countdownSpan) countdownSpan.textContent = `(${remaining}s)`;
+            if (remaining <= 0) {
+              clearInterval(otpCountdownInterval);
+              otpCountdownInterval = null;
+              resendBtn.disabled = false;
+              if (countdownSpan) countdownSpan.textContent = "";
             }
-          }
-        )
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Renderer error:",
-        error
-      );
-
-    } finally {
-
-      this.isRendering =
-        false;
-    }
-  }
-
-
-  /* =======================================================
-     CONFIG
-  ======================================================= */
-
-  getConfig() {
-
-    if (
-      window.state &&
-      typeof window.state.getConfig ===
-        "function"
-    ) {
-
-      try {
-        return (
-          window.state.getConfig() ||
-          {}
-        );
-      } catch (error) {}
-    }
-
-
-    if (
-      window.state &&
-      window.state.config
-    ) {
-      return window.state.config;
-    }
-
-
-    if (
-      window.authBuilderState &&
-      typeof window.authBuilderState.getConfig ===
-        "function"
-    ) {
-
-      try {
-        return (
-          window.authBuilderState.getConfig() ||
-          {}
-        );
-      } catch (error) {}
-    }
-
-
-    if (
-      window.authBuilderConfig
-    ) {
-      return window.authBuilderConfig;
-    }
-
-
-    if (
-      window.config
-    ) {
-      return window.config;
-    }
-
-
-    return {};
-  }
-
-
-  /* =======================================================
-     PREVIEW ELEMENT
-  ======================================================= */
-
-  getPreviewElement() {
-
-    return document.querySelector(
-      this.previewSelector
-    );
-
-  }
-
-
-  getPreviewRoot() {
-
-    const preview =
-      this.getPreviewElement();
-
-    if (!preview) {
-      return null;
-    }
-
-    return preview.querySelector(
-      ".auth-preview-root"
-    );
-
-  }
-
-
-  /* =======================================================
-     LAYOUT
-  ======================================================= */
-
-  applyPreviewLayout() {
-
-    const previewRoot =
-      this.getPreviewRoot();
-
-    if (!previewRoot) {
-      return;
-    }
-
-    const config =
-      this.getConfig();
-
-    const layout =
-      config.layout || {};
-
-
-    /*
-      Page layout
-    */
-
-    const pageLayout =
-      this.normalizeLayout(
-        layout.pageLayout ||
-        layout.type ||
-        "split"
-      );
-
-
-    /*
-      Image width
-    */
-
-    const imageWidth =
-      this.normalizeImageWidth(
-        layout.imageWidth ||
-        50
-      );
-
-
-    /*
-      Form position
-    */
-
-    const formPosition =
-      this.normalizeFormPosition(
-        layout.formPosition ||
-        "center"
-      );
-
-
-    /*
-      Remove previous layout classes
-    */
-
-    [
-      "preview-layout-split",
-      "preview-layout-imageLeft",
-      "preview-layout-imageRight",
-      "preview-layout-full",
-      "preview-layout-background",
-
-      "preview-image-width-30",
-      "preview-image-width-40",
-      "preview-image-width-50",
-      "preview-image-width-60",
-      "preview-image-width-70",
-
-      "preview-form-position-left",
-      "preview-form-position-center",
-      "preview-form-position-right",
-      "preview-form-position-top",
-      "preview-form-position-bottom",
-      "preview-form-position-topLeft",
-      "preview-form-position-topRight",
-      "preview-form-position-bottomLeft",
-      "preview-form-position-bottomRight"
-    ].forEach(
-      (className) => {
-        previewRoot.classList.remove(
-          className
-        );
-      }
-    );
-
-
-    /*
-      Add current classes
-    */
-
-    previewRoot.classList.add(
-      `preview-layout-${pageLayout}`
-    );
-
-    previewRoot.classList.add(
-      `preview-image-width-${imageWidth}`
-    );
-
-    previewRoot.classList.add(
-      `preview-form-position-${formPosition}`
-    );
-  }
-
-
-  /* =======================================================
-     NORMALIZE LAYOUT
-  ======================================================= */
-
-  normalizeLayout(value) {
-
-    const normalized =
-      String(value || "")
-        .toLowerCase()
-        .replace(
-          /[\s_-]+/g,
-          ""
-        );
-
-    const aliases = {
-
-      split:
-        "split",
-
-      imageleft:
-        "imageLeft",
-
-      leftimage:
-        "imageLeft",
-
-      imageright:
-        "imageRight",
-
-      rightimage:
-        "imageRight",
-
-      full:
-        "full",
-
-      background:
-        "background"
-    };
-
-    return (
-      aliases[normalized] ||
-      "split"
-    );
-  }
-
-
-  /* =======================================================
-     NORMALIZE IMAGE WIDTH
-  ======================================================= */
-
-  normalizeImageWidth(value) {
-
-    const width =
-      Number(
-        String(value)
-          .replace(
-            /[^0-9.]/g,
-            ""
-          )
-      );
-
-    if (width <= 30) {
-      return 30;
-    }
-
-    if (width <= 40) {
-      return 40;
-    }
-
-    if (width <= 50) {
-      return 50;
-    }
-
-    if (width <= 60) {
-      return 60;
-    }
-
-    if (width <= 70) {
-      return 70;
-    }
-
-    return 50;
-  }
-
-
-  /* =======================================================
-     NORMALIZE FORM POSITION
-  ======================================================= */
-
-  normalizeFormPosition(value) {
-
-    const normalized =
-      String(value || "")
-        .toLowerCase()
-        .replace(
-          /[\s_-]+/g,
-          ""
-        );
-
-    const aliases = {
-
-      left:
-        "left",
-
-      center:
-        "center",
-
-      right:
-        "right",
-
-      top:
-        "top",
-
-      bottom:
-        "bottom",
-
-      topleft:
-        "topLeft",
-
-      topright:
-        "topRight",
-
-      bottomleft:
-        "bottomLeft",
-
-      bottomright:
-        "bottomRight"
-    };
-
-    return (
-      aliases[normalized] ||
-      "center"
-    );
-  }
-
-
-  /* =======================================================
-     RESPONSIVE PREVIEW
-  ======================================================= */
-
-  applyResponsivePreview() {
-
-    const preview =
-      this.getPreviewElement();
-
-    if (!preview) {
-      return;
-    }
-
-
-    /*
-      PreviewManager controls
-      desktop/tablet/mobile mode.
-    */
-
-    if (
-      window.previewManager &&
-      typeof window.previewManager
-        .applyDeviceMode ===
-        "function"
-    ) {
-
-      window.previewManager
-        .applyDeviceMode();
-    }
-  }
-
-
-  /* =======================================================
-     PAGE SWITCHING
-  ======================================================= */
-
-  renderPage(pageName) {
-
-    if (
-      window.previewManager &&
-      typeof window.previewManager
-        .setPage ===
-        "function"
-    ) {
-
-      window.previewManager
-        .setPage(
-          pageName
-        );
-
-      return;
-    }
-
-
-    this.updateCurrentPage(
-      pageName
-    );
-
-    this.render();
-  }
-
-
-  updateCurrentPage(pageName) {
-
-    if (
-      window.state &&
-      typeof window.state.set ===
-        "function"
-    ) {
-
-      try {
-
-        window.state.set(
-          "currentPage",
-          pageName
-        );
-
-      } catch (error) {}
-    }
-
-
-    if (
-      window.state &&
-      window.state.config
-    ) {
-
-      window.state.config.currentPage =
-        pageName;
-    }
-
-
-    if (
-      window.config
-    ) {
-
-      window.config.currentPage =
-        pageName;
-    }
-  }
-
-
-  /* =======================================================
-     DEVICE SWITCHING
-  ======================================================= */
-
-  renderDevice(device) {
-
-    if (
-      window.previewManager &&
-      typeof window.previewManager
-        .setDevice ===
-        "function"
-    ) {
-
-      window.previewManager
-        .setDevice(
-          device
-        );
-
-      return;
-    }
-
-    const preview =
-      this.getPreviewElement();
-
-    if (!preview) {
-      return;
-    }
-
-
-    preview.classList.remove(
-      "preview-mode-desktop",
-      "preview-mode-tablet",
-      "preview-mode-mobile"
-    );
-
-
-    preview.classList.add(
-      `preview-mode-${device}`
-    );
-  }
-
-
-  /* =======================================================
-     CUSTOMIZATION
-  ======================================================= */
-
-  updateCustomization() {
-
-    this.requestRender();
-
-  }
-
-
-  updateLayout() {
-
-    this.requestRender();
-
-  }
-
-
-  updateBranding() {
-
-    this.requestRender();
-
-  }
-
-
-  updateBackground() {
-
-    this.requestRender();
-
-  }
-
-
-  updatePageConfiguration() {
-
-    this.requestRender();
-
-  }
-
-
-  /* =======================================================
-     FULLSCREEN SYNC
-  ======================================================= */
-
-  refreshFullscreen() {
-
-    if (
-      window.fullscreenManager &&
-      typeof window.fullscreenManager
-        .refresh ===
-        "function"
-    ) {
-
-      window.fullscreenManager
-        .refresh();
-    }
-  }
-
-
-  /* =======================================================
-     DESTROY
-  ======================================================= */
-
-  destroy() {
-
-    this.isRendering =
-      false;
-
-    this.renderQueued =
-      false;
-
-    this.initialized =
-      false;
-  }
-}
-
-
-/* =========================================================
-   GLOBAL CLASS
-========================================================= */
-
-window.AuthPageRenderer =
-  AuthPageRenderer;
-
-
-/* =========================================================
-   GLOBAL INSTANCE
-========================================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    window.authPageRenderer =
-      new AuthPageRenderer();
-
-  }
-);
-
-
-/* =========================================================
-   GLOBAL COMPATIBILITY FUNCTIONS
-========================================================= */
-
-
-/*
-  Render complete preview
-*/
-
-window.renderAuthPage =
-  function () {
-
-    if (
-      window.authPageRenderer
-    ) {
-
-      window.authPageRenderer
-        .render();
-    }
-  };
-
-
-/*
-  Refresh renderer
-*/
-
-window.refreshRenderer =
-  window.renderAuthPage;
-
-
-/*
-  Render specific page
-*/
-
-window.renderPage =
-  function (pageName) {
-
-    if (
-      window.authPageRenderer
-    ) {
-
-      window.authPageRenderer
-        .renderPage(
-          pageName
-        );
-    }
-  };
-
-
-/*
-  Switch preview device
-*/
-
-window.renderPreviewDevice =
-  function (device) {
-
-    if (
-      window.authPageRenderer
-    ) {
-
-      window.authPageRenderer
-        .renderDevice(
-          device
-        );
-    }
-  };
-
-
-/*
-  Render Login
-*/
-
-window.renderLogin =
-  function () {
-
-    window.renderPage(
-      "login"
-    );
-
-  };
-
-
-/*
-  Render Signup
-*/
-
-window.renderSignup =
-  function () {
-
-    window.renderPage(
-      "signup"
-    );
-
-  };
-
-
-/*
-  Render Forgot Password
-*/
-
-window.renderForgotPassword =
-  function () {
-
-    window.renderPage(
-      "forgotPassword"
-    );
-
-  };
-
-
-/*
-  Render OTP
-*/
-
-window.renderOTP =
-  function () {
-
-    window.renderPage(
-      "otp"
-    );
-
-  };
-
-
-/* =========================================================
-   LISTEN FOR CUSTOMIZATION EVENTS
-========================================================= */
-
-[
-  "auth-builder:config-updated",
-  "auth-builder:state-updated",
-  "auth-builder:customization-updated",
-  "auth-builder:layout-updated",
-  "auth-builder:branding-updated",
-  "auth-builder:background-updated",
-  "auth-builder:page-config-updated",
-  "auth-builder:rerender-preview"
-].forEach(
-  (eventName) => {
-
-    document.addEventListener(
-      eventName,
-      () => {
-
-        if (
-          window.authPageRenderer
-        ) {
-
-          window.authPageRenderer
-            .requestRender();
+          }, 1000);
         }
+      });
+    }
 
-      }
-    );
-
+    // 6. Form Submission Simulation & Redirect
+    const forms = container.querySelectorAll(".auth-main-form");
+    forms.forEach(form => {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const redirectUrl = config.urls?.redirectUrl || "https://customerwebsite.com/dashboard";
+        if (Utils.showToast) {
+          Utils.showToast(`Authentication simulated! Redirecting to: ${redirectUrl}`, "success", 4000);
+        }
+      });
+    });
   }
-);
+
+  /* =======================================================
+     MAIN RENDER FUNCTION
+  ======================================================= */
+  function renderPreview(targetElement, options = {}) {
+    const root = typeof targetElement === "string" 
+      ? (document ? document.querySelector(targetElement) : null) 
+      : targetElement;
+
+    if (!root) {
+      console.warn("AuthPageRenderer: target root element not found.");
+      return;
+    }
+
+    const config = options.config || (window.state ? window.state.getState() : window.config) || {};
+    const pageName = options.page || config.activePage || "login";
+
+    // Inject CSS variables
+    injectStyles(config);
+
+    // Generate complete HTML
+    const html = Templates.generateAuthShell(config, pageName);
+    root.innerHTML = html;
+
+    // Apply preview device class to parent wrapper if present
+    const device = options.device || config.previewMode || "desktop";
+    root.className = `preview-root preview-device-${device}`;
+
+    // Attach behaviors
+    attachInteractiveBehaviors(root, config);
+
+    // Trigger completion event
+    if (typeof document !== "undefined" && document.dispatchEvent) {
+      document.dispatchEvent(
+        new CustomEvent("auth-builder:render-complete", {
+          detail: { root, config, pageName, device }
+        })
+      );
+    }
+  }
+
+  return {
+    computeStyleVariables,
+    injectStyles,
+    renderPreview,
+    render: renderPreview
+  };
+});

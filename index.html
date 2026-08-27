@@ -3,2258 +3,935 @@
 
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-    <meta name="description"
-        content="Professional authentication page builder for creating customized login, signup, forgot password and OTP pages.">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Enterprise Authentication Page Builder for building and customizing modern login, signup, forgot password, and OTP experiences.">
     <title>Auth Page Builder</title>
 
-    <!-- =====================================================
-         APPLICATION STYLES
-    ====================================================== -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet"
-        href="./css/main.css">
-
-    <link rel="stylesheet"
-        href="./css/app.css">
-
-    <link rel="stylesheet"
-        href="./css/layout.css">
-
-    <link rel="stylesheet"
-        href="./css/sidebar.css">
-
-    <link rel="stylesheet"
-        href="./css/components.css">
-
-    <link rel="stylesheet"
-        href="./css/forms.css">
-
-    <link rel="stylesheet"
-        href="./css/customization.css">
-
-    <link rel="stylesheet"
-        href="./css/preview.css">
-
-    <link rel="stylesheet"
-        href="./css/responsive.css">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/app.css">
+    <link rel="stylesheet" href="./css/layout.css">
+    <link rel="stylesheet" href="./css/sidebar.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <link rel="stylesheet" href="./css/forms.css">
+    <link rel="stylesheet" href="./css/customization.css">
+    <link rel="stylesheet" href="./css/preview.css">
+    <link rel="stylesheet" href="./css/responsive.css">
 </head>
 
-
 <body>
-
-    <!-- =====================================================
-         APPLICATION SHELL
-    ====================================================== -->
 
     <div class="app-shell">
 
         <!-- =================================================
              HEADER
         ================================================== -->
-
         <header class="app-header">
-
             <div class="app-brand">
-
                 <div class="app-brand-icon">
-                    A
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
                 </div>
-
                 <div class="app-brand-content">
-
-                    <h1>
-                        Auth Page Builder
-                    </h1>
-
-                    <p>
-                        Design your authentication experience
-                    </p>
-
+                    <h1>Auth Page Builder</h1>
+                    <p>Live Authentication Studio</p>
                 </div>
-
             </div>
-
 
             <div class="header-actions">
-
-                <span class="save-indicator"
-                    data-unsaved-indicator>
-                    All changes saved
+                <span class="save-indicator" data-unsaved-indicator>
+                    <span class="indicator-dot"></span>
+                    Live Sync Active
                 </span>
 
-
-                <button type="button"
-                    class="header-button secondary"
-                    data-action="fullscreen-preview">
-
-                    ⛶
-
-                    <span>
-                        Full Preview
-                    </span>
-
+                <button type="button" class="header-button secondary" data-action="fullscreen-preview" title="Fullscreen Preview (⛶)">
+                    <span>⛶ Fullscreen</span>
                 </button>
 
-
-                <button type="button"
-                    class="header-button primary"
-                    id="downloadButton"
-                    data-action="download-package">
-
-                    ↓
-
-                    <span>
-                        Download Package
-                    </span>
-
+                <button type="button" class="header-button primary" id="downloadButton" data-action="download-package">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download Package</span>
                 </button>
-
             </div>
-
         </header>
-
 
         <!-- =================================================
              MAIN BUILDER
         ================================================== -->
-
         <main class="builder-layout">
-
 
             <!-- =============================================
                  LEFT CUSTOMIZATION SIDEBAR
             ============================================== -->
-
             <aside class="customization-sidebar">
 
-
-                <!-- =========================================
-                     PAGE SELECTOR
-                ========================================== -->
-
+                <!-- Page Selector Tabs -->
                 <div class="sidebar-page-tabs">
-
-                    <button type="button"
-                        class="sidebar-page-tab active"
-                        data-builder-page="login">
-
+                    <button type="button" class="sidebar-page-tab active" data-builder-page="login">
                         Login
-
                     </button>
-
-
-                    <button type="button"
-                        class="sidebar-page-tab"
-                        data-builder-page="signup">
-
+                    <button type="button" class="sidebar-page-tab" data-builder-page="signup">
                         Sign Up
-
                     </button>
-
-
-                    <button type="button"
-                        class="sidebar-page-tab"
-                        data-builder-page="forgotPassword">
-
+                    <button type="button" class="sidebar-page-tab" data-builder-page="forgotPassword">
                         Forgot Password
-
                     </button>
-
-
-                    <button type="button"
-                        class="sidebar-page-tab"
-                        data-builder-page="otp">
-
+                    <button type="button" class="sidebar-page-tab" data-builder-page="otp">
                         OTP
-
                     </button>
-
                 </div>
 
-
-                <!-- =========================================
-                     CUSTOMIZATION SCROLL AREA
-                ========================================== -->
-
+                <!-- Customization Accordion Scroll Area -->
                 <div class="customization-scroll">
 
-
                     <!-- =====================================
-                         PAGE CONTENT
+                         1. URL CONFIGURATION (CRITICAL FEATURE)
                     ====================================== -->
-
                     <section class="customization-section customization-accordion open">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="true">
-
-                            <span class="accordion-title">
-                                Page Content
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="true">
+                            <span class="accordion-title">Application URLs</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
-
-                            <!-- LOGIN -->
-
-                            <div class="page-specific-control"
-                                data-control-page="login">
-
-                                <div class="control-group">
-
-                                    <label>
-                                        Login Title
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.login.title"
-                                        placeholder="Welcome back">
-
-                                </div>
-
-
-                                <div class="control-group">
-
-                                    <label>
-                                        Login Subtitle
-                                    </label>
-
-                                    <textarea rows="3"
-                                        data-config-path="pages.login.subtitle"
-                                        placeholder="Sign in to continue"></textarea>
-
-                                </div>
-
-
-                                <div class="control-group">
-
-                                    <label>
-                                        Login Button Text
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.login.buttonText"
-                                        placeholder="Sign In">
-
-                                </div>
-
+                            <div class="control-group">
+                                <label for="landingPageUrlInput">Customer Landing Page URL</label>
+                                <p class="control-help">Your main application entry point (adds a "Back to Website" link).</p>
+                                <input type="url" id="landingPageUrlInput" data-config-path="urls.landingPageUrl" placeholder="https://customerwebsite.com">
                             </div>
 
+                            <div class="control-group">
+                                <label for="redirectUrlInput">Post-Authentication Redirect URL</label>
+                                <p class="control-help">Where authenticated users will be redirected upon successful login.</p>
+                                <input type="url" id="redirectUrlInput" data-config-path="urls.redirectUrl" placeholder="https://customerwebsite.com/dashboard">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- =====================================
+                         2. PAGE CONTENT (PER-PAGE)
+                    ====================================== -->
+                    <section class="customization-section customization-accordion open">
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="true">
+                            <span class="accordion-title">Page Content</span>
+                            <span class="accordion-arrow">▾</span>
+                        </button>
+                        <div class="accordion-content">
+                            <!-- LOGIN -->
+                            <div class="page-specific-control" data-control-page="login">
+                                <div class="control-group">
+                                    <label>Login Title</label>
+                                    <input type="text" data-config-path="pages.login.title" placeholder="Welcome back">
+                                </div>
+                                <div class="control-group">
+                                    <label>Login Subtitle</label>
+                                    <textarea rows="2" data-config-path="pages.login.subtitle" placeholder="Sign in to continue to your account"></textarea>
+                                </div>
+                                <div class="control-group">
+                                    <label>Login Button Text</label>
+                                    <input type="text" data-config-path="pages.login.buttonText" placeholder="Sign In">
+                                </div>
+                            </div>
 
                             <!-- SIGNUP -->
-
-                            <div class="page-specific-control"
-                                data-control-page="signup"
-                                hidden>
-
+                            <div class="page-specific-control" data-control-page="signup" hidden>
                                 <div class="control-group">
-
-                                    <label>
-                                        Sign Up Title
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.signup.title"
-                                        placeholder="Create account">
-
+                                    <label>Sign Up Title</label>
+                                    <input type="text" data-config-path="pages.signup.title" placeholder="Create account">
                                 </div>
-
-
                                 <div class="control-group">
-
-                                    <label>
-                                        Sign Up Subtitle
-                                    </label>
-
-                                    <textarea rows="3"
-                                        data-config-path="pages.signup.subtitle"
-                                        placeholder="Create your account to get started"></textarea>
-
+                                    <label>Sign Up Subtitle</label>
+                                    <textarea rows="2" data-config-path="pages.signup.subtitle" placeholder="Enter your details to create an account"></textarea>
                                 </div>
-
-
                                 <div class="control-group">
-
-                                    <label>
-                                        Sign Up Button Text
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.signup.buttonText"
-                                        placeholder="Create Account">
-
+                                    <label>Sign Up Button Text</label>
+                                    <input type="text" data-config-path="pages.signup.buttonText" placeholder="Create Account">
                                 </div>
-
                             </div>
-
 
                             <!-- FORGOT PASSWORD -->
-
-                            <div class="page-specific-control"
-                                data-control-page="forgotPassword"
-                                hidden>
-
+                            <div class="page-specific-control" data-control-page="forgotPassword" hidden>
                                 <div class="control-group">
-
-                                    <label>
-                                        Page Title
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.forgotPassword.title"
-                                        placeholder="Forgot password?">
-
+                                    <label>Page Title</label>
+                                    <input type="text" data-config-path="pages.forgotPassword.title" placeholder="Forgot password?">
                                 </div>
-
-
                                 <div class="control-group">
-
-                                    <label>
-                                        Page Subtitle
-                                    </label>
-
-                                    <textarea rows="3"
-                                        data-config-path="pages.forgotPassword.subtitle"
-                                        placeholder="Enter your email or mobile number"></textarea>
-
+                                    <label>Page Subtitle</label>
+                                    <textarea rows="2" data-config-path="pages.forgotPassword.subtitle" placeholder="Enter your email or mobile number to receive reset instructions"></textarea>
                                 </div>
-
-
                                 <div class="control-group">
-
-                                    <label>
-                                        Button Text
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.forgotPassword.buttonText"
-                                        placeholder="Send Reset Link">
-
+                                    <label>Button Text</label>
+                                    <input type="text" data-config-path="pages.forgotPassword.buttonText" placeholder="Send Reset Link">
                                 </div>
-
                             </div>
-
 
                             <!-- OTP -->
-
-                            <div class="page-specific-control"
-                                data-control-page="otp"
-                                hidden>
-
+                            <div class="page-specific-control" data-control-page="otp" hidden>
                                 <div class="control-group">
-
-                                    <label>
-                                        OTP Title
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.otp.title"
-                                        placeholder="Verify your identity">
-
+                                    <label>OTP Title</label>
+                                    <input type="text" data-config-path="pages.otp.title" placeholder="Verify your identity">
                                 </div>
-
-
                                 <div class="control-group">
-
-                                    <label>
-                                        OTP Subtitle
-                                    </label>
-
-                                    <textarea rows="3"
-                                        data-config-path="pages.otp.subtitle"
-                                        placeholder="Enter the verification code"></textarea>
-
+                                    <label>OTP Subtitle</label>
+                                    <textarea rows="2" data-config-path="pages.otp.subtitle" placeholder="Enter the verification code sent to your device"></textarea>
                                 </div>
-
-
                                 <div class="control-group">
-
-                                    <label>
-                                        OTP Button Text
-                                    </label>
-
-                                    <input type="text"
-                                        data-config-path="pages.otp.buttonText"
-                                        placeholder="Verify OTP">
-
+                                    <label>OTP Button Text</label>
+                                    <input type="text" data-config-path="pages.otp.buttonText" placeholder="Verify OTP">
                                 </div>
-
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         LAYOUT
+                         3. PAGE LAYOUT (7 Complete Layouts)
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Layout
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Page Layout</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
-
                             <div class="control-group">
-
-                                <label>
-                                    Page Layout
-                                </label>
-
+                                <label>Layout Preset</label>
                                 <select data-config-path="layout.type">
-
-                                    <option value="split-left-image">
-                                        Split — Image Left
-                                    </option>
-
-                                    <option value="split-right-image">
-                                        Split — Image Right
-                                    </option>
-
-                                    <option value="centered">
-                                        Centered Card
-                                    </option>
-
-                                    <option value="full-background">
-                                        Full Background
-                                    </option>
-
+                                    <option value="split-left-image">Split — Image Left</option>
+                                    <option value="split-right-image">Split — Image Right</option>
+                                    <option value="centered">Centered Card</option>
+                                    <option value="full-background">Full Background</option>
+                                    <option value="minimal">Minimal</option>
+                                    <option value="card-left">Card Left</option>
+                                    <option value="card-right">Card Right</option>
                                 </select>
-
                             </div>
 
-
                             <div class="control-group">
-
                                 <div class="range-label-row">
-
-                                    <label>
-                                        Image Width
-                                    </label>
-
-                                    <span id="imageWidthValue">
-                                        50%
-                                    </span>
-
+                                    <label>Image Section Width</label>
+                                    <span id="imageWidthValue">50%</span>
                                 </div>
-
-
-                                <input type="range"
-                                    min="20"
-                                    max="80"
-                                    value="50"
-                                    data-config-path="layout.imageWidth"
-                                    data-value-target="#imageWidthValue"
-                                    data-value-suffix="%">
-
+                                <input type="range" min="20" max="80" value="50" data-config-path="layout.imageWidth" data-value-target="#imageWidthValue" data-value-suffix="%">
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Form Horizontal Position
-                                </label>
-
+                                <label>Form Horizontal Position</label>
                                 <select data-config-path="layout.formHorizontalAlignment">
-
-                                    <option value="left">
-                                        Left
-                                    </option>
-
-                                    <option value="center">
-                                        Center
-                                    </option>
-
-                                    <option value="right">
-                                        Right
-                                    </option>
-
+                                    <option value="left">Left</option>
+                                    <option value="center" selected>Center</option>
+                                    <option value="right">Right</option>
                                 </select>
-
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Form Vertical Position
-                                </label>
-
+                                <label>Form Vertical Position</label>
                                 <select data-config-path="layout.formVerticalAlignment">
-
-                                    <option value="top">
-                                        Top
-                                    </option>
-
-                                    <option value="center">
-                                        Center
-                                    </option>
-
-                                    <option value="bottom">
-                                        Bottom
-                                    </option>
-
+                                    <option value="top">Top</option>
+                                    <option value="center" selected>Center</option>
+                                    <option value="bottom">Bottom</option>
                                 </select>
-
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         BACKGROUND
+                         4. BACKGROUND CUSTOMIZATION
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Background
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Background & Overlay</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
-
                             <div class="control-group">
-
-                                <label>
-                                    Default Background
-                                </label>
-
+                                <label>Default Background Images</label>
                                 <div class="asset-grid">
-
-                                    <button type="button"
-                                        class="asset-option"
-                                        data-background="assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
-
-                                        Background 1
-
+                                    <button type="button" class="asset-option active" data-background="assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
+                                        Dark Geometric
                                     </button>
-
-
-                                    <button type="button"
-                                        class="asset-option"
-                                        data-background="assets/backgrounds/idea-6900632_1280.png">
-
-                                        Background 2
-
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/idea-6900632_1280.png">
+                                        Creative Graphic
                                     </button>
-
-
-                                    <button type="button"
-                                        class="asset-option"
-                                        data-background="assets/backgrounds/OIP (3).webp">
-
-                                        Background 3
-
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (3).webp">
+                                        Gradient Glow
                                     </button>
-
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (4).webp">
+                                        Deep Azure
+                                    </button>
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (5).webp">
+                                        Modern Mesh
+                                    </button>
                                 </div>
-
                             </div>
 
-
                             <div class="control-group">
-
                                 <label class="upload-label">
-
-                                    <span>
-                                        Upload Background
-                                    </span>
-
-                                    <input type="file"
-                                        accept="image/*"
-                                        data-upload-type="background"
-                                        data-upload-preview="#backgroundUploadPreview"
-                                        data-file-name-target="#backgroundFileName">
-
+                                    <span>Upload Custom Background</span>
+                                    <input type="file" accept="image/*" data-upload-type="background" data-upload-preview="#backgroundUploadPreview" data-file-name-target="#backgroundFileName">
                                 </label>
-
-
-                                <img id="backgroundUploadPreview"
-                                    class="upload-preview"
-                                    alt="Background preview"
-                                    hidden>
-
-
-                                <span id="backgroundFileName"
-                                    class="file-name">
-                                </span>
-
+                                <img id="backgroundUploadPreview" class="upload-preview" alt="Background preview" hidden>
+                                <span id="backgroundFileName" class="file-name"></span>
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Background Color
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="background.color">
-
+                                <label>Background Color</label>
+                                <input type="color" data-config-path="background.color" value="#0f172a">
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Background Position
-                                </label>
-
+                                <label>Background Position</label>
                                 <select data-config-path="background.position">
-
-                                    <option value="center">
-                                        Center
-                                    </option>
-
-                                    <option value="top">
-                                        Top
-                                    </option>
-
-                                    <option value="bottom">
-                                        Bottom
-                                    </option>
-
-                                    <option value="left">
-                                        Left
-                                    </option>
-
-                                    <option value="right">
-                                        Right
-                                    </option>
-
+                                    <option value="center" selected>Center</option>
+                                    <option value="top">Top</option>
+                                    <option value="bottom">Bottom</option>
+                                    <option value="left">Left</option>
+                                    <option value="right">Right</option>
                                 </select>
-
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Background Size
-                                </label>
-
+                                <label>Background Size</label>
                                 <select data-config-path="background.size">
-
-                                    <option value="cover">
-                                        Cover
-                                    </option>
-
-                                    <option value="contain">
-                                        Contain
-                                    </option>
-
-                                    <option value="auto">
-                                        Original
-                                    </option>
-
+                                    <option value="cover" selected>Cover</option>
+                                    <option value="contain">Contain</option>
+                                    <option value="auto">Original</option>
                                 </select>
-
                             </div>
-
 
                             <div class="switch-control">
-
-                                <label>
-                                    Enable Overlay
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="background.overlayEnabled">
-
+                                <label>Enable Overlay</label>
+                                <input type="checkbox" data-config-path="background.overlayEnabled" checked>
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Overlay Color
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="background.overlayColor">
-
+                                <label>Overlay Color</label>
+                                <input type="color" data-config-path="background.overlayColor" value="#000000">
                             </div>
 
-
                             <div class="control-group">
-
                                 <div class="range-label-row">
-
-                                    <label>
-                                        Overlay Opacity
-                                    </label>
-
-                                    <span id="overlayOpacityValue">
-                                        40%
-                                    </span>
-
+                                    <label>Overlay Opacity</label>
+                                    <span id="overlayOpacityValue">35%</span>
                                 </div>
-
-
-                                <input type="range"
-                                    min="0"
-                                    max="100"
-                                    data-config-path="background.overlayOpacity"
-                                    data-value-target="#overlayOpacityValue"
-                                    data-value-suffix="%">
-
+                                <input type="range" min="0" max="100" value="35" data-config-path="background.overlayOpacity" data-value-target="#overlayOpacityValue" data-value-suffix="%">
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         BRANDING
+                         5. BRANDING & LOGO
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Branding & Logo
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Branding & Logo</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
+                            <div class="switch-control">
+                                <label>Show Logo</label>
+                                <input type="checkbox" data-config-path="branding.showLogo" checked>
+                            </div>
 
                             <div class="control-group">
+                                <label>Brand Name</label>
+                                <input type="text" placeholder="Your Brand" data-config-path="branding.brandName" value="Your Brand">
+                            </div>
 
-                                <label>
-                                    Default Logo
-                                </label>
-
+                            <div class="control-group">
+                                <label>Select Default Logo</label>
                                 <div class="asset-grid">
-
-                                    <button type="button"
-                                        class="asset-option"
-                                        data-logo="assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
-
-                                        Logo 1
-
+                                    <button type="button" class="asset-option" data-logo="assets/logos/brand-shield.svg">
+                                        Shield Mark
                                     </button>
-
-
-                                    <button type="button"
-                                        class="asset-option"
-                                        data-logo="assets/logos/idea-6900632_1280.png">
-
-                                        Logo 2
-
+                                    <button type="button" class="asset-option" data-logo="assets/logos/brand-prism.svg">
+                                        Prism Emblem
                                     </button>
-
-
-                                    <button type="button"
-                                        class="asset-option"
-                                        data-logo="assets/logos/OIP (4).webp">
-
-                                        Logo 3
-
+                                    <button type="button" class="asset-option active" data-logo="assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
+                                        Geometric
                                     </button>
-
+                                    <button type="button" class="asset-option" data-logo="assets/logos/idea-6900632_1280.png">
+                                        Idea Spark
+                                    </button>
+                                    <button type="button" class="asset-option" data-logo="assets/logos/OIP (4).webp">
+                                        Crest
+                                    </button>
                                 </div>
-
                             </div>
 
-
                             <div class="control-group">
-
                                 <label class="upload-label">
-
-                                    <span>
-                                        Upload Logo
-                                    </span>
-
-                                    <input type="file"
-                                        accept="image/*"
-                                        data-upload-type="logo"
-                                        data-upload-preview="#logoUploadPreview"
-                                        data-file-name-target="#logoFileName">
-
+                                    <span>Upload Custom Logo</span>
+                                    <input type="file" accept="image/*" data-upload-type="logo" data-upload-preview="#logoUploadPreview" data-file-name-target="#logoFileName">
                                 </label>
-
-
-                                <img id="logoUploadPreview"
-                                    class="upload-preview logo-upload-preview"
-                                    alt="Logo preview"
-                                    hidden>
-
-
-                                <span id="logoFileName"
-                                    class="file-name">
-                                </span>
-
+                                <img id="logoUploadPreview" class="upload-preview logo-upload-preview" alt="Logo preview" hidden>
+                                <span id="logoFileName" class="file-name"></span>
                             </div>
 
-
                             <div class="control-group">
-
                                 <div class="range-label-row">
-
-                                    <label>
-                                        Logo Size
-                                    </label>
-
-                                    <span id="logoSizeValue">
-                                        64px
-                                    </span>
-
+                                    <label>Logo Size</label>
+                                    <span id="logoSizeValue">64px</span>
                                 </div>
-
-
-                                <input type="range"
-                                    min="24"
-                                    max="160"
-                                    data-config-path="branding.logoSize"
-                                    data-value-target="#logoSizeValue"
-                                    data-value-suffix="px">
-
+                                <input type="range" min="24" max="160" value="64" data-config-path="branding.logoSize" data-value-target="#logoSizeValue" data-value-suffix="px">
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Logo Shape
-                                </label>
-
+                                <label>Logo Shape</label>
                                 <select data-config-path="branding.logoShape">
-
-                                    <option value="square">
-                                        Square
-                                    </option>
-
-                                    <option value="rounded">
-                                        Rounded
-                                    </option>
-
-                                    <option value="circle">
-                                        Circle
-                                    </option>
-
-                                    <option value="ellipse">
-                                        Ellipse
-                                    </option>
-
+                                    <option value="circle" selected>Circle</option>
+                                    <option value="rounded">Rounded</option>
+                                    <option value="square">Square</option>
+                                    <option value="ellipse">Ellipse</option>
                                 </select>
-
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Logo Position
-                                </label>
-
+                                <label>Logo Position</label>
                                 <select data-config-path="branding.logoPosition">
-
-                                    <option value="left">
-                                        Left
-                                    </option>
-
-                                    <option value="center">
-                                        Center
-                                    </option>
-
-                                    <option value="right">
-                                        Right
-                                    </option>
-
+                                    <option value="left">Left</option>
+                                    <option value="center" selected>Center</option>
+                                    <option value="right">Right</option>
                                 </select>
-
                             </div>
-
 
                             <div class="switch-control">
-
-                                <label>
-                                    Logo Background
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="branding.logoBackgroundEnabled">
-
+                                <label>Logo Background</label>
+                                <input type="checkbox" data-config-path="branding.logoBackgroundEnabled">
                             </div>
-
 
                             <div class="control-group">
+                                <label>Logo Background Color</label>
+                                <input type="color" data-config-path="branding.logoBackgroundColor" value="#ffffff">
+                            </div>
+                        </div>
+                    </section>
 
-                                <label>
-                                    Logo Background Color
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="branding.logoBackgroundColor">
-
+                    <!-- =====================================
+                         6. LOGIN & AUTHENTICATION METHODS
+                    ====================================== -->
+                    <section class="customization-section customization-accordion">
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Authentication Methods</span>
+                            <span class="accordion-arrow">▾</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="switch-control">
+                                <label>Email Login</label>
+                                <input type="checkbox" data-config-path="pages.login.emailEnabled" checked>
                             </div>
 
+                            <div class="switch-control">
+                                <label>Mobile Number Login</label>
+                                <input type="checkbox" data-config-path="pages.login.mobileEnabled" checked>
+                            </div>
 
+                            <div class="switch-control">
+                                <label>Username Login</label>
+                                <input type="checkbox" data-config-path="pages.login.usernameEnabled">
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Password Field</label>
+                                <input type="checkbox" data-config-path="pages.login.passwordEnabled" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>OTP Login Option ("Continue with OTP")</label>
+                                <input type="checkbox" data-config-path="pages.login.otpEnabled" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>WhatsApp OTP Option</label>
+                                <input type="checkbox" data-config-path="authentication.otp.whatsappEnabled" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Remember Me Option</label>
+                                <input type="checkbox" data-config-path="pages.login.rememberMeEnabled" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Forgot Password Link</label>
+                                <input type="checkbox" data-config-path="pages.login.forgotPasswordEnabled" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Sign Up Link</label>
+                                <input type="checkbox" data-config-path="pages.login.signupEnabled" checked>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- =====================================
+                         7. SIGNUP CONFIGURABLE FIELDS
+                    ====================================== -->
+                    <section class="customization-section customization-accordion">
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Sign Up Fields</span>
+                            <span class="accordion-arrow">▾</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="switch-control">
+                                <label>Full Name</label>
+                                <input type="checkbox" data-config-path="pages.signup.fields.fullName" checked>
+                            </div>
+                            <div class="switch-control">
+                                <label>Username</label>
+                                <input type="checkbox" data-config-path="pages.signup.fields.username" checked>
+                            </div>
+                            <div class="switch-control">
+                                <label>Email Address</label>
+                                <input type="checkbox" data-config-path="pages.signup.fields.email" checked>
+                            </div>
+                            <div class="switch-control">
+                                <label>Mobile Number</label>
+                                <input type="checkbox" data-config-path="pages.signup.fields.mobile" checked>
+                            </div>
+                            <div class="switch-control">
+                                <label>Password Field</label>
+                                <input type="checkbox" data-config-path="pages.signup.fields.password" checked>
+                            </div>
+                            <div class="switch-control">
+                                <label>Confirm Password Field</label>
+                                <input type="checkbox" data-config-path="pages.signup.fields.confirmPassword" checked>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- =====================================
+                         8. OTP CONFIGURATION (4, 6, 8 Digits & Resend)
+                    ====================================== -->
+                    <section class="customization-section customization-accordion">
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">OTP Configuration</span>
+                            <span class="accordion-arrow">▾</span>
+                        </button>
+                        <div class="accordion-content">
                             <div class="control-group">
-
-                                <label>
-                                    Brand Name
-                                </label>
-
-                                <input type="text"
-                                    placeholder="Your Brand"
-                                    data-config-path="branding.brandName">
-
-                            </div>
-
-
-                        </div>
-
-                    </section>
-
-
-                    <!-- =====================================
-                         LOGIN AUTHENTICATION
-                    ====================================== -->
-
-                    <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Authentication
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
-                        </button>
-
-
-                        <div class="accordion-content">
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable Email Login
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.login.emailEnabled">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable Mobile Login
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.login.mobileEnabled">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable Password Login
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.login.passwordEnabled">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable OTP Login
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.login.otpEnabled">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable Remember Me
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.login.rememberMeEnabled">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable Forgot Password
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.login.forgotPasswordEnabled">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable Sign Up
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.login.signupEnabled">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Enable WhatsApp OTP
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="authentication.otp.whatsappEnabled">
-
-                            </div>
-
-
-                        </div>
-
-                    </section>
-
-
-                    <!-- =====================================
-                         SIGNUP FIELDS
-                    ====================================== -->
-
-                    <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Sign Up Fields
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
-                        </button>
-
-
-                        <div class="accordion-content">
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Full Name
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.signup.fields.fullName">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Username
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.signup.fields.username">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Email
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.signup.fields.email">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Mobile Number
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.signup.fields.mobile">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Password
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.signup.fields.password">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Confirm Password
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.signup.fields.confirmPassword">
-
-                            </div>
-
-
-                        </div>
-
-                    </section>
-
-
-                    <!-- =====================================
-                         OTP SETTINGS
-                    ====================================== -->
-
-                    <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                OTP Settings
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
-                        </button>
-
-
-                        <div class="accordion-content">
-
-
-                            <div class="control-group">
-
-                                <label>
-                                    OTP Length
-                                </label>
-
+                                <label>OTP Digits Count</label>
                                 <select data-config-path="pages.otp.length">
-
-                                    <option value="4">
-                                        4 Digits
-                                    </option>
-
-                                    <option value="6">
-                                        6 Digits
-                                    </option>
-
-                                    <option value="8">
-                                        8 Digits
-                                    </option>
-
+                                    <option value="4">4 Digits</option>
+                                    <option value="6" selected>6 Digits</option>
+                                    <option value="8">8 Digits</option>
                                 </select>
-
                             </div>
-
 
                             <div class="switch-control">
-
-                                <label>
-                                    Enable Resend OTP
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="pages.otp.resendEnabled">
-
+                                <label>Enable Resend OTP</label>
+                                <input type="checkbox" data-config-path="pages.otp.resendEnabled" checked>
                             </div>
-
 
                             <div class="control-group">
-
-                                <label>
-                                    Resend Button Text
-                                </label>
-
-                                <input type="text"
-                                    data-config-path="pages.otp.resendText"
-                                    placeholder="Resend OTP">
-
+                                <label>Resend Button Text</label>
+                                <input type="text" data-config-path="pages.otp.resendText" placeholder="Resend OTP" value="Resend OTP">
                             </div>
-
 
                             <div class="control-group">
-
-                                <label>
-                                    Resend Delay (seconds)
-                                </label>
-
-                                <input type="number"
-                                    min="10"
-                                    max="300"
-                                    step="1"
-                                    data-config-path="pages.otp.resendSeconds">
-
+                                <label>Resend Countdown Delay (seconds)</label>
+                                <input type="number" min="5" max="300" step="1" data-config-path="pages.otp.resendSeconds" value="30">
                             </div>
-
 
                             <div class="switch-control">
-
-                                <label>
-                                    Enable Email OTP
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="authentication.otp.emailEnabled">
-
+                                <label>Email OTP Delivery</label>
+                                <input type="checkbox" data-config-path="authentication.otp.emailEnabled" checked>
                             </div>
-
 
                             <div class="switch-control">
-
-                                <label>
-                                    Enable SMS OTP
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="authentication.otp.smsEnabled">
-
+                                <label>SMS OTP Delivery</label>
+                                <input type="checkbox" data-config-path="authentication.otp.smsEnabled" checked>
                             </div>
-
 
                             <div class="switch-control">
-
-                                <label>
-                                    Enable WhatsApp OTP
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="authentication.otp.whatsappEnabled">
-
+                                <label>WhatsApp OTP Delivery</label>
+                                <input type="checkbox" data-config-path="authentication.otp.whatsappEnabled" checked>
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         CARD
+                         9. AUTHENTICATION CARD
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Authentication Card
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Authentication Card</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
+                            <div class="switch-control">
+                                <label>Enable Card Container</label>
+                                <input type="checkbox" data-config-path="card.enabled" checked>
+                            </div>
 
+                            <div class="control-group">
+                                <label>Card Background Color</label>
+                                <input type="color" data-config-path="card.backgroundColor" value="#ffffff">
+                            </div>
+
+                            <div class="control-group">
+                                <div class="range-label-row">
+                                    <label>Card Opacity</label>
+                                    <span id="cardOpacityValue">100%</span>
+                                </div>
+                                <input type="range" min="10" max="100" value="100" data-config-path="card.opacity" data-value-target="#cardOpacityValue" data-value-suffix="%">
+                            </div>
+
+                            <div class="control-group">
+                                <div class="range-label-row">
+                                    <label>Card Max Width</label>
+                                    <span id="cardWidthValue">460px</span>
+                                </div>
+                                <input type="range" min="280" max="680" value="460" data-config-path="card.width" data-value-target="#cardWidthValue" data-value-suffix="px">
+                            </div>
+
+                            <div class="control-group">
+                                <div class="range-label-row">
+                                    <label>Border Radius</label>
+                                    <span id="cardRadiusValue">20px</span>
+                                </div>
+                                <input type="range" min="0" max="50" value="20" data-config-path="card.borderRadius" data-value-target="#cardRadiusValue" data-value-suffix="px">
+                            </div>
+
+                            <div class="control-group">
+                                <label>Border Color</label>
+                                <input type="color" data-config-path="card.borderColor" value="#e2e8f0">
+                            </div>
 
                             <div class="switch-control">
-
-                                <label>
-                                    Enable Card
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="card.enabled">
-
+                                <label>Card Drop Shadow</label>
+                                <input type="checkbox" data-config-path="card.shadowEnabled" checked>
                             </div>
-
-
-                            <div class="control-group">
-
-                                <label>
-                                    Card Background
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="card.backgroundColor">
-
-                            </div>
-
-
-                            <div class="control-group">
-
-                                <div class="range-label-row">
-
-                                    <label>
-                                        Transparency
-                                    </label>
-
-                                    <span id="cardOpacityValue">
-                                        100%
-                                    </span>
-
-                                </div>
-
-
-                                <input type="range"
-                                    min="0"
-                                    max="100"
-                                    data-config-path="card.opacity"
-                                    data-value-target="#cardOpacityValue"
-                                    data-value-suffix="%">
-
-                            </div>
-
-
-                            <div class="control-group">
-
-                                <div class="range-label-row">
-
-                                    <label>
-                                        Card Width
-                                    </label>
-
-                                    <span id="cardWidthValue">
-                                        460px
-                                    </span>
-
-                                </div>
-
-
-                                <input type="range"
-                                    min="280"
-                                    max="700"
-                                    data-config-path="card.width"
-                                    data-value-target="#cardWidthValue"
-                                    data-value-suffix="px">
-
-                            </div>
-
-
-                            <div class="control-group">
-
-                                <div class="range-label-row">
-
-                                    <label>
-                                        Border Radius
-                                    </label>
-
-                                    <span id="cardRadiusValue">
-                                        20px
-                                    </span>
-
-                                </div>
-
-
-                                <input type="range"
-                                    min="0"
-                                    max="50"
-                                    data-config-path="card.borderRadius"
-                                    data-value-target="#cardRadiusValue"
-                                    data-value-suffix="px">
-
-                            </div>
-
 
                             <div class="switch-control">
-
-                                <label>
-                                    Enable Shadow
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="card.shadowEnabled">
-
+                                <label>Glassmorphism Blur</label>
+                                <input type="checkbox" data-config-path="card.blurEnabled">
                             </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Glass Blur
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="card.blurEnabled">
-
-                            </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         TYPOGRAPHY
+                         10. TYPOGRAPHY
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Typography
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Typography & Colors</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
-
                             <div class="control-group">
-
-                                <label>
-                                    Font Family
-                                </label>
-
+                                <label>Font Family</label>
                                 <select data-config-path="typography.fontFamily">
-
-                                    <option value="Inter, sans-serif">
-                                        Inter
-                                    </option>
-
-                                    <option value="Arial, sans-serif">
-                                        Arial
-                                    </option>
-
-                                    <option value="'Segoe UI', sans-serif">
-                                        Segoe UI
-                                    </option>
-
-                                    <option value="Georgia, serif">
-                                        Georgia
-                                    </option>
-
-                                    <option value="'Courier New', monospace">
-                                        Monospace
-                                    </option>
-
+                                    <option value="'Inter', -apple-system, BlinkMacSystemFont, sans-serif" selected>Inter</option>
+                                    <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans</option>
+                                    <option value="Arial, sans-serif">Arial</option>
+                                    <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                                    <option value="Georgia, serif">Georgia</option>
                                 </select>
-
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Title Color
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="typography.titleColor">
-
+                                <label>Heading Color</label>
+                                <input type="color" data-config-path="typography.titleColor" value="#0f172a">
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Subtitle Color
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="typography.subtitleColor">
-
+                                <label>Subtitle Color</label>
+                                <input type="color" data-config-path="typography.subtitleColor" value="#64748b">
                             </div>
 
-
                             <div class="control-group">
-
                                 <div class="range-label-row">
-
-                                    <label>
-                                        Title Size
-                                    </label>
-
-                                    <span id="titleSizeValue">
-                                        32px
-                                    </span>
-
+                                    <label>Heading Size</label>
+                                    <span id="titleSizeValue">32px</span>
                                 </div>
-
-
-                                <input type="range"
-                                    min="18"
-                                    max="56"
-                                    data-config-path="typography.titleSize"
-                                    data-value-target="#titleSizeValue"
-                                    data-value-suffix="px">
-
+                                <input type="range" min="20" max="52" value="32" data-config-path="typography.titleSize" data-value-target="#titleSizeValue" data-value-suffix="px">
                             </div>
-
 
                             <div class="control-group">
-
                                 <div class="range-label-row">
-
-                                    <label>
-                                        Subtitle Size
-                                    </label>
-
-                                    <span id="subtitleSizeValue">
-                                        15px
-                                    </span>
-
+                                    <label>Subtitle Size</label>
+                                    <span id="subtitleSizeValue">15px</span>
                                 </div>
-
-
-                                <input type="range"
-                                    min="10"
-                                    max="28"
-                                    data-config-path="typography.subtitleSize"
-                                    data-value-target="#subtitleSizeValue"
-                                    data-value-suffix="px">
-
+                                <input type="range" min="12" max="24" value="15" data-config-path="typography.subtitleSize" data-value-target="#subtitleSizeValue" data-value-suffix="px">
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         PRIMARY BUTTON
+                         11. BUTTON CUSTOMIZATION
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Primary Button
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Primary Button</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
-
                             <div class="control-group">
-
-                                <label>
-                                    Background Type
-                                </label>
-
+                                <label>Button Background Type</label>
                                 <select data-config-path="button.backgroundType">
-
-                                    <option value="solid">
-                                        Solid
-                                    </option>
-
-                                    <option value="gradient">
-                                        Gradient
-                                    </option>
-
+                                    <option value="solid" selected>Solid Color</option>
+                                    <option value="gradient">Linear Gradient</option>
                                 </select>
-
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Button Background
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="button.backgroundColor">
-
+                                <label>Button Color / Gradient Start</label>
+                                <input type="color" data-config-path="button.backgroundColor" value="#2563eb">
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Text Color
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="button.textColor">
-
+                                <label>Gradient End Color</label>
+                                <input type="color" data-config-path="button.gradientEnd" value="#4f46e5">
                             </div>
 
+                            <div class="control-group">
+                                <label>Button Text Color</label>
+                                <input type="color" data-config-path="button.textColor" value="#ffffff">
+                            </div>
 
                             <div class="control-group">
-
                                 <div class="range-label-row">
-
-                                    <label>
-                                        Button Radius
-                                    </label>
-
-                                    <span id="buttonRadiusValue">
-                                        10px
-                                    </span>
-
+                                    <label>Button Border Radius</label>
+                                    <span id="buttonRadiusValue">10px</span>
                                 </div>
-
-
-                                <input type="range"
-                                    min="0"
-                                    max="50"
-                                    data-config-path="button.borderRadius"
-                                    data-value-target="#buttonRadiusValue"
-                                    data-value-suffix="px">
-
+                                <input type="range" min="0" max="40" value="10" data-config-path="button.borderRadius" data-value-target="#buttonRadiusValue" data-value-suffix="px">
                             </div>
-
 
                             <div class="control-group">
-
                                 <div class="range-label-row">
-
-                                    <label>
-                                        Button Height
-                                    </label>
-
-                                    <span id="buttonHeightValue">
-                                        48px
-                                    </span>
-
+                                    <label>Button Height</label>
+                                    <span id="buttonHeightValue">48px</span>
                                 </div>
-
-
-                                <input type="range"
-                                    min="36"
-                                    max="70"
-                                    data-config-path="button.height"
-                                    data-value-target="#buttonHeightValue"
-                                    data-value-suffix="px">
-
+                                <input type="range" min="38" max="64" value="48" data-config-path="button.height" data-value-target="#buttonHeightValue" data-value-suffix="px">
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         SOCIAL LOGIN
+                         12. SOCIAL LOGIN PROVIDERS
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Social Login
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Social Login</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
-
                             <div class="switch-control">
-
-                                <label>
-                                    Enable Social Login
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="social.enabled">
-
+                                <label>Enable Social Login</label>
+                                <input type="checkbox" data-config-path="social.enabled" checked>
                             </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Google
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="social.providers.google">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    LinkedIn
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="social.providers.linkedin">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    GitHub
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="social.providers.github">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Facebook
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="social.providers.facebook">
-
-                            </div>
-
-
-                            <div class="switch-control">
-
-                                <label>
-                                    Apple
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="social.providers.apple">
-
-                            </div>
-
 
                             <div class="control-group">
+                                <label>Divider Text</label>
+                                <input type="text" data-config-path="social.dividerText" value="or continue with">
+                            </div>
 
-                                <label>
-                                    Social Button Layout
-                                </label>
+                            <div class="switch-control">
+                                <label>Google</label>
+                                <input type="checkbox" data-config-path="social.providers.google" checked>
+                            </div>
 
+                            <div class="switch-control">
+                                <label>Apple</label>
+                                <input type="checkbox" data-config-path="social.providers.apple" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>GitHub</label>
+                                <input type="checkbox" data-config-path="social.providers.github" checked>
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Facebook</label>
+                                <input type="checkbox" data-config-path="social.providers.facebook">
+                            </div>
+
+                            <div class="switch-control">
+                                <label>LinkedIn</label>
+                                <input type="checkbox" data-config-path="social.providers.linkedin">
+                            </div>
+
+                            <div class="control-group">
+                                <label>Social Button Layout</label>
                                 <select data-config-path="social.layout">
-
-                                    <option value="vertical">
-                                        Vertical
-                                    </option>
-
-                                    <option value="horizontal">
-                                        Horizontal
-                                    </option>
-
+                                    <option value="horizontal" selected>Horizontal</option>
+                                    <option value="vertical">Vertical (Full Width)</option>
+                                    <option value="grid">Grid</option>
                                 </select>
-
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         BACKGROUND TEXT
+                         13. BACKGROUND TEXT (VISUAL PANEL)
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Background Text
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Background Text</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
-
                             <div class="switch-control">
-
-                                <label>
-                                    Show Text
-                                </label>
-
-                                <input type="checkbox"
-                                    data-config-path="imageSection.showText">
-
+                                <label>Show Background Text</label>
+                                <input type="checkbox" data-config-path="imageSection.showText" checked>
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Text
-                                </label>
-
-                                <textarea rows="3"
-                                    data-config-path="imageSection.text"></textarea>
-
+                                <label>Headline Text</label>
+                                <textarea rows="2" data-config-path="imageSection.text">Experience the next generation of authentication.</textarea>
                             </div>
 
-
                             <div class="control-group">
-
-                                <label>
-                                    Text Color
-                                </label>
-
-                                <input type="color"
-                                    data-config-path="imageSection.textColor">
-
+                                <label>Subtext</label>
+                                <textarea rows="2" data-config-path="imageSection.subtext">Fast, secure, and beautifully customized for your brand.</textarea>
                             </div>
 
+                            <div class="control-group">
+                                <label>Text Color</label>
+                                <input type="color" data-config-path="imageSection.textColor" value="#ffffff">
+                            </div>
 
                             <div class="control-group">
-
-                                <label>
-                                    Text Position
-                                </label>
-
+                                <label>Text Position</label>
                                 <select data-config-path="imageSection.textPosition">
-
-                                    <option value="top-left">
-                                        Top Left
-                                    </option>
-
-                                    <option value="top-center">
-                                        Top Center
-                                    </option>
-
-                                    <option value="top-right">
-                                        Top Right
-                                    </option>
-
-                                    <option value="center-left">
-                                        Center Left
-                                    </option>
-
-                                    <option value="center">
-                                        Center
-                                    </option>
-
-                                    <option value="center-right">
-                                        Center Right
-                                    </option>
-
-                                    <option value="bottom-left">
-                                        Bottom Left
-                                    </option>
-
-                                    <option value="bottom-center">
-                                        Bottom Center
-                                    </option>
-
-                                    <option value="bottom-right">
-                                        Bottom Right
-                                    </option>
-
+                                    <option value="center" selected>Center</option>
+                                    <option value="top-left">Top Left</option>
+                                    <option value="top-center">Top Center</option>
+                                    <option value="top-right">Top Right</option>
+                                    <option value="center-left">Center Left</option>
+                                    <option value="center-right">Center Right</option>
+                                    <option value="bottom-left">Bottom Left</option>
+                                    <option value="bottom-center">Bottom Center</option>
+                                    <option value="bottom-right">Bottom Right</option>
                                 </select>
-
                             </div>
-
-
                         </div>
-
                     </section>
 
-
                     <!-- =====================================
-                         ADVANCED CSS
+                         14. ADVANCED CUSTOM CSS
                     ====================================== -->
-
                     <section class="customization-section customization-accordion">
-
-                        <button type="button"
-                            class="accordion-header"
-                            data-accordion-trigger
-                            aria-expanded="false">
-
-                            <span class="accordion-title">
-                                Advanced CSS
-                            </span>
-
-                            <span class="accordion-arrow">
-                                ▾
-                            </span>
-
+                        <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="false">
+                            <span class="accordion-title">Advanced Custom CSS</span>
+                            <span class="accordion-arrow">▾</span>
                         </button>
-
-
                         <div class="accordion-content">
-
                             <div class="control-group">
-
-                                <label>
-                                    Custom CSS
-                                </label>
-
-                                <textarea
-                                    class="code-textarea"
-                                    rows="8"
-                                    placeholder=".auth-card { ... }"
-                                    data-config-path="customCSS"></textarea>
-
+                                <label>Custom CSS Rules</label>
+                                <textarea class="code-textarea" rows="6" placeholder=".auth-card { ... }" data-config-path="customCSS"></textarea>
                             </div>
-
                         </div>
-
                     </section>
 
-
-                    <!-- =====================================
-                         RESET
-                    ====================================== -->
-
+                    <!-- Reset Section -->
                     <div class="sidebar-footer">
-
-                        <button type="button"
-                            class="reset-button"
-                            id="resetConfigurationButton"
-                            data-action="reset-configuration">
-
-                            Reset All Customizations
-
+                        <button type="button" class="reset-button" id="resetConfigurationButton" data-action="reset-configuration">
+                            ↺ Reset All Customizations
                         </button>
-
                     </div>
 
-
                 </div>
-
             </aside>
-
 
             <!-- =============================================
                  PREVIEW WORKSPACE
             ============================================== -->
-
             <section class="preview-workspace">
 
-
-                <!-- =========================================
-                     PREVIEW TOOLBAR
-                ========================================== -->
-
+                <!-- PREVIEW TOOLBAR -->
                 <div class="preview-toolbar">
-
-
                     <div class="preview-toolbar-title">
-
-                        <div>
-
-                            <span class="preview-eyebrow">
-                                LIVE PREVIEW
-                            </span>
-
-                            <h2 id="previewPageTitle">
-                                Authentication Page
-                            </h2>
-
-                        </div>
-
+                        <span class="preview-eyebrow">LIVE PREVIEW CANVAS</span>
+                        <h2 id="previewPageTitle">Login Page</h2>
                     </div>
-
 
                     <div class="preview-device-controls">
-
-                        <button type="button"
-                            class="device-button active"
-                            data-preview-device="desktop"
-                            title="Desktop Preview"
-                            aria-label="Desktop Preview">
-
-                            🖥
-
+                        <button type="button" class="device-button active" data-preview-device="desktop" title="Desktop Preview">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                            <span>Desktop</span>
                         </button>
 
-
-                        <button type="button"
-                            class="device-button"
-                            data-preview-device="tablet"
-                            title="Tablet Preview"
-                            aria-label="Tablet Preview">
-
-                            ▣
-
+                        <button type="button" class="device-button" data-preview-device="tablet" title="Tablet Preview">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                            </svg>
+                            <span>Tablet</span>
                         </button>
 
-
-                        <button type="button"
-                            class="device-button"
-                            data-preview-device="mobile"
-                            title="Mobile Preview"
-                            aria-label="Mobile Preview">
-
-                            ▯
-
+                        <button type="button" class="device-button" data-preview-device="mobile" title="Mobile Preview">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                            </svg>
+                            <span>Mobile</span>
                         </button>
-
                     </div>
 
-
-                    <button type="button"
-                        class="preview-expand-button"
-                        data-action="fullscreen-preview">
-
-                        ⛶
-
-                        Fullscreen
-
+                    <button type="button" class="preview-expand-button" data-action="fullscreen-preview" title="Fullscreen Preview">
+                        <span>⛶ Fullscreen</span>
                     </button>
-
                 </div>
 
-
-                <!-- =========================================
-                     PREVIEW CANVAS
-                ========================================== -->
-
+                <!-- PREVIEW CANVAS -->
                 <div class="preview-canvas">
-
-                    <div id="previewRoot"
-                        class="preview-root preview-device-desktop">
-
+                    <div id="previewRoot" class="preview-root preview-device-desktop">
                         <!-- Rendered dynamically by renderer.js -->
-
                     </div>
-
                 </div>
-
 
             </section>
 
-
         </main>
 
-
     </div>
 
-
     <!-- =====================================================
-         FULLSCREEN PREVIEW
+         FULLSCREEN PREVIEW MODAL
     ====================================================== -->
-
-    <div class="auth-fullscreen-preview"
-        id="fullscreenPreview"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Fullscreen authentication preview"
-        hidden>
-
-
-        <button type="button"
-            class="fullscreen-close-button"
-            data-action="close-fullscreen-preview"
-            aria-label="Close fullscreen preview">
-
+    <div class="auth-fullscreen-preview" id="fullscreenPreview" role="dialog" aria-modal="true" aria-label="Fullscreen authentication preview" hidden>
+        <button type="button" class="fullscreen-close-button" data-action="close-fullscreen-preview" aria-label="Close fullscreen preview" title="Close Fullscreen (Esc)">
             ×
-
         </button>
 
-
-        <div id="fullscreenPreviewRoot"
-            class="fullscreen-preview-root preview-device-desktop">
-
+        <div id="fullscreenPreviewRoot" class="fullscreen-preview-root preview-device-desktop">
             <!-- Rendered dynamically -->
-
         </div>
-
-
     </div>
 
+    <!-- =====================================================
+         JAVASCRIPT DEPENDENCY (JSZip for Packaging)
+    ====================================================== -->
+    <script src="./js/jszip.min.js"></script>
+    <script>if (typeof JSZip === "undefined") document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\\/script>');</script>
 
     <!-- =====================================================
-         DOWNLOAD STATUS
+         CORE SCRIPTS
     ====================================================== -->
-
-    <div id="downloadStatus"
-        class="download-status"
-        role="status"
-        aria-live="polite"
-        hidden>
-    </div>
-
-
-    <!-- =====================================================
-         JAVASCRIPT DEPENDENCY
-    ====================================================== -->
-
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
-
-    <!-- =====================================================
-         CORE CONFIGURATION
-    ====================================================== -->
-
     <script src="./js/constants.js"></script>
-
     <script src="./js/config.js"></script>
-
     <script src="./js/state.js"></script>
-
     <script src="./js/utils.js"></script>
-
-
-    <!-- =====================================================
-         TEMPLATE AND PAGE GENERATION
-    ====================================================== -->
-
     <script src="./js/templates.js"></script>
-
-    <script src="./js/auth-pages.js"></script>
-
     <script src="./js/renderer.js"></script>
-
-
-    <!-- =====================================================
-         CONTROLS AND CUSTOMIZATION
-    ====================================================== -->
-
     <script src="./js/controls.js"></script>
-
     <script src="./js/customization.js"></script>
-
     <script src="./js/preview.js"></script>
-
     <script src="./js/fullscreen.js"></script>
-
-
-    <!-- =====================================================
-         DOWNLOAD PACKAGE
-    ====================================================== -->
-
     <script src="./js/download.js"></script>
-
-
-    <!-- =====================================================
-         APPLICATION STARTUP
-    ====================================================== -->
-
     <script src="./js/app.js"></script>
-
 
 </body>
 
