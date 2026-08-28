@@ -624,18 +624,18 @@
     height: 46px;
     padding: 0 14px;
     font-family: inherit;
-    font-size: 14.5px;
+    font-size: 14px;
     color: var(--auth-body-color, #0f172a);
     background-color: #ffffff;
     border: 1.5px solid #cbd5e1;
     border-radius: 10px;
     outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color var(--transition, 0.22s ease), box-shadow var(--transition, 0.22s ease);
 }
 
 .auth-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3.5px rgba(99, 102, 241, 0.18);
 }
 
 .auth-input::placeholder {
@@ -660,7 +660,7 @@
     transition: color 0.15s ease;
 }
 .auth-password-toggle:hover {
-    color: #0f172a;
+    color: #4f46e5;
 }
 
 /* Password strength */
@@ -696,7 +696,7 @@
     width: 17px;
     height: 17px;
     border-radius: 4px;
-    accent-color: #2563eb;
+    accent-color: #4f46e5;
     cursor: pointer;
 }
 
@@ -711,7 +711,7 @@
     justify-content: center;
     gap: 8px;
     padding: 0 20px;
-    background: var(--auth-button-bg, #2563eb);
+    background: var(--auth-button-bg, linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%));
     color: var(--auth-button-text, #ffffff);
     border: none;
     border-radius: var(--auth-button-radius, 10px);
@@ -719,13 +719,13 @@
     font-size: 15px;
     font-weight: 650;
     cursor: pointer;
-    box-shadow: var(--auth-button-shadow, 0 4px 14px rgba(37, 99, 235, 0.28));
-    transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: var(--auth-button-shadow, 0 4px 14px 0 rgba(79, 70, 229, 0.35));
+    transition: all var(--transition, 0.22s ease);
 }
 .auth-primary-btn:hover {
     filter: brightness(1.06);
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 6px 18px 0 rgba(79, 70, 229, 0.45);
 }
 .auth-primary-btn:active {
     transform: translateY(0);
@@ -739,15 +739,23 @@
     justify-content: center;
     gap: 8px;
     padding: 0 16px;
-    background: #f1f5f9;
+    background: #f8fafc;
     color: #334155;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #cbd5e1;
     border-radius: var(--auth-button-radius, 10px);
     font-family: inherit;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition, 0.22s ease);
+}
+
+.auth-secondary-btn:hover {
+    color: #4f46e5;
+    background: #eef2ff;
+    border-color: #a5b4fc;
+    transform: translateY(-1px);
+}
 }
 .auth-secondary-btn:hover {
     background: #e2e8f0;

@@ -39,148 +39,212 @@
 
 
 /* =========================================================
-   APPLICATION HEADER
+   APPLICATION HEADER (PHASE 5 REDESIGNED)
 ========================================================= */
 
 .app-header {
     height: 64px;
-
     flex-shrink: 0;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 20px;
-
     padding: 0 24px;
-
     position: relative;
     z-index: 100;
-
-    border-bottom: 1px solid #e5eaf1;
-
-    background: rgba(255, 255, 255, 0.96);
-
-    box-shadow:
-        0 2px 12px
-        rgba(15, 23, 42, 0.03);
-
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
-
 /* =========================================================
-   HEADER LEFT
+   HEADER LEFT & BRAND
 ========================================================= */
 
 .header-left {
     min-width: 0;
-
     display: flex;
     align-items: center;
-
-    gap: 12px;
+    gap: 14px;
 }
-
 
 .app-brand {
     min-width: 0;
-
     display: flex;
     align-items: center;
-
-    gap: 10px;
+    gap: 12px;
+    text-decoration: none;
 }
-
 
 .app-brand-icon {
-    width: 36px;
-    height: 36px;
-
+    width: 38px;
+    height: 38px;
     flex-shrink: 0;
-
     display: grid;
     place-items: center;
-
     color: #ffffff;
-
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
-
-    border-radius: 10px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #2563eb,
-            #7c3aed
-        );
-
-    box-shadow:
-        0 7px 18px
-        rgba(37, 99, 235, 0.22);
+    border-radius: 11px;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.35);
+    transition: transform var(--transition, 0.22s ease), box-shadow var(--transition, 0.22s ease);
 }
 
+.app-brand-icon:hover {
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.45);
+}
 
 .app-brand-content {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-
+.app-brand-content h1,
 .app-brand-title {
     margin: 0;
-
     color: #0f172a;
-
-    font-size: 15px;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+    font-size: 16px;
     font-weight: 800;
-
-    letter-spacing: -0.02em;
-
+    letter-spacing: -0.03em;
+    line-height: 1.2;
     white-space: nowrap;
 }
 
-
+.app-brand-content p,
 .app-brand-subtitle {
     margin: 2px 0 0;
-
-    color: #94a3b8;
-
-    font-size: 10px;
-
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 500;
     white-space: nowrap;
-}
-
-
-/* =========================================================
-   HEADER CENTER
-========================================================= */
-
-.header-center {
-    flex: 1;
-
-    min-width: 0;
-
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
 }
 
+.app-brand-content p::after {
+    content: "STUDIO";
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #4f46e5;
+    background: #eef2ff;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
 
 /* =========================================================
-   HEADER RIGHT
+   HEADER ACTIONS & BUTTONS
 ========================================================= */
 
+.header-actions,
 .header-right {
     flex-shrink: 0;
-
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    gap: 10px;
+}
 
+/* Live Sync Status Indicator Badge */
+.save-indicator,
+[data-unsaved-indicator] {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #065f46;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+    animation: pulse-beacon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-beacon {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.65;
+        transform: scale(0.85);
+    }
+}
+
+.header-button {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
+    padding: 0 14px;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition, 0.22s ease);
+    white-space: nowrap;
+}
+
+.header-button.secondary {
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+}
+
+.header-button.secondary:hover {
+    color: #4f46e5;
+    background: #f8fafc;
+    border-color: #818cf8;
+    box-shadow: 0 2px 6px 0 rgba(99, 102, 241, 0.12);
+    transform: translateY(-1px);
+}
+
+.header-button.secondary:active {
+    transform: translateY(0);
+    background: #f1f5f9;
+}
+
+.header-button.primary,
+#downloadButton {
+    color: #ffffff;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border: 1px solid transparent;
+    box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.35);
+}
+
+.header-button.primary:hover,
+#downloadButton:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+    box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.45);
+    transform: translateY(-1px);
+}
+
+.header-button.primary:active,
+#downloadButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px 0 rgba(79, 70, 229, 0.30);
 }
 
 
@@ -272,77 +336,53 @@
    SIDEBAR PAGE TABS
 ========================================================= */
 
+/* =========================================================
+   SIDEBAR PAGE TABS (PHASE 5 SEGMENTED PILL SYSTEM)
+========================================================= */
+
 .sidebar-page-tabs {
     min-height: 52px;
-
     flex-shrink: 0;
-
     display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 4px;
-
-    padding: 8px;
-
-    border-bottom:
-        1px solid #e2e8f0;
-
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border, #e2e8f0);
     background: #f8fafc;
 }
 
-
 .sidebar-page-tab {
     min-width: 0;
-
-    display: flex;
+    height: 36px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    gap: 5px;
-
-    padding: 0 6px;
-
+    gap: 6px;
+    padding: 0 8px;
     color: #64748b;
-
     font-family: inherit;
-    font-size: 10px;
+    font-size: 11.5px;
     font-weight: 700;
-
+    letter-spacing: -0.01em;
     white-space: nowrap;
-
-    border: none;
+    border: 1px solid transparent;
     border-radius: 8px;
-
     background: transparent;
-
     cursor: pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: all var(--transition, 0.22s ease);
 }
-
 
 .sidebar-page-tab:hover {
-    color: #2563eb;
-
-    background: #eff6ff;
+    color: #4f46e5;
+    background: #eef2ff;
 }
-
 
 .sidebar-page-tab.active {
-    color: #2563eb;
-
+    color: #4f46e5;
     background: #ffffff;
-
-    box-shadow:
-        0 3px 10px
-        rgba(15, 23, 42, 0.08);
+    border-color: #e0e7ff;
+    box-shadow: 0 2px 6px 0 rgba(79, 70, 229, 0.12), 0 1px 2px 0 rgba(15, 23, 42, 0.05);
 }
-
 
 /* =========================================================
    SIDEBAR SCROLL AREA
@@ -350,15 +390,12 @@
 
 .customization-scroll {
     flex: 1;
-
     min-height: 0;
-
     overflow-y: auto;
     overflow-x: hidden;
-
-    padding: 14px;
+    padding: 16px;
+    background: #ffffff;
 }
-
 
 /* =========================================================
    SIDEBAR FOOTER
@@ -366,116 +403,124 @@
 
 .sidebar-footer {
     flex-shrink: 0;
-
-    padding: 12px 14px;
-
-    border-top:
-        1px solid #e2e8f0;
-
-    background:
-        rgba(255, 255, 255, 0.98);
+    padding: 14px 16px;
+    border-top: 1px solid var(--border, #e2e8f0);
+    background: rgba(255, 255, 255, 0.98);
 }
 
-
 /* =========================================================
-   PREVIEW AREA
+   PREVIEW AREA (CENTER & RIGHT WORKSPACE)
 ========================================================= */
 
 .preview-area {
     min-width: 0;
     min-height: 0;
-
     position: relative;
-
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
-
-    background: #eef2f7;
+    background: #f1f5f9;
 }
-
 
 /* =========================================================
    PREVIEW HEADER
 ========================================================= */
 
 .preview-header {
-    min-height: 62px;
-
+    min-height: 60px;
     flex-shrink: 0;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 14px;
-
-    padding: 0 18px;
-
+    padding: 0 20px;
     position: relative;
     z-index: 50;
-
-    border-bottom:
-        1px solid #dfe5ed;
-
-    background:
-        rgba(255, 255, 255, 0.9);
-
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
 
-
 .preview-header-left {
     min-width: 0;
-
     display: flex;
     align-items: center;
-
     gap: 12px;
 }
-
 
 .preview-title-group {
     display: flex;
     flex-direction: column;
-
     gap: 2px;
 }
 
-
 .preview-title {
     margin: 0;
-
     color: #0f172a;
-
-    font-size: 13px;
-    font-weight: 800;
+    font-size: 13.5px;
+    font-weight: 750;
+    letter-spacing: -0.02em;
 }
-
 
 .preview-subtitle {
     margin: 0;
-
-    color: #94a3b8;
-
-    font-size: 10px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 500;
 }
-
 
 .preview-header-right {
     flex-shrink: 0;
-
     display: flex;
     align-items: center;
-
-    gap: 8px;
+    gap: 10px;
 }
 
+/* Segmented Device Switcher */
+.preview-device-controls {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px;
+    border-radius: 9px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    gap: 2px;
+}
+
+.preview-device-button,
+[data-preview-device] {
+    height: 30px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748b;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--transition, 0.22s ease);
+}
+
+.preview-device-button:hover,
+[data-preview-device]:hover {
+    color: #4f46e5;
+    background: #eef2ff;
+}
+
+.preview-device-button.active,
+[data-preview-device].active {
+    color: #4f46e5;
+    background: #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.10);
+}
 
 /* =========================================================
-   PREVIEW CANVAS WRAPPER & CANVAS
+   PREVIEW CANVAS WRAPPER & MODERN DOT-MATRIX BACKDROP
 ========================================================= */
 
 .preview-canvas-wrapper {
@@ -486,9 +531,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    background: #0b1120;
-    padding: 0;
+    overflow: auto;
+    background: #0f172a;
+    background-image: radial-gradient(#334155 1.2px, transparent 1.2px);
+    background-size: 24px 24px;
+    padding: 24px;
 }
 
 .preview-canvas {
@@ -500,6 +547,34 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all var(--transition-slow, 0.35s ease);
+}
+
+/* Realistic Device Frames */
+.preview-canvas.device-desktop {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+}
+
+.preview-canvas.device-tablet {
+    width: 768px;
+    height: 920px;
+    max-height: 100%;
+    border-radius: 28px;
+    border: 10px solid #1e293b;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.preview-canvas.device-mobile {
+    width: 380px;
+    height: 760px;
+    max-height: 100%;
+    border-radius: 36px;
+    border: 10px solid #1e293b;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
 }
 
 

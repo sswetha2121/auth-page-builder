@@ -13,34 +13,34 @@
 
 
 /* =========================================================
-   AUTH FORM VARIABLES
+   AUTH FORM VARIABLES (PHASE 5 DESIGN SYSTEM)
 ========================================================= */
 
 .auth-page,
 .auth-preview {
-    --auth-primary-color: #2563eb;
-    --auth-primary-hover: #1d4ed8;
+    --auth-primary-color: #4f46e5;
+    --auth-primary-hover: #4338ca;
 
     --auth-text-color: #0f172a;
     --auth-muted-color: #64748b;
     --auth-placeholder-color: #94a3b8;
 
     --auth-input-background: #ffffff;
-    --auth-input-border-color: #dbe3ee;
-    --auth-input-focus-color: #2563eb;
+    --auth-input-border-color: #cbd5e1;
+    --auth-input-focus-color: #6366f1;
 
-    --auth-button-background: #2563eb;
+    --auth-button-background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
     --auth-button-text-color: #ffffff;
 
-    --auth-link-color: #2563eb;
+    --auth-link-color: #4f46e5;
 
     --auth-form-gap: 18px;
 
-    --auth-input-height: 48px;
+    --auth-input-height: 46px;
     --auth-input-radius: 10px;
     --auth-button-radius: 10px;
 
-    --auth-font-size: 13px;
+    --auth-font-size: 13.5px;
 }
 
 

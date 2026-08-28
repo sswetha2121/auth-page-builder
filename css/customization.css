@@ -1,11 +1,7 @@
 /* =========================================================
-   AUTH PAGE BUILDER
-   FILE: css/customization.css
-
-   Customization Sidebar UI
-   Login / Signup / Forgot Password / OTP
+   AUTH PAGE BUILDER (PHASE 5 REFINED CUSTOMIZATION SIDEBAR)
+   File: css/customization.css
 ========================================================= */
-
 
 /* =========================================================
    SIDEBAR FOUNDATION
@@ -13,183 +9,105 @@
 
 .customization-sidebar {
     position: relative;
-
-    background:
-        linear-gradient(
-            180deg,
-            #ffffff 0%,
-            #f8fafc 100%
-        );
+    background: #ffffff;
+    border-right: 1px solid var(--border, #e2e8f0);
 }
-
 
 .customization-sidebar::before {
     content: "";
-
     position: absolute;
-
     top: 0;
     left: 0;
     right: 0;
-
     height: 3px;
-
     z-index: 20;
-
-    background:
-        linear-gradient(
-            90deg,
-            #2563eb,
-            #4f46e5,
-            #7c3aed
-        );
+    background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #06b6d4 100%);
 }
 
-
 /* =========================================================
-   PAGE TYPE TABS
+   PAGE TYPE TABS (SEGMENTED MODERN CONTROLS)
 ========================================================= */
 
 .sidebar-page-tabs {
     position: relative;
-
     display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
-
-    padding: 12px 14px;
-
-    background:
-        linear-gradient(
-            180deg,
-            #ffffff,
-            #f8fafc
-        );
-
-    border-bottom:
-        1px solid #e2e8f0;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border, #e2e8f0);
 }
-
 
 .sidebar-page-tab {
     position: relative;
-
     min-height: 38px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     gap: 6px;
-
-    padding: 7px 8px;
-
+    padding: 6px 10px;
     overflow: hidden;
-
-    border:
-        1px solid transparent;
-
+    border: 1px solid transparent;
     border-radius: 9px;
-
     background: transparent;
-
     color: #64748b;
-
     font-family: inherit;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 700;
-
     cursor: pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: all var(--transition, 0.22s ease);
 }
-
 
 .sidebar-page-tab:hover {
-    color: #334155;
-
-    background: #ffffff;
-
-    border-color: #e2e8f0;
+    color: #4f46e5;
+    background: #eef2ff;
 }
-
 
 .sidebar-page-tab.active {
-    color: #2563eb;
-
+    color: #4f46e5;
     background: #ffffff;
-
-    border-color: #bfdbfe;
-
-    box-shadow:
-        0 2px 7px rgba(15, 23, 42, 0.06);
+    border-color: #e0e7ff;
+    box-shadow: 0 2px 8px 0 rgba(79, 70, 229, 0.12), 0 1px 2px 0 rgba(15, 23, 42, 0.04);
 }
-
 
 .sidebar-page-tab::after {
     content: "";
-
     position: absolute;
-
-    bottom: 5px;
+    bottom: 4px;
     left: 50%;
-
-    width: 4px;
-    height: 4px;
-
-    border-radius: 50%;
-
+    width: 14px;
+    height: 2.5px;
+    border-radius: 2px;
     background: transparent;
-
-    transform:
-        translateX(-50%)
-        scale(0);
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease;
+    transform: translateX(-50%) scaleX(0);
+    transition: transform var(--transition, 0.22s ease), background var(--transition, 0.22s ease);
 }
-
 
 .sidebar-page-tab.active::after {
-    background: #2563eb;
-
-    transform:
-        translateX(-50%)
-        scale(1);
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    transform: translateX(-50%) scaleX(1);
 }
 
-
-/* =========================================================
-   PAGE-SPECIFIC ACTIVE TAB COLORS
-========================================================= */
-
-.sidebar-page-tab[data-page="login"].active {
-    color: #2563eb;
+/* Page-Specific Active Tab Badges */
+.sidebar-page-tab[data-page="login"].active,
+.sidebar-page-tab[data-builder-page="login"].active {
+    color: #4f46e5;
 }
 
-
-.sidebar-page-tab[data-page="signup"].active {
+.sidebar-page-tab[data-page="signup"].active,
+.sidebar-page-tab[data-builder-page="signup"].active {
     color: #7c3aed;
 }
 
-
-.sidebar-page-tab[data-page="forgotPassword"].active {
-    color: #d97706;
+.sidebar-page-tab[data-page="forgotPassword"].active,
+.sidebar-page-tab[data-builder-page="forgotPassword"].active {
+    color: #0284c7;
 }
 
-
-.sidebar-page-tab[data-page="otp"].active {
+.sidebar-page-tab[data-page="otp"].active,
+.sidebar-page-tab[data-builder-page="otp"].active {
     color: #059669;
 }
-
 
 /* =========================================================
    CUSTOMIZATION SCROLL AREA
@@ -197,34 +115,26 @@
 
 .customization-scroll {
     flex: 1;
-
     min-height: 0;
-
-    padding: 12px;
-
+    padding: 16px;
     overflow-y: auto;
     overflow-x: hidden;
-
     scroll-behavior: smooth;
+    background: #ffffff;
 }
-
 
 .customization-scroll::-webkit-scrollbar {
-    width: 7px;
+    width: 6px;
 }
-
 
 .customization-scroll::-webkit-scrollbar-track {
     background: transparent;
 }
 
-
 .customization-scroll::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-
     border-radius: 999px;
 }
-
 
 .customization-scroll::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
@@ -232,77 +142,46 @@
 
 
 /* =========================================================
-   CUSTOMIZATION SECTIONS
+   CUSTOMIZATION SECTIONS (MODERN ACCORDION CARDS)
 ========================================================= */
 
 .customization-section {
     position: relative;
-
-    margin-bottom: 10px;
-
-    overflow: hidden;
-
-    border:
-        1px solid #e2e8f0;
-
+    margin-bottom: 12px;
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 12px;
-
-    background:
-        rgba(255, 255, 255, 0.94);
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+    background: #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03);
+    transition: all var(--transition, 0.22s ease);
 }
-
 
 .customization-section:hover {
-    border-color: #dbeafe;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
-
 
 .customization-section.open {
-    border-color:
-        rgba(37, 99, 235, 0.22);
-
-    box-shadow:
-        0 8px 24px rgba(15, 23, 42, 0.05);
+    border-color: #a5b4fc;
+    box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
 }
-
 
 .customization-section.is-customized {
-    border-color:
-        rgba(37, 99, 235, 0.28);
+    border-color: #c7d2fe;
 }
 
-
-/* =========================================================
-   SECTION CUSTOMIZED INDICATOR
-========================================================= */
-
+/* Section Customized Indicator Dot */
 .customization-section.is-customized::after {
     content: "";
-
     position: absolute;
-
-    top: 17px;
-    right: 42px;
-
+    top: 18px;
+    right: 44px;
     width: 7px;
     height: 7px;
-
     border-radius: 50%;
-
-    background: #2563eb;
-
-    box-shadow:
-        0 0 0 4px
-        rgba(37, 99, 235, 0.08);
-
+    background: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
     pointer-events: none;
 }
-
 
 /* =========================================================
    ACCORDION HEADER
@@ -310,146 +189,89 @@
 
 .accordion-header {
     position: relative;
-
     width: 100%;
-    min-height: 50px;
-
+    min-height: 52px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: 12px;
-
-    padding: 12px 14px;
-
+    padding: 12px 16px;
     border: none;
-
     background: transparent;
-
     color: #0f172a;
-
     font-family: inherit;
-
     cursor: pointer;
-
     text-align: left;
-
-    transition:
-        background 0.2s ease;
+    border-radius: 12px;
+    transition: background var(--transition, 0.22s ease);
 }
-
 
 .accordion-header::before {
     content: "";
-
     position: absolute;
-
     top: 50%;
     left: 0;
-
-    width: 3px;
-    height: 22px;
-
-    border-radius:
-        0 4px 4px 0;
-
+    width: 3.5px;
+    height: 24px;
+    border-radius: 0 4px 4px 0;
     background: transparent;
-
-    transform:
-        translateY(-50%);
-
-    transition:
-        background 0.2s ease;
+    transform: translateY(-50%);
+    transition: background var(--transition, 0.22s ease);
 }
 
-
-.customization-section.open
-.accordion-header {
-    background:
-        linear-gradient(
-            90deg,
-            rgba(37, 99, 235, 0.05),
-            transparent
-        );
+.customization-section.open .accordion-header {
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.04), transparent);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
-
-.customization-section.open
-.accordion-header::before {
-    background:
-        linear-gradient(
-            180deg,
-            #2563eb,
-            #7c3aed
-        );
+.customization-section.open .accordion-header::before {
+    background: linear-gradient(180deg, #4f46e5, #7c3aed);
 }
-
 
 .accordion-title {
     flex: 1;
-
     min-width: 0;
-
     color: #0f172a;
-
     font-size: 13.5px;
     font-weight: 700;
-
-    transition:
-        color 0.2s ease;
+    letter-spacing: -0.01em;
+    transition: color var(--transition, 0.22s ease);
 }
 
-
-.accordion-header:hover
-.accordion-title {
-    color: #2563eb;
+.accordion-header:hover .accordion-title {
+    color: #4f46e5;
 }
 
-
-.customization-section.open
-.accordion-title {
-    color: #1d4ed8;
+.customization-section.open .accordion-title {
+    color: #3730a3;
 }
-
 
 /* =========================================================
-   ACCORDION ICON
+   ACCORDION ICON / ARROW
 ========================================================= */
 
 .accordion-icon,
 .accordion-arrow {
-    width: 26px;
-    height: 26px;
-
-    flex: 0 0 26px;
-
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    border-radius: 7px;
-
+    border-radius: 8px;
     color: #64748b;
-
     background: #f8fafc;
-
-    font-size: 15px;
-
-    transition:
-        transform 0.25s ease,
-        color 0.2s ease,
-        background 0.2s ease;
+    border: 1px solid #f1f5f9;
+    font-size: 13px;
+    transition: all var(--transition, 0.22s ease);
 }
 
-
-.customization-section.open
-.accordion-icon,
-.customization-section.open
-.accordion-arrow {
-    color: #2563eb;
-
-    background: #eff6ff;
-
+.customization-section.open .accordion-icon,
+.customization-section.open .accordion-arrow {
+    color: #4f46e5;
+    background: #eef2ff;
+    border-color: #c7d2fe;
     transform: rotate(180deg);
 }
 
