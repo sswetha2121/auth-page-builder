@@ -57,12 +57,70 @@
 
     logout() {
       this.currentUser = null;
-      this.client.setAuthToken(null);
+      if (this.client) {
+        this.client.setAuthToken(null);
+      }
     }
 
     isAuthenticated() {
-      return Boolean(this.client.getAuthToken());
+      return Boolean(this.client && this.client.getAuthToken());
     }
+
+    async logoutUser() {
+      try {
+        await this.client.post("/auth/logout", {});
+      } catch (e) {
+        // ignore logout network errors
+      }
+      this.logout();
+      return { success: true, message: "Logged out successfully." };
+    }
+
+
+    /* =======================================================
+       REAL EMAIL OTP & PASSWORD RESET API
+    ======================================================= */
+    async sendEmailOtp(identifier, purpose = "login") {
+      return this.client.post("/otp/send-email", {
+        identifier: identifier.trim(),
+        purpose
+      });
+    }
+
+    async verifyOtp(identifier, otp, purpose = "login") {
+      const response = await this.client.post("/otp/verify", {
+        identifier: identifier.trim(),
+        otp: String(otp).trim(),
+        purpose
+      });
+      if (response && response.token) {
+        this.client.setAuthToken(response.token);
+        this.currentUser = response.user;
+      }
+      return response;
+    }
+
+    async requestPasswordReset(identifier) {
+      return this.client.post("/password-reset/request", {
+        identifier: identifier.trim()
+      });
+    }
+
+    async verifyPasswordResetOtp(identifier, otp) {
+      return this.client.post("/password-reset/verify-otp", {
+        identifier: identifier.trim(),
+        otp: String(otp).trim()
+      });
+    }
+
+    async confirmPasswordReset(identifier, otp, newPassword) {
+      return this.client.post("/password-reset/confirm", {
+        identifier: identifier.trim(),
+        otp: String(otp).trim(),
+        new_password: newPassword
+      });
+    }
+
 
     /* =======================================================
        VALIDATION HELPERS

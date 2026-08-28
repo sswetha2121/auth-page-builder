@@ -7,7 +7,7 @@ class AuthConfiguration(models.Model):
     Model mapping to existing MySQL `auth_configurations` table.
     Stores the full customization JSON for Auth Page Builder.
     """
-    id = models.BigAutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
         AuthUser,
         on_delete=models.CASCADE,

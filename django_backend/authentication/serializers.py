@@ -101,7 +101,78 @@ class UserLoginSerializer(serializers.Serializer):
             is_valid = False
 
         if not is_valid:
+            # Fallback to Django check_password if bcrypt failed
+            from django.contrib.auth.hashers import check_password as django_check_password
+            try:
+                is_valid = django_check_password(password, hash_to_verify)
+            except Exception:
+                is_valid = False
+
+        if not is_valid:
             raise serializers.ValidationError("Invalid credentials. Please check your password and try again.")
 
         attrs["user"] = user
         return attrs
+
+
+class SendEmailOTPSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True)
+    purpose = serializers.CharField(required=False, default="login")
+
+    def validate_identifier(self, value):
+        cleaned = value.strip()
+        if not cleaned:
+            raise serializers.ValidationError("Username or email identifier is required.")
+        return cleaned
+
+
+class VerifyOTPSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True)
+    otp = serializers.CharField(required=True, min_length=4, max_length=10)
+    purpose = serializers.CharField(required=False, default="login")
+
+    def validate_identifier(self, value):
+        cleaned = value.strip()
+        if not cleaned:
+            raise serializers.ValidationError("Identifier is required.")
+        return cleaned
+
+    def validate_otp(self, value):
+        cleaned = value.strip()
+        if not cleaned.isdigit():
+            raise serializers.ValidationError("Verification code must contain digits only.")
+        return cleaned
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True)
+
+    def validate_identifier(self, value):
+        cleaned = value.strip()
+        if not cleaned:
+            raise serializers.ValidationError("Username or email is required.")
+        return cleaned
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True)
+    otp = serializers.CharField(required=True, min_length=4, max_length=10)
+    new_password = serializers.CharField(required=True, min_length=6, write_only=True)
+
+    def validate_identifier(self, value):
+        cleaned = value.strip()
+        if not cleaned:
+            raise serializers.ValidationError("Identifier is required.")
+        return cleaned
+
+    def validate_otp(self, value):
+        cleaned = value.strip()
+        if not cleaned.isdigit():
+            raise serializers.ValidationError("Verification code must contain digits only.")
+        return cleaned
+
+    def validate_new_password(self, value):
+        if len(value) < 6:
+            raise serializers.ValidationError("New password must be at least 6 characters long.")
+        return value
+

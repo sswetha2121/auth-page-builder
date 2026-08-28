@@ -628,11 +628,22 @@ window.handleAuthSubmit = async function (event, pageType) {
       } else if (pageType === "forgotPassword") {
         const identifier = form?.querySelector("#forgotIdentifier")?.value?.trim() || "";
         if (!identifier) {
-          throw new Error("Please enter your email or phone number.");
+          throw new Error("Please enter your email or username.");
         }
-        const result = await window.AuthController.handleForgotPassword({ identifier }, config);
+        let result = null;
+        try {
+          result = await window.AuthController.requestPasswordReset(identifier);
+        } catch (apiErr) {
+          const isNetworkErr = !apiErr || !apiErr.message || apiErr.message.includes("fetch") || apiErr.message.includes("NetworkError") || apiErr.message.includes("File not found") || apiErr.message.includes("404");
+          if (!isNetworkErr) {
+            throw apiErr;
+          }
+          result = await window.AuthController.handleForgotPassword({ identifier }, config);
+        }
+
+        const msg = result?.message || (result?.masked_email ? `Password reset code sent to ${result.masked_email}` : "Password reset link sent to your registered contact.");
         if (window.Utils && typeof window.Utils.showToast === "function") {
-          window.Utils.showToast(result.message || "Password reset link sent to your registered contact.", "success", 4000);
+          window.Utils.showToast(msg, "success", 4000);
         }
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -644,13 +655,30 @@ window.handleAuthSubmit = async function (event, pageType) {
         if (otpBoxes && otpBoxes.length > 0) {
           otpValue = Array.from(otpBoxes).map(b => b.value || "").join("");
         }
-        if (!otpValue || otpValue.length < (config.pages?.otp?.length || 6)) {
-          otpValue = "123456".slice(0, config.pages?.otp?.length || 6);
+        const expectedLen = config.pages?.otp?.length || 6;
+        if (!otpValue || otpValue.length < expectedLen) {
+          otpValue = "123456".slice(0, expectedLen);
         }
 
-        const result = await window.AuthController.handleOtpVerification({ otp: otpValue }, config);
+        const identifier = (window.state && window.state.get("auth")?.identifier) || "user";
+        let result = null;
+        try {
+          result = await window.AuthController.verifyOtp(identifier, otpValue, "login");
+        } catch (apiErr) {
+          const isNetworkErr = !apiErr || !apiErr.message || apiErr.message.includes("fetch") || apiErr.message.includes("NetworkError") || apiErr.message.includes("File not found") || apiErr.message.includes("404");
+          if (!isNetworkErr) {
+            throw apiErr;
+          }
+          result = await window.AuthController.handleOtpVerification({ otp: otpValue }, config);
+        }
+
+        if (result && result.redirect_url) {
+          targetRedirectUrl = result.redirect_url;
+        }
+
+        const successMsg = `OTP verified successfully! Redirect destination: ${targetRedirectUrl}`;
         if (window.Utils && typeof window.Utils.showToast === "function") {
-          window.Utils.showToast(`OTP verified successfully! Redirect destination: ${targetRedirectUrl}`, "success", 3000);
+          window.Utils.showToast(successMsg, "success", 3000);
         }
 
         setTimeout(() => {
