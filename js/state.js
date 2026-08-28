@@ -16,6 +16,9 @@
   }
 })(typeof window !== "undefined" ? window : globalThis, function (initialDefaultConfig) {
 
+  const STORAGE_KEY = "auth_page_builder_state_v2";
+  const ASSETS_STORAGE_KEY = "auth_page_builder_assets_v2";
+
   function deepClone(obj) {
     if (obj === null || typeof obj !== "object") return obj;
     if (Array.isArray(obj)) return obj.map(deepClone);
@@ -24,6 +27,53 @@
       copy[key] = deepClone(obj[key]);
     }
     return copy;
+  }
+
+  function deepMerge(target, source) {
+    if (!source || typeof source !== "object") return target;
+    for (const key of Object.keys(source)) {
+      if (source[key] !== undefined && source[key] !== null) {
+        if (
+          typeof source[key] === "object" &&
+          !Array.isArray(source[key]) &&
+          typeof target[key] === "object" &&
+          !Array.isArray(target[key])
+        ) {
+          deepMerge(target[key], source[key]);
+        } else {
+          target[key] = deepClone(source[key]);
+        }
+      }
+    }
+    return target;
+  }
+
+  function validateAndNormalize(state, defaults) {
+    if (!state || typeof state !== "object") return deepClone(defaults);
+    const normalized = deepClone(defaults);
+    deepMerge(normalized, state);
+
+    // Normalizations for background
+    if (!normalized.background) normalized.background = deepClone(defaults.background);
+    if (normalized.background.uploadedImage) {
+      normalized.background.type = "uploaded";
+      normalized.background.image = normalized.background.uploadedImage;
+    } else if (normalized.background.type === "color" || normalized.background.selected === "none") {
+      normalized.background.type = "color";
+      normalized.background.image = "";
+    } else if (!normalized.background.image && normalized.background.selected) {
+      normalized.background.image = normalized.background.selected;
+    }
+
+    // Ensure OTP length is valid (4, 6, 8)
+    if (normalized.pages?.otp) {
+      const len = Number(normalized.pages.otp.length);
+      if (![4, 6, 8].includes(len)) {
+        normalized.pages.otp.length = 6;
+      }
+    }
+
+    return normalized;
   }
 
   function getByPath(obj, path, fallback = undefined) {
@@ -63,6 +113,64 @@
         backgrounds: {},
         logos: {}
       };
+
+      this.loadFromStorage();
+      this.initIndexedDB();
+    }
+
+    initIndexedDB() {
+      if (typeof window === "undefined" || !window.indexedDB) return;
+      try {
+        const req = window.indexedDB.open("AuthPageBuilderAssetsDB", 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains("assets")) {
+            db.createObjectStore("assets", { keyPath: "key" });
+          }
+        };
+        req.onsuccess = (e) => {
+          this.db = e.target.result;
+          this.loadAssetsFromIndexedDB();
+        };
+      } catch (err) {
+        console.warn("IndexedDB init skipped:", err);
+      }
+    }
+
+    loadAssetsFromIndexedDB() {
+      if (!this.db) return;
+      try {
+        const tx = this.db.transaction("assets", "readonly");
+        const store = tx.objectStore("assets");
+        const req = store.getAll();
+        req.onsuccess = (e) => {
+          const records = e.target.result || [];
+          for (const rec of records) {
+            if (rec.type && rec.name && rec.dataUrl) {
+              if (!this.uploadedAssets[rec.type]) this.uploadedAssets[rec.type] = {};
+              this.uploadedAssets[rec.type][rec.name] = rec;
+            }
+          }
+        };
+      } catch (err) {
+        console.warn("IndexedDB load error:", err);
+      }
+    }
+
+    persistAssetToIndexedDB(type, name, assetRecord) {
+      if (!this.db) return;
+      try {
+        const tx = this.db.transaction("assets", "readwrite");
+        const store = tx.objectStore("assets");
+        store.put({
+          key: `${type}:${name}`,
+          type,
+          name,
+          ...assetRecord
+        });
+      } catch (err) {
+        console.warn("IndexedDB save error:", err);
+      }
     }
 
     getState() {
@@ -90,21 +198,7 @@
         return this.set(partialOrPath, value);
       }
       if (partialOrPath && typeof partialOrPath === "object") {
-        const merge = (target, source) => {
-          for (const key of Object.keys(source)) {
-            if (
-              source[key] &&
-              typeof source[key] === "object" &&
-              !Array.isArray(source[key])
-            ) {
-              if (!target[key]) target[key] = {};
-              merge(target[key], source[key]);
-            } else {
-              target[key] = source[key];
-            }
-          }
-        };
-        merge(this.state, partialOrPath);
+        deepMerge(this.state, partialOrPath);
         this.notify("*", this.state);
         return true;
       }
@@ -134,6 +228,8 @@
 
     reset() {
       this.state = deepClone(this.defaultConfig);
+      this.uploadedAssets = { backgrounds: {}, logos: {} };
+      this.clearStorage();
       this.notify("reset", this.state);
       return this.state;
     }
@@ -147,6 +243,8 @@
     }
 
     notify(changedPath, changedValue) {
+      this.saveToStorage();
+
       for (const listener of this.listeners) {
         try {
           listener(this.state, changedPath, changedValue);
@@ -164,15 +262,123 @@
       }
     }
 
-    setUploadedAsset(type, name, dataUrl) {
+    /* =======================================================
+       UPLOADED ASSET MANAGEMENT WITH RICH METADATA
+    ======================================================= */
+    setUploadedAsset(type, name, dataUrl, meta = {}) {
       if (!this.uploadedAssets[type]) {
         this.uploadedAssets[type] = {};
       }
-      this.uploadedAssets[type][name] = dataUrl;
+
+      const ext = meta.extension || (name.includes(".") ? name.split(".").pop().toLowerCase() : "png");
+      const mime = meta.mimeType || (ext === "svg" ? "image/svg+xml" : ext === "webp" ? "image/webp" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png");
+
+      const record = {
+        id: meta.id || `asset-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+        name: name,
+        originalName: meta.originalName || name,
+        mimeType: mime,
+        extension: ext,
+        dataUrl: dataUrl,
+        size: meta.size || (dataUrl ? Math.round((dataUrl.length * 3) / 4) : 0)
+      };
+
+      this.uploadedAssets[type][name] = record;
+      this.persistAssetToIndexedDB(type, name, record);
+      this.saveToStorage();
     }
 
     getUploadedAsset(type, name) {
+      const asset = this.uploadedAssets[type]?.[name];
+      if (!asset) return null;
+      return typeof asset === "string" ? asset : asset.dataUrl;
+    }
+
+    getUploadedAssetMeta(type, name) {
       return this.uploadedAssets[type]?.[name] || null;
+    }
+
+    getAllUploadedAssets() {
+      return this.uploadedAssets;
+    }
+
+    /* =======================================================
+       LOCAL STORAGE PERSISTENCE (Safe Deep Merge & Quota Protection)
+    ======================================================= */
+    saveToStorage() {
+      if (typeof window === "undefined" || !window.localStorage) return;
+      try {
+        // Strip huge base64 strings if over 2MB to prevent quota crashes, IndexedDB retains full asset
+        const stateToSave = deepClone(this.state);
+        const stateStr = JSON.stringify(stateToSave);
+        if (stateStr.length < 2500000) {
+          window.localStorage.setItem(STORAGE_KEY, stateStr);
+        } else {
+          // Temporarily store reference without freezing localStorage
+          if (stateToSave.background && stateToSave.background.uploadedImage && stateToSave.background.uploadedImage.length > 500000) {
+            stateToSave.background.uploadedImage = "";
+          }
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+        }
+
+        const assetMeta = { backgrounds: {}, logos: {} };
+        for (const cat of ["backgrounds", "logos"]) {
+          for (const key of Object.keys(this.uploadedAssets[cat] || {})) {
+            const item = this.uploadedAssets[cat][key];
+            if (item && typeof item === "object") {
+              assetMeta[cat][key] = {
+                id: item.id,
+                name: item.name,
+                originalName: item.originalName,
+                mimeType: item.mimeType,
+                extension: item.extension,
+                size: item.size,
+                // Only save small dataURLs into localStorage
+                dataUrl: (item.dataUrl && item.dataUrl.length < 500000) ? item.dataUrl : ""
+              };
+            }
+          }
+        }
+        window.localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(assetMeta));
+      } catch (e) {
+        console.warn("Storage save skipped:", e.message);
+      }
+    }
+
+    loadFromStorage() {
+      if (typeof window === "undefined" || !window.localStorage) return;
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") {
+            this.state = validateAndNormalize(parsed, this.defaultConfig);
+          }
+        }
+        const rawAssets = window.localStorage.getItem(ASSETS_STORAGE_KEY);
+        if (rawAssets) {
+          const parsedAssets = JSON.parse(rawAssets);
+          if (parsedAssets && typeof parsedAssets === "object") {
+            this.uploadedAssets = parsedAssets;
+          }
+        }
+      } catch (e) {
+        console.warn("Storage load error:", e);
+      }
+    }
+
+    clearStorage() {
+      if (typeof window === "undefined" || !window.localStorage) return;
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(ASSETS_STORAGE_KEY);
+        if (this.db) {
+          const tx = this.db.transaction("assets", "readwrite");
+          tx.objectStore("assets").clear();
+        }
+      } catch (e) {
+        // Ignore
+      }
     }
 
     exportJSON() {

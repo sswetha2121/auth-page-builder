@@ -182,11 +182,12 @@
   }
 
   /* =======================================================
-     DYNAMIC OTP DIGIT BOXES BUILDER (4, 6, or 8)
+     DYNAMIC OTP DIGIT BOXES BUILDER (4, 6, or 8 & Styles)
   ======================================================= */
   function generateOtpBoxesHTML(config) {
     const pageConfig = config.pages?.otp || {};
     const length = Number(pageConfig.length) || 6;
+    const inputStyle = pageConfig.inputStyle || "box"; // "box", "rounded", "underline"
 
     const boxes = [];
     for (let i = 0; i < length; i++) {
@@ -204,7 +205,7 @@
     }
 
     return `
-      <div class="otp-boxes-container" data-otp-count="${length}">
+      <div class="otp-boxes-container otp-boxes-style-${escapeHtml(inputStyle)}" data-otp-count="${length}">
         ${boxes.join("")}
       </div>
     `;
@@ -225,8 +226,16 @@
     const passwordEnabled = pageConfig.passwordEnabled !== false;
     const otpEnabled = pageConfig.otpEnabled !== false;
     const rememberMeEnabled = Boolean(pageConfig.rememberMeEnabled);
+    const rememberMeText = escapeHtml(pageConfig.rememberMeText || "Remember me for 30 days");
     const forgotPasswordEnabled = pageConfig.forgotPasswordEnabled !== false;
+    const forgotPasswordText = escapeHtml(pageConfig.forgotPasswordText || "Forgot password?");
     const signupEnabled = pageConfig.signupEnabled !== false;
+    const signupPrompt = escapeHtml(pageConfig.signupPrompt || "Don't have an account?");
+    const signupLinkText = escapeHtml(pageConfig.signupLinkText || "Create account");
+    const idPlaceholder = escapeHtml(pageConfig.identifierPlaceholder || "name@company.com");
+    const passPlaceholder = escapeHtml(pageConfig.passwordPlaceholder || "••••••••");
+    const otpBtnText = escapeHtml(pageConfig.otpButtonText || "Continue with OTP");
+    const whatsappBtnText = escapeHtml(pageConfig.whatsappButtonText || "Get OTP via WhatsApp");
     const whatsappEnabled = Boolean(config.authentication?.otp?.whatsappEnabled);
 
     // Check OTP Display Mode (Separate Page vs Inline on Login)
@@ -254,7 +263,7 @@
                      id="loginIdentifier" 
                      name="identifier" 
                      class="auth-input" 
-                     placeholder="name@company.com" 
+                     placeholder="${idPlaceholder}" 
                      required />
             </div>
           </div>
@@ -264,7 +273,7 @@
             <div class="auth-label-row">
               <label class="auth-label" for="loginPassword">Password</label>
               ${forgotPasswordEnabled ? `
-                <a href="#forgot" class="auth-link auth-link-forgot" data-auth-nav="forgotPassword">Forgot password?</a>
+                <a href="#forgot" class="auth-link auth-link-forgot" data-auth-nav="forgotPassword">${forgotPasswordText}</a>
               ` : ""}
             </div>
             <div class="auth-input-wrapper auth-input-password-wrapper">
@@ -272,7 +281,7 @@
                      id="loginPassword" 
                      name="password" 
                      class="auth-input" 
-                     placeholder="••••••••" 
+                     placeholder="${passPlaceholder}" 
                      required />
               <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
                 ${ICONS.eye}
@@ -287,14 +296,14 @@
             <div class="auth-label-row">
               <label class="auth-label">Enter Verification Code</label>
               ${forgotPasswordEnabled ? `
-                <a href="#forgot" class="auth-link auth-link-forgot" data-auth-nav="forgotPassword">Forgot password?</a>
+                <a href="#forgot" class="auth-link auth-link-forgot" data-auth-nav="forgotPassword">${forgotPasswordText}</a>
               ` : ""}
             </div>
             ${generateDeliveryMethodsHTML(config)}
             ${generateOtpBoxesHTML(config)}
             ${config.pages?.otp?.resendEnabled !== false ? `
               <div class="otp-resend-row">
-                <span>Didn't get code?</span>
+                <span>${escapeHtml(config.pages?.otp?.resendPromptText || "Didn't receive code?")}</span>
                 <button type="button" class="otp-resend-btn" id="otpResendButtonInline" data-countdown="${config.pages?.otp?.resendSeconds || 30}">
                   <span>${escapeHtml(config.pages?.otp?.resendText || "Resend OTP")}</span>
                   <span class="otp-countdown-timer">(${config.pages?.otp?.resendSeconds || 30}s)</span>
@@ -308,7 +317,7 @@
           <div class="auth-checkbox-group">
             <label class="auth-checkbox-label">
               <input type="checkbox" id="loginRememberMe" name="rememberMe" class="auth-checkbox" />
-              <span>Remember me for 30 days</span>
+              <span>${rememberMeText}</span>
             </label>
           </div>
           ` : ""}
@@ -323,7 +332,7 @@
           <div class="auth-alt-auth-group">
             <button type="button" class="auth-secondary-btn" data-auth-nav="otp">
               ${ICONS.sms}
-              <span>Continue with OTP</span>
+              <span>${otpBtnText}</span>
             </button>
           </div>
           ` : ""}
@@ -332,7 +341,7 @@
           <div class="auth-whatsapp-badge-row">
             <button type="button" class="auth-whatsapp-btn" data-auth-nav="otp" data-otp-method="whatsapp">
               ${ICONS.whatsapp}
-              <span>Get OTP via WhatsApp</span>
+              <span>${whatsappBtnText}</span>
             </button>
           </div>
           ` : ""}
@@ -341,8 +350,8 @@
 
           ${signupEnabled ? `
           <div class="auth-footer-nav">
-            <span>Don't have an account?</span>
-            <a href="#signup" class="auth-link auth-link-action" data-auth-nav="signup">Create account</a>
+            <span>${signupPrompt}</span>
+            <a href="#signup" class="auth-link auth-link-action" data-auth-nav="signup">${signupLinkText}</a>
           </div>
           ` : ""}
         </form>
@@ -358,6 +367,9 @@
     const title = escapeHtml(pageConfig.title || "Create account");
     const subtitle = escapeHtml(pageConfig.subtitle || "Enter your details to create an account");
     const buttonText = escapeHtml(pageConfig.buttonText || "Create Account");
+    const signinPrompt = escapeHtml(pageConfig.signinPrompt || "Already have an account?");
+    const signinLinkText = escapeHtml(pageConfig.signinLinkText || "Sign in");
+
     const fields = pageConfig.fields || {
       fullName: true,
       username: true,
@@ -366,6 +378,31 @@
       password: true,
       confirmPassword: true
     };
+
+    const labels = pageConfig.fieldLabels || {
+      fullName: "Full Name",
+      username: "Username",
+      email: "Email Address",
+      mobile: "Mobile Number",
+      password: "Password",
+      confirmPassword: "Confirm Password"
+    };
+
+    const placeholders = pageConfig.fieldPlaceholders || {
+      fullName: "Alex Morgan",
+      username: "alexmorgan",
+      email: "alex@company.com",
+      mobile: "+1 (555) 234-5678",
+      password: "Minimum 8 characters",
+      confirmPassword: "Repeat your password"
+    };
+
+    const termsEnabled = Boolean(pageConfig.termsEnabled);
+    const termsText = escapeHtml(pageConfig.termsText || "I agree to the Terms of Service");
+    const termsUrl = escapeHtml(pageConfig.termsUrl || "https://customerwebsite.com/terms");
+    const privacyEnabled = Boolean(pageConfig.privacyEnabled);
+    const privacyText = escapeHtml(pageConfig.privacyText || "Privacy Policy");
+    const privacyUrl = escapeHtml(pageConfig.privacyUrl || "https://customerwebsite.com/privacy");
 
     return `
       <div class="auth-page-form-wrapper" data-page="signup">
@@ -378,37 +415,37 @@
           
           ${fields.fullName ? `
           <div class="auth-field-group">
-            <label class="auth-label" for="signupName">Full Name</label>
-            <input type="text" id="signupName" name="fullName" class="auth-input" placeholder="Alex Morgan" required />
+            <label class="auth-label" for="signupName">${escapeHtml(labels.fullName || "Full Name")}</label>
+            <input type="text" id="signupName" name="fullName" class="auth-input" placeholder="${escapeHtml(placeholders.fullName || "Alex Morgan")}" required />
           </div>
           ` : ""}
 
           ${fields.username ? `
           <div class="auth-field-group">
-            <label class="auth-label" for="signupUsername">Username</label>
-            <input type="text" id="signupUsername" name="username" class="auth-input" placeholder="alexmorgan" required />
+            <label class="auth-label" for="signupUsername">${escapeHtml(labels.username || "Username")}</label>
+            <input type="text" id="signupUsername" name="username" class="auth-input" placeholder="${escapeHtml(placeholders.username || "alexmorgan")}" required />
           </div>
           ` : ""}
 
           ${fields.email ? `
           <div class="auth-field-group">
-            <label class="auth-label" for="signupEmail">Email Address</label>
-            <input type="email" id="signupEmail" name="email" class="auth-input" placeholder="alex@company.com" required />
+            <label class="auth-label" for="signupEmail">${escapeHtml(labels.email || "Email Address")}</label>
+            <input type="email" id="signupEmail" name="email" class="auth-input" placeholder="${escapeHtml(placeholders.email || "alex@company.com")}" required />
           </div>
           ` : ""}
 
           ${fields.mobile ? `
           <div class="auth-field-group">
-            <label class="auth-label" for="signupMobile">Mobile Number</label>
-            <input type="tel" id="signupMobile" name="mobile" class="auth-input" placeholder="+1 (555) 234-5678" />
+            <label class="auth-label" for="signupMobile">${escapeHtml(labels.mobile || "Mobile Number")}</label>
+            <input type="tel" id="signupMobile" name="mobile" class="auth-input" placeholder="${escapeHtml(placeholders.mobile || "+1 (555) 234-5678")}" />
           </div>
           ` : ""}
 
           ${fields.password ? `
           <div class="auth-field-group">
-            <label class="auth-label" for="signupPassword">Password</label>
+            <label class="auth-label" for="signupPassword">${escapeHtml(labels.password || "Password")}</label>
             <div class="auth-input-wrapper auth-input-password-wrapper">
-              <input type="password" id="signupPassword" name="password" class="auth-input" placeholder="Minimum 8 characters" required />
+              <input type="password" id="signupPassword" name="password" class="auth-input" placeholder="${escapeHtml(placeholders.password || "Minimum 8 characters")}" required />
               <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
                 ${ICONS.eye}
               </button>
@@ -421,13 +458,25 @@
 
           ${fields.confirmPassword ? `
           <div class="auth-field-group">
-            <label class="auth-label" for="signupConfirmPassword">Confirm Password</label>
+            <label class="auth-label" for="signupConfirmPassword">${escapeHtml(labels.confirmPassword || "Confirm Password")}</label>
             <div class="auth-input-wrapper auth-input-password-wrapper">
-              <input type="password" id="signupConfirmPassword" name="confirmPassword" class="auth-input" placeholder="Repeat your password" required />
+              <input type="password" id="signupConfirmPassword" name="confirmPassword" class="auth-input" placeholder="${escapeHtml(placeholders.confirmPassword || "Repeat your password")}" required />
               <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
                 ${ICONS.eye}
               </button>
             </div>
+          </div>
+          ` : ""}
+
+          ${termsEnabled ? `
+          <div class="auth-checkbox-group auth-terms-group">
+            <label class="auth-checkbox-label">
+              <input type="checkbox" id="signupTerms" name="terms" class="auth-checkbox" required />
+              <span>
+                <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" class="auth-inline-link">${termsText}</a>
+                ${privacyEnabled ? ` and <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" class="auth-inline-link">${privacyText}</a>` : ""}
+              </span>
+            </label>
           </div>
           ` : ""}
 
@@ -440,8 +489,8 @@
           ${generateSocialLogin(config)}
 
           <div class="auth-footer-nav">
-            <span>Already have an account?</span>
-            <a href="#login" class="auth-link auth-link-action" data-auth-nav="login">Sign in</a>
+            <span>${signinPrompt}</span>
+            <a href="#login" class="auth-link auth-link-action" data-auth-nav="login">${signinLinkText}</a>
           </div>
         </form>
       </div>
@@ -456,6 +505,9 @@
     const title = escapeHtml(pageConfig.title || "Forgot password?");
     const subtitle = escapeHtml(pageConfig.subtitle || "Enter your email or mobile number to receive reset instructions");
     const buttonText = escapeHtml(pageConfig.buttonText || "Send Reset Link");
+    const mode = pageConfig.identifierMode || "both"; // "email", "phone", "both"
+    const label = escapeHtml(pageConfig.identifierLabel || (mode === "email" ? "Email Address" : mode === "phone" ? "Mobile Number" : "Email or Phone Number"));
+    const placeholder = escapeHtml(pageConfig.identifierPlaceholder || (mode === "email" ? "name@company.com" : mode === "phone" ? "+1 (555) 234-5678" : "name@company.com or +1 555-234-5678"));
 
     return `
       <div class="auth-page-form-wrapper" data-page="forgotPassword">
@@ -467,8 +519,8 @@
         <form class="auth-main-form" id="authForgotForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'forgotPassword') : null;">
           
           <div class="auth-field-group">
-            <label class="auth-label" for="forgotIdentifier">Email or Phone Number</label>
-            <input type="text" id="forgotIdentifier" name="identifier" class="auth-input" placeholder="name@company.com" required />
+            <label class="auth-label" for="forgotIdentifier">${label}</label>
+            <input type="${mode === 'email' ? 'email' : mode === 'phone' ? 'tel' : 'text'}" id="forgotIdentifier" name="identifier" class="auth-input" placeholder="${placeholder}" required />
           </div>
 
           <div class="auth-button-group">
@@ -480,7 +532,7 @@
           <div class="auth-footer-nav auth-back-center">
             <a href="#login" class="auth-link auth-back-link" data-auth-nav="login">
               ${ICONS.arrowLeft}
-              <span>Back to login</span>
+              <span>${escapeHtml(pageConfig.backToLoginText || "Back to login")}</span>
             </a>
           </div>
         </form>
@@ -499,7 +551,9 @@
 
     const resendEnabled = pageConfig.resendEnabled !== false;
     const resendText = escapeHtml(pageConfig.resendText || "Resend OTP");
+    const resendPrompt = escapeHtml(pageConfig.resendPromptText || "Didn't receive code?");
     const resendSeconds = Number(pageConfig.resendSeconds) || 30;
+    const backToSignIn = escapeHtml(pageConfig.backToSignInText || "Back to sign in");
 
     return `
       <div class="auth-page-form-wrapper" data-page="otp">
@@ -516,7 +570,7 @@
 
           ${resendEnabled ? `
           <div class="otp-resend-row">
-            <span class="otp-resend-prompt">Didn't receive code?</span>
+            <span class="otp-resend-prompt">${resendPrompt}</span>
             <button type="button" class="otp-resend-btn" id="otpResendButton" data-countdown="${resendSeconds}">
               <span>${resendText}</span>
               <span class="otp-countdown-timer">(${resendSeconds}s)</span>
@@ -533,7 +587,7 @@
           <div class="auth-footer-nav auth-back-center">
             <a href="#login" class="auth-link auth-back-link" data-auth-nav="login">
               ${ICONS.arrowLeft}
-              <span>Back to sign in</span>
+              <span>${backToSignIn}</span>
             </a>
           </div>
         </form>
@@ -571,6 +625,9 @@
     const bgPosClass = `position-${imageSection.textPosition || 'center'}`;
 
     const landingUrl = config.urls?.landingPageUrl || "";
+    const showBackToWeb = config.urls?.showBackToWebsite !== false && Boolean(landingUrl);
+    const backToWebText = escapeHtml(config.urls?.backToWebsiteText || "Back to Website");
+    const openNewTab = config.urls?.openInNewTab !== false;
 
     return `
       <div class="auth-preview-shell">
@@ -591,11 +648,11 @@
         <!-- Form & Content Section -->
         <div class="auth-form-section">
           <div class="auth-card">
-            ${landingUrl ? `
+            ${showBackToWeb ? `
               <div class="auth-landing-link-bar">
-                <a href="${escapeHtml(landingUrl)}" target="_blank" rel="noopener noreferrer" class="auth-landing-link">
+                <a href="${escapeHtml(landingUrl)}" target="${openNewTab ? '_blank' : '_self'}" rel="noopener noreferrer" class="auth-landing-link">
                   ${ICONS.arrowLeft}
-                  <span>Back to Website</span>
+                  <span>${backToWebText}</span>
                 </a>
               </div>
             ` : ""}

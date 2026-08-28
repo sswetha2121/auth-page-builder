@@ -39,7 +39,7 @@ console.log("Test Group 1: Constants & Default Config");
 assert(Constants.APP_INFO && Constants.APP_INFO.name === "Auth Page Builder", "APP_INFO is defined");
 assert(Object.keys(Constants.PAGE_TYPES).length === 4, "PAGE_TYPES defined with 4 types");
 assert(Object.keys(Constants.LAYOUT_TYPES).length === 7, "LAYOUT_TYPES includes all 7 layouts");
-assert(Constants.DEFAULT_BACKGROUND_ASSETS.length === 5, "5 default background assets registered");
+assert(Constants.DEFAULT_BACKGROUND_ASSETS.length === 6, "6 default background assets registered");
 assert(Constants.DEFAULT_LOGO_ASSETS.length === 5, "5 default logo assets registered");
 assert(defaultConfig.urls.landingPageUrl === "https://customerwebsite.com", "Default landingPageUrl set");
 assert(defaultConfig.urls.redirectUrl === "https://customerwebsite.com/dashboard", "Default redirectUrl set");

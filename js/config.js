@@ -13,7 +13,11 @@ const defaultConfig = {
   ======================================================= */
   urls: {
     landingPageUrl: "https://customerwebsite.com",
-    redirectUrl: "https://customerwebsite.com/dashboard"
+    redirectUrl: "https://customerwebsite.com/dashboard",
+    authPageUrl: "https://customerwebsite.com/auth",
+    showBackToWebsite: true,
+    backToWebsiteText: "Back to Website",
+    openInNewTab: true
   },
 
   /* =======================================================
@@ -34,17 +38,17 @@ const defaultConfig = {
      BACKGROUND SETTINGS
   ======================================================= */
   background: {
-    type: "default",
-    selected: "assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg",
-    image: "assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg",
+    type: "default", // "default", "uploaded", "color", "gradient"
+    selected: "assets/backgrounds/background-1.svg",
+    image: "assets/backgrounds/background-1.svg",
     uploadedImage: "",
     color: "#0f172a",
     gradientEnabled: false,
     gradientStart: "#0f172a",
     gradientEnd: "#1e293b",
-    position: "center",
-    size: "cover",
-    repeat: "no-repeat",
+    position: "center", // "center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right"
+    size: "cover", // "cover", "contain", "auto"
+    repeat: "no-repeat", // "no-repeat", "repeat", "repeat-x", "repeat-y"
     overlayEnabled: true,
     overlayColor: "#000000",
     overlayOpacity: 35
@@ -174,14 +178,30 @@ const defaultConfig = {
       passwordEnabled: true,
       otpEnabled: true,
       rememberMeEnabled: true,
+      rememberMeText: "Remember me for 30 days",
       forgotPasswordEnabled: true,
-      signupEnabled: true
+      forgotPasswordText: "Forgot password?",
+      signupEnabled: true,
+      signupPrompt: "Don't have an account?",
+      signupLinkText: "Create account",
+      identifierPlaceholder: "name@company.com",
+      passwordPlaceholder: "••••••••",
+      otpButtonText: "Continue with OTP",
+      whatsappButtonText: "Get OTP via WhatsApp"
     },
 
     signup: {
       title: "Create account",
       subtitle: "Create your account to get started",
       buttonText: "Create Account",
+      signinPrompt: "Already have an account?",
+      signinLinkText: "Sign in",
+      termsEnabled: true,
+      termsText: "I agree to the Terms of Service",
+      termsUrl: "https://customerwebsite.com/terms",
+      privacyEnabled: true,
+      privacyText: "Privacy Policy",
+      privacyUrl: "https://customerwebsite.com/privacy",
       fields: {
         fullName: true,
         username: true,
@@ -189,6 +209,22 @@ const defaultConfig = {
         mobile: true,
         password: true,
         confirmPassword: true
+      },
+      fieldLabels: {
+        fullName: "Full Name",
+        username: "Username",
+        email: "Email Address",
+        mobile: "Mobile Number",
+        password: "Password",
+        confirmPassword: "Confirm Password"
+      },
+      fieldPlaceholders: {
+        fullName: "Alex Morgan",
+        username: "alexmorgan",
+        email: "alex@company.com",
+        mobile: "+1 (555) 234-5678",
+        password: "Minimum 8 characters",
+        confirmPassword: "Repeat your password"
       }
     },
 
@@ -196,8 +232,10 @@ const defaultConfig = {
       title: "Forgot password?",
       subtitle: "Enter your email or mobile number to reset password",
       buttonText: "Send Reset Link",
-      allowEmail: true,
-      allowMobile: true
+      backToLoginText: "Back to login",
+      identifierMode: "both", // "email", "phone", "both"
+      identifierLabel: "Email or Phone Number",
+      identifierPlaceholder: "name@company.com"
     },
 
     otp: {
@@ -205,10 +243,13 @@ const defaultConfig = {
       subtitle: "Enter the verification code sent to your device",
       buttonText: "Verify OTP",
       displayMode: "separate", // "separate" or "inline"
-      length: 6,
+      length: 6, // 4, 6, 8
+      inputStyle: "box", // "box", "rounded", "underline"
       resendEnabled: true,
       resendText: "Resend OTP",
+      resendPromptText: "Didn't receive code?",
       resendSeconds: 30,
+      backToSignInText: "Back to sign in",
       boxWidth: 48,
       boxHeight: 54,
       gap: 10,

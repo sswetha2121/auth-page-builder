@@ -4,10 +4,11 @@
 ========================================================= */
 
 (function (root, factory) {
+  const utils = factory();
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = factory();
-  } else {
-    const utils = factory();
+    module.exports = utils;
+  }
+  if (root) {
     root.Utils = utils;
     root.escapeHtml = utils.escapeHtml;
     root.isValidUrl = utils.isValidUrl;

@@ -8,13 +8,14 @@
     const templates = require("./templates.js");
     const renderer = require("./renderer.js");
     const utils = require("./utils.js");
-    module.exports = factory(templates, renderer, utils);
+    const constants = require("./constants.js");
+    module.exports = factory(templates, renderer, utils, constants);
   } else {
-    const downloadManager = factory(root.Templates, root.AuthPageRenderer, root.Utils);
+    const downloadManager = factory(root.Templates, root.AuthPageRenderer, root.Utils, root.Constants);
     root.DownloadManager = downloadManager;
     root.downloadPackage = downloadManager.downloadPackage;
   }
-})(typeof window !== "undefined" ? window : globalThis, function (Templates, Renderer, Utils) {
+})(typeof window !== "undefined" ? window : globalThis, function (Templates, Renderer, Utils, Constants) {
 
   function getCleanConfig() {
     const state = window.state ? window.state.getState() : (window.config || {});
@@ -26,13 +27,39 @@
   ======================================================= */
   async function fetchAsset(url) {
     try {
+      if (typeof window === "undefined") {
+        // Node environment fallback for testing
+        const fs = require("fs");
+        const path = require("path");
+        const cleanPath = url.replace(/^\.\//, "").replace(/^\//, "");
+        const fullPath = path.resolve(__dirname, "..", cleanPath);
+        if (fs.existsSync(fullPath)) {
+          return fs.readFileSync(fullPath);
+        }
+      }
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.arrayBuffer();
     } catch (e) {
-      console.warn(`Could not fetch asset ${url}:`, e);
+      console.warn(`Could not fetch asset ${url}:`, e.message || e);
       return null;
     }
+  }
+
+  /* =======================================================
+     DETECT MIME TYPE AND EXTENSION FROM DATA URL
+  ======================================================= */
+  function detectMimeAndExt(dataUrl, fallbackExt = "png") {
+    if (!dataUrl || typeof dataUrl !== "string" || !dataUrl.startsWith("data:")) {
+      return { mime: "image/png", ext: fallbackExt };
+    }
+    const header = dataUrl.split(",")[0].toLowerCase();
+    if (header.includes("image/svg+xml")) return { mime: "image/svg+xml", ext: "svg" };
+    if (header.includes("image/webp")) return { mime: "image/webp", ext: "webp" };
+    if (header.includes("image/jpeg") || header.includes("image/jpg")) return { mime: "image/jpeg", ext: "jpg" };
+    if (header.includes("image/png")) return { mime: "image/png", ext: "png" };
+    if (header.includes("image/gif")) return { mime: "image/gif", ext: "gif" };
+    return { mime: "image/png", ext: fallbackExt };
   }
 
   /* =======================================================
@@ -60,6 +87,7 @@ html, body {
   font-family: var(--auth-font-family, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
   color: var(--auth-title-color, #0f172a);
   background-color: var(--auth-background-color, #0f172a);
+  -webkit-font-smoothing: antialiased;
 }
 
 .auth-preview-root {
@@ -110,6 +138,7 @@ html, body {
   border: none !important;
   box-shadow: none !important;
   background: transparent !important;
+  backdrop-filter: none !important;
   padding: 24px 0 !important;
 }
 
@@ -240,6 +269,7 @@ html, body {
   backdrop-filter: blur(var(--auth-card-blur, 0px));
   -webkit-backdrop-filter: blur(var(--auth-card-blur, 0px));
   position: relative;
+  flex-shrink: 0;
 }
 
 .auth-landing-link-bar { margin-bottom: 20px; }
@@ -248,14 +278,19 @@ html, body {
   align-items: center;
   gap: 6px;
   color: #64748b;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 500;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 .auth-landing-link:hover { color: #2563eb; }
 
-/* Branding & Logo */
-.auth-branding-header { display: flex; flex-direction: column; margin-bottom: 24px; }
+/* Logo & Branding */
+.auth-branding-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 22px;
+}
 .auth-branding-header.auth-logo-pos-left { align-items: flex-start; text-align: left; }
 .auth-branding-header.auth-logo-pos-center { align-items: center; text-align: center; }
 .auth-branding-header.auth-logo-pos-right { align-items: flex-end; text-align: right; }
@@ -267,17 +302,26 @@ html, body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   background-color: var(--auth-logo-bg, transparent);
   border-radius: var(--auth-logo-radius, 50%);
   clip-path: var(--auth-logo-clip, none);
   -webkit-clip-path: var(--auth-logo-clip, none);
+  flex-shrink: 0;
 }
-.auth-logo-shape-square { border-radius: 0px !important; clip-path: none !important; -webkit-clip-path: none !important; }
-.auth-logo-shape-rounded { border-radius: 14px !important; clip-path: none !important; -webkit-clip-path: none !important; }
-.auth-logo-shape-circle { border-radius: 50% !important; clip-path: circle(50% at 50% 50%) !important; -webkit-clip-path: circle(50% at 50% 50%) !important; }
-.auth-logo-shape-ellipse { border-radius: 50% / 35% !important; clip-path: ellipse(50% 38% at 50% 50%) !important; -webkit-clip-path: ellipse(50% 38% at 50% 50%) !important; }
-.auth-logo-img { width: 100%; height: 100%; object-fit: cover; }
+
+.auth-logo-shape-square { border-radius: 0px !important; clip-path: none !important; -webkit-clip-path: none !important; width: var(--auth-logo-size, 64px); height: var(--auth-logo-size, 64px); }
+.auth-logo-shape-rounded { border-radius: 14px !important; clip-path: none !important; -webkit-clip-path: none !important; width: var(--auth-logo-size, 64px); height: var(--auth-logo-size, 64px); }
+.auth-logo-shape-circle { border-radius: 50% !important; clip-path: circle(50% at 50% 50%) !important; -webkit-clip-path: circle(50% at 50% 50%) !important; width: var(--auth-logo-size, 64px); height: var(--auth-logo-size, 64px); }
+.auth-logo-shape-ellipse { border-radius: 50% !important; clip-path: ellipse(50% 38% at 50% 50%) !important; -webkit-clip-path: ellipse(50% 38% at 50% 50%) !important; width: calc(var(--auth-logo-size, 64px) * 1.35) !important; height: var(--auth-logo-size, 64px); }
+
+.auth-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .auth-logo-fallback {
   width: 100%;
   height: 100%;
@@ -289,10 +333,15 @@ html, body {
   font-weight: 800;
   font-size: calc(var(--auth-logo-size, 64px) * 0.38);
 }
-.auth-brand-title { font-size: 16px; font-weight: 700; color: var(--auth-title-color, #0f172a); }
+
+.auth-brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--auth-title-color, #0f172a);
+}
 
 /* Typography */
-.auth-form-header { margin-bottom: 24px; }
+.auth-form-header { margin-bottom: 22px; }
 .auth-heading {
   margin: 0 0 8px;
   color: var(--auth-title-color, #0f172a);
@@ -448,43 +497,23 @@ html, body {
 .auth-social-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
 
 /* Inline OTP & Standalone OTP */
-.auth-inline-otp-section {
-  padding: 12px 0 4px;
-  border-top: 1px dashed #e2e8f0;
-  margin-top: 4px;
-}
-.otp-delivery-methods { margin-bottom: 20px; text-align: center; }
+.auth-inline-otp-section { padding: 12px 0 4px; border-top: 1px dashed #e2e8f0; margin-top: 4px; }
+.otp-delivery-methods { margin-bottom: 14px; text-align: center; }
 .otp-delivery-single { margin-bottom: 12px; }
-.otp-delivery-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border-radius: 8px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
+.otp-delivery-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #eff6ff; color: #1d4ed8; border-radius: 8px; font-size: 12.5px; font-weight: 600; }
 .otp-delivery-label { display: block; font-size: 12.5px; font-weight: 600; color: #64748b; margin-bottom: 8px; }
 .otp-delivery-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-.otp-delivery-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #475569;
-  cursor: pointer;
-}
+.otp-delivery-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: #ffffff; font-family: inherit; font-size: 12.5px; font-weight: 600; color: #475569; cursor: pointer; }
 .otp-delivery-pill.active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
 
-.otp-boxes-container { display: flex; align-items: center; justify-content: center; gap: var(--otp-box-gap, 10px); margin: 8px 0 12px; width: 100%; }
+.otp-boxes-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--otp-box-gap, 10px);
+  margin: 8px 0 12px;
+  width: 100%;
+}
 .otp-digit-box {
   width: var(--otp-box-width, 48px);
   height: var(--otp-box-height, 54px);
@@ -666,8 +695,15 @@ ${config.customCSS || ""}
         }
 
         setTimeout(() => {
-          window.location.assign(redirectUrl);
-        }, 800);
+          if (typeof window.onAuthRedirect === "function") {
+            window.onAuthRedirect(redirectUrl);
+          }
+          try {
+            window.location.assign(redirectUrl);
+          } catch (e) {
+            window.location.href = redirectUrl;
+          }
+        }, 300);
       });
     });
   }
@@ -762,6 +798,8 @@ ${config.customCSS || ""}
     const bgPosClass = `position-${imageSection.textPosition || 'center'}`;
 
     const landingUrl = config.urls?.landingPageUrl || "";
+    const showBackToWeb = config.urls?.showBackToWebsite !== false && Boolean(landingUrl);
+    const backToWebText = Utils.escapeHtml(config.urls?.backToWebsiteText || "← Back to Website");
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -798,10 +836,10 @@ ${config.customCSS || ""}
       <!-- Auth Form Section -->
       <div class="auth-form-section">
         <div class="auth-card">
-          ${landingUrl ? `
+          ${showBackToWeb ? `
             <div class="auth-landing-link-bar">
               <a href="${Utils.escapeHtml(landingUrl)}" class="auth-landing-link">
-                ← Back to Website
+                ${backToWebText}
               </a>
             </div>
           ` : ""}
@@ -876,7 +914,7 @@ generated-auth-page/
   }
 
   /* =======================================================
-     MAIN DOWNLOAD FUNCTION (ZIP CREATION)
+     MAIN DOWNLOAD FUNCTION (ZIP CREATION WITH ASSET PRESERVATION)
   ======================================================= */
   async function downloadPackage() {
     if (typeof JSZip === "undefined") {
@@ -898,18 +936,18 @@ generated-auth-page/
       const assetsFolder = folder.folder("assets");
       const bgFolder = assetsFolder.folder("backgrounds");
       const logoFolder = assetsFolder.folder("logos");
-      const iconFolder = assetsFolder.folder("icons");
 
-      // Asset mapping for relative paths inside ZIP
       const exportConfig = JSON.parse(JSON.stringify(config));
 
-      // 1. Process Background Image
+      // 1. Process Background Image (Preserve original extension)
       if (config.background?.uploadedImage && config.background.uploadedImage.startsWith("data:")) {
+        const { ext } = detectMimeAndExt(config.background.uploadedImage, "png");
         const base64Data = config.background.uploadedImage.split(",")[1];
         if (base64Data) {
-          bgFolder.file("background-custom.png", base64Data, { base64: true });
-          exportConfig.background.image = "./assets/backgrounds/background-custom.png";
-          exportConfig.background.uploadedImage = "./assets/backgrounds/background-custom.png";
+          const bgFileName = `background-custom.${ext}`;
+          bgFolder.file(bgFileName, base64Data, { base64: true });
+          exportConfig.background.image = `./assets/backgrounds/${bgFileName}`;
+          exportConfig.background.uploadedImage = "";
         }
       } else if (config.background?.image && !config.background.image.startsWith("data:")) {
         const bgData = await fetchAsset(config.background.image);
@@ -920,20 +958,53 @@ generated-auth-page/
         }
       }
 
-      // 2. Process Logo Image
+      // Copy default backgrounds to ZIP
+      const defaultBgs = [
+        "background-1.svg",
+        "background-2.svg",
+        "background-3.svg",
+        "background-4.svg",
+        "background-5.svg",
+        "background-6.svg"
+      ];
+      for (const bg of defaultBgs) {
+        const data = await fetchAsset(`assets/backgrounds/${bg}`);
+        if (data) {
+          bgFolder.file(bg, data);
+        }
+      }
+
+      // 2. Process Logo Image (Preserve original extension)
       if (config.branding?.uploadedLogo && config.branding.uploadedLogo.startsWith("data:")) {
+        const { ext } = detectMimeAndExt(config.branding.uploadedLogo, "png");
         const base64Data = config.branding.uploadedLogo.split(",")[1];
         if (base64Data) {
-          logoFolder.file("logo-custom.png", base64Data, { base64: true });
-          exportConfig.branding.logo = "./assets/logos/logo-custom.png";
-          exportConfig.branding.uploadedLogo = "./assets/logos/logo-custom.png";
+          const logoFileName = `logo-custom.${ext}`;
+          logoFolder.file(logoFileName, base64Data, { base64: true });
+          exportConfig.branding.logo = `./assets/logos/${logoFileName}`;
+          exportConfig.branding.uploadedLogo = "";
         }
       } else if (config.branding?.logo && !config.branding.logo.startsWith("data:")) {
         const logoData = await fetchAsset(config.branding.logo);
         if (logoData) {
-          const filename = config.branding.logo.split("/").pop() || "logo.png";
+          const filename = config.branding.logo.split("/").pop() || "brand-shield.svg";
           logoFolder.file(filename, logoData);
           exportConfig.branding.logo = `./assets/logos/${filename}`;
+        }
+      }
+
+      // Copy default vector logos to ZIP
+      const defaultLogos = [
+        "brand-shield.svg",
+        "brand-prism.svg",
+        "brand-nexus.svg",
+        "brand-aurora.svg",
+        "brand-apex.svg"
+      ];
+      for (const lg of defaultLogos) {
+        const data = await fetchAsset(`assets/logos/${lg}`);
+        if (data) {
+          logoFolder.file(lg, data);
         }
       }
 
@@ -941,6 +1012,9 @@ generated-auth-page/
       const configJSON = {
         landingPageUrl: exportConfig.urls?.landingPageUrl || "",
         redirectUrl: exportConfig.urls?.redirectUrl || "",
+        authPageUrl: exportConfig.urls?.authPageUrl || "",
+        showBackToWebsite: exportConfig.urls?.showBackToWebsite !== false,
+        backToWebsiteText: exportConfig.urls?.backToWebsiteText || "Back to Website",
         authentication: exportConfig.authentication || {},
         branding: exportConfig.branding || {},
         layout: exportConfig.layout || {},
@@ -990,11 +1064,13 @@ generated-auth-page/
       if (Utils.showToast) {
         Utils.showToast("Your authentication package has been downloaded!", "success");
       }
+      return true;
     } catch (err) {
       console.error("ZIP Generation error:", err);
       if (Utils.showToast) {
         Utils.showToast("Failed to generate ZIP package.", "error");
       }
+      throw err;
     }
   }
 
@@ -1005,6 +1081,7 @@ generated-auth-page/
     generateIntegrationJS,
     generateIntegrationSnippetHTML,
     generateStandaloneIndexHTML,
-    generateReadme
+    generateReadme,
+    detectMimeAndExt
   };
 });

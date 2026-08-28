@@ -47,8 +47,23 @@
             <div class="header-actions">
                 <span class="save-indicator" data-unsaved-indicator>
                     <span class="indicator-dot"></span>
-                    Live Sync Active
+                    <span class="indicator-text">Live Sync Active</span>
                 </span>
+
+                <button type="button" class="header-button secondary" id="savedConfigsButton" data-action="open-configurations" title="Saved Cloud Configurations">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>My Configurations</span>
+                </button>
+
+                <button type="button" class="header-button secondary" id="userAuthButton" data-action="open-user-auth" title="User Account">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span id="userAuthButtonText">Account</span>
+                </button>
 
                 <button type="button" class="header-button secondary" data-action="fullscreen-preview" title="Fullscreen Preview (⛶)">
                     <span>⛶ Fullscreen</span>
@@ -116,6 +131,27 @@
                             </div>
 
                             <div class="control-group">
+                                <label for="authPageUrlInput">Authentication Page Host URL (Optional)</label>
+                                <p class="control-help">Where the generated authentication page is deployed/hosted.</p>
+                                <input type="url" id="authPageUrlInput" data-config-path="urls.authPageUrl" placeholder="https://customerwebsite.com/auth">
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Show "Back to Website" Link</label>
+                                <input type="checkbox" data-config-path="urls.showBackToWebsite" checked>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="backToWebsiteTextInput">"Back to Website" Text</label>
+                                <input type="text" id="backToWebsiteTextInput" data-config-path="urls.backToWebsiteText" placeholder="Back to Website" value="Back to Website">
+                            </div>
+
+                            <div class="switch-control">
+                                <label>Open in New Tab</label>
+                                <input type="checkbox" data-config-path="urls.openInNewTab" checked>
+                            </div>
+
+                            <div class="control-group">
                                 <label>Landing Page Integration Snippet</label>
                                 <p class="control-help">Add this snippet or link to your website's Login button:</p>
                                 <textarea class="code-textarea" id="integrationSnippetText" rows="3" readonly>&lt;!-- Integration on your landing page --&gt;
@@ -129,14 +165,14 @@
                     ====================================== -->
                     <section class="customization-section customization-accordion open">
                         <button type="button" class="accordion-header" data-accordion-trigger aria-expanded="true">
-                            <span class="accordion-title">Page Content</span>
+                            <span class="accordion-title">Page Content & Text</span>
                             <span class="accordion-arrow">▾</span>
                         </button>
                         <div class="accordion-content">
                             <!-- LOGIN -->
                             <div class="page-specific-control" data-control-page="login">
                                 <div class="control-group">
-                                    <label>Login Title</label>
+                                    <label>Login Heading</label>
                                     <input type="text" data-config-path="pages.login.title" placeholder="Welcome back">
                                 </div>
                                 <div class="control-group">
@@ -147,12 +183,44 @@
                                     <label>Login Button Text</label>
                                     <input type="text" data-config-path="pages.login.buttonText" placeholder="Sign In">
                                 </div>
+                                <div class="control-group">
+                                    <label>Identifier Placeholder</label>
+                                    <input type="text" data-config-path="pages.login.identifierPlaceholder" placeholder="name@company.com">
+                                </div>
+                                <div class="control-group">
+                                    <label>Password Placeholder</label>
+                                    <input type="text" data-config-path="pages.login.passwordPlaceholder" placeholder="••••••••">
+                                </div>
+                                <div class="control-group">
+                                    <label>Remember Me Text</label>
+                                    <input type="text" data-config-path="pages.login.rememberMeText" placeholder="Remember me for 30 days">
+                                </div>
+                                <div class="control-group">
+                                    <label>Forgot Password Text</label>
+                                    <input type="text" data-config-path="pages.login.forgotPasswordText" placeholder="Forgot password?">
+                                </div>
+                                <div class="control-group">
+                                    <label>Sign Up Prompt</label>
+                                    <input type="text" data-config-path="pages.login.signupPrompt" placeholder="Don't have an account?">
+                                </div>
+                                <div class="control-group">
+                                    <label>Sign Up Link Text</label>
+                                    <input type="text" data-config-path="pages.login.signupLinkText" placeholder="Create account">
+                                </div>
+                                <div class="control-group">
+                                    <label>OTP Button Text</label>
+                                    <input type="text" data-config-path="pages.login.otpButtonText" placeholder="Continue with OTP">
+                                </div>
+                                <div class="control-group">
+                                    <label>WhatsApp Button Text</label>
+                                    <input type="text" data-config-path="pages.login.whatsappButtonText" placeholder="Get OTP via WhatsApp">
+                                </div>
                             </div>
 
                             <!-- SIGNUP -->
                             <div class="page-specific-control" data-control-page="signup" hidden>
                                 <div class="control-group">
-                                    <label>Sign Up Title</label>
+                                    <label>Sign Up Heading</label>
                                     <input type="text" data-config-path="pages.signup.title" placeholder="Create account">
                                 </div>
                                 <div class="control-group">
@@ -163,28 +231,76 @@
                                     <label>Sign Up Button Text</label>
                                     <input type="text" data-config-path="pages.signup.buttonText" placeholder="Create Account">
                                 </div>
+                                <div class="control-group">
+                                    <label>Sign In Prompt</label>
+                                    <input type="text" data-config-path="pages.signup.signinPrompt" placeholder="Already have an account?">
+                                </div>
+                                <div class="control-group">
+                                    <label>Sign In Link Text</label>
+                                    <input type="text" data-config-path="pages.signup.signinLinkText" placeholder="Sign in">
+                                </div>
+                                <div class="switch-control">
+                                    <label>Enable Terms & Conditions Checkbox</label>
+                                    <input type="checkbox" data-config-path="pages.signup.termsEnabled" checked>
+                                </div>
+                                <div class="control-group">
+                                    <label>Terms of Service Text</label>
+                                    <input type="text" data-config-path="pages.signup.termsText" placeholder="I agree to the Terms of Service">
+                                </div>
+                                <div class="control-group">
+                                    <label>Terms of Service URL</label>
+                                    <input type="url" data-config-path="pages.signup.termsUrl" placeholder="https://customerwebsite.com/terms">
+                                </div>
+                                <div class="switch-control">
+                                    <label>Enable Privacy Policy Link</label>
+                                    <input type="checkbox" data-config-path="pages.signup.privacyEnabled" checked>
+                                </div>
+                                <div class="control-group">
+                                    <label>Privacy Policy Text</label>
+                                    <input type="text" data-config-path="pages.signup.privacyText" placeholder="Privacy Policy">
+                                </div>
+                                <div class="control-group">
+                                    <label>Privacy Policy URL</label>
+                                    <input type="url" data-config-path="pages.signup.privacyUrl" placeholder="https://customerwebsite.com/privacy">
+                                </div>
                             </div>
 
                             <!-- FORGOT PASSWORD -->
                             <div class="page-specific-control" data-control-page="forgotPassword" hidden>
                                 <div class="control-group">
-                                    <label>Page Title</label>
+                                    <label>Page Heading</label>
                                     <input type="text" data-config-path="pages.forgotPassword.title" placeholder="Forgot password?">
                                 </div>
                                 <div class="control-group">
-                                    <label>Page Subtitle</label>
+                                    <label>Page Subtitle / Instructions</label>
                                     <textarea rows="2" data-config-path="pages.forgotPassword.subtitle" placeholder="Enter your email or mobile number to receive reset instructions"></textarea>
                                 </div>
                                 <div class="control-group">
-                                    <label>Button Text</label>
+                                    <label>Identifier Mode</label>
+                                    <select data-config-path="pages.forgotPassword.identifierMode">
+                                        <option value="both" selected>Email or Phone Number</option>
+                                        <option value="email">Email Only</option>
+                                        <option value="phone">Phone Only</option>
+                                    </select>
+                                </div>
+                                <div class="control-group">
+                                    <label>Input Placeholder</label>
+                                    <input type="text" data-config-path="pages.forgotPassword.identifierPlaceholder" placeholder="name@company.com">
+                                </div>
+                                <div class="control-group">
+                                    <label>Send Reset Button Text</label>
                                     <input type="text" data-config-path="pages.forgotPassword.buttonText" placeholder="Send Reset Link">
+                                </div>
+                                <div class="control-group">
+                                    <label>Back to Login Link Text</label>
+                                    <input type="text" data-config-path="pages.forgotPassword.backToLoginText" placeholder="Back to login">
                                 </div>
                             </div>
 
                             <!-- OTP -->
                             <div class="page-specific-control" data-control-page="otp" hidden>
                                 <div class="control-group">
-                                    <label>OTP Title</label>
+                                    <label>OTP Heading</label>
                                     <input type="text" data-config-path="pages.otp.title" placeholder="Verify your identity">
                                 </div>
                                 <div class="control-group">
@@ -192,8 +308,32 @@
                                     <textarea rows="2" data-config-path="pages.otp.subtitle" placeholder="Enter the verification code sent to your device"></textarea>
                                 </div>
                                 <div class="control-group">
-                                    <label>OTP Button Text</label>
+                                    <label>Verify Button Text</label>
                                     <input type="text" data-config-path="pages.otp.buttonText" placeholder="Verify OTP">
+                                </div>
+                                <div class="control-group">
+                                    <label>OTP Input Style</label>
+                                    <select data-config-path="pages.otp.inputStyle">
+                                        <option value="box" selected>Box / Square</option>
+                                        <option value="rounded">Rounded Box</option>
+                                        <option value="underline">Underline</option>
+                                    </select>
+                                </div>
+                                <div class="control-group">
+                                    <label>Resend Prompt Text</label>
+                                    <input type="text" data-config-path="pages.otp.resendPromptText" placeholder="Didn't receive code?">
+                                </div>
+                                <div class="control-group">
+                                    <label>Resend Button Text</label>
+                                    <input type="text" data-config-path="pages.otp.resendText" placeholder="Resend OTP">
+                                </div>
+                                <div class="control-group">
+                                    <label>Resend Countdown (Seconds)</label>
+                                    <input type="number" min="5" max="300" data-config-path="pages.otp.resendSeconds" value="30">
+                                </div>
+                                <div class="control-group">
+                                    <label>Back to Sign In Text</label>
+                                    <input type="text" data-config-path="pages.otp.backToSignInText" placeholder="Back to sign in">
                                 </div>
                             </div>
                         </div>
@@ -261,25 +401,33 @@
                             <div class="control-group">
                                 <label>Default Background Images</label>
                                 <div class="asset-grid">
-                                    <button type="button" class="asset-option active" data-background="assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
-                                        <img src="./assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg" alt="Dark Geometric">
+                                    <button type="button" class="asset-option" data-background="none" title="Solid Color / Gradient (No Image)">
+                                        <div style="width: 100%; height: 50px; border-radius: 6px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase;">Color</div>
+                                        <span>Color / Grad</span>
+                                    </button>
+                                    <button type="button" class="asset-option active" data-background="assets/backgrounds/background-1.svg">
+                                        <img src="./assets/backgrounds/background-1.svg" alt="Dark Geometric">
                                         <span>Dark Geometric</span>
                                     </button>
-                                    <button type="button" class="asset-option" data-background="assets/backgrounds/idea-6900632_1280.png">
-                                        <img src="./assets/backgrounds/idea-6900632_1280.png" alt="Creative Graphic">
-                                        <span>Creative Graphic</span>
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/background-2.svg">
+                                        <img src="./assets/backgrounds/background-2.svg" alt="Blue Gradient">
+                                        <span>Blue Gradient</span>
                                     </button>
-                                    <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (3).webp">
-                                        <img src="./assets/backgrounds/OIP (3).webp" alt="Gradient Glow">
-                                        <span>Gradient Glow</span>
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/background-3.svg">
+                                        <img src="./assets/backgrounds/background-3.svg" alt="Clean Light">
+                                        <span>Clean Light</span>
                                     </button>
-                                    <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (4).webp">
-                                        <img src="./assets/backgrounds/OIP (4).webp" alt="Deep Azure">
-                                        <span>Deep Azure</span>
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/background-4.svg">
+                                        <img src="./assets/backgrounds/background-4.svg" alt="Cyber Grid">
+                                        <span>Cyber Grid</span>
                                     </button>
-                                    <button type="button" class="asset-option" data-background="assets/backgrounds/OIP (5).webp">
-                                        <img src="./assets/backgrounds/OIP (5).webp" alt="Modern Mesh">
-                                        <span>Modern Mesh</span>
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/background-5.svg">
+                                        <img src="./assets/backgrounds/background-5.svg" alt="Purple Mesh">
+                                        <span>Purple Mesh</span>
+                                    </button>
+                                    <button type="button" class="asset-option" data-background="assets/backgrounds/background-6.svg">
+                                        <img src="./assets/backgrounds/background-6.svg" alt="Soft Aurora">
+                                        <span>Soft Aurora</span>
                                     </button>
                                 </div>
                             </div>
@@ -298,6 +446,21 @@
                                 <input type="color" data-config-path="background.color" value="#0f172a">
                             </div>
 
+                            <div class="switch-control">
+                                <label>Enable Gradient</label>
+                                <input type="checkbox" data-config-path="background.gradientEnabled">
+                            </div>
+
+                            <div class="control-group">
+                                <label>Gradient Start Color</label>
+                                <input type="color" data-config-path="background.gradientStart" value="#0f172a">
+                            </div>
+
+                            <div class="control-group">
+                                <label>Gradient End Color</label>
+                                <input type="color" data-config-path="background.gradientEnd" value="#1e293b">
+                            </div>
+
                             <div class="control-group">
                                 <label>Background Position</label>
                                 <select data-config-path="background.position">
@@ -306,6 +469,10 @@
                                     <option value="bottom">Bottom</option>
                                     <option value="left">Left</option>
                                     <option value="right">Right</option>
+                                    <option value="top left">Top Left</option>
+                                    <option value="top right">Top Right</option>
+                                    <option value="bottom left">Bottom Left</option>
+                                    <option value="bottom right">Bottom Right</option>
                                 </select>
                             </div>
 
@@ -378,17 +545,17 @@
                                         <img src="./assets/logos/brand-prism.svg" alt="Prism Emblem">
                                         <span>Prism Emblem</span>
                                     </button>
-                                    <button type="button" class="asset-option" data-logo="assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg">
-                                        <img src="./assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg" alt="Geometric">
-                                        <span>Geometric</span>
+                                    <button type="button" class="asset-option" data-logo="assets/logos/brand-nexus.svg">
+                                        <img src="./assets/logos/brand-nexus.svg" alt="Nexus Tech">
+                                        <span>Nexus Tech</span>
                                     </button>
-                                    <button type="button" class="asset-option" data-logo="assets/logos/idea-6900632_1280.png">
-                                        <img src="./assets/logos/idea-6900632_1280.png" alt="Idea Spark">
-                                        <span>Idea Spark</span>
+                                    <button type="button" class="asset-option" data-logo="assets/logos/brand-aurora.svg">
+                                        <img src="./assets/logos/brand-aurora.svg" alt="Aurora Wave">
+                                        <span>Aurora Wave</span>
                                     </button>
-                                    <button type="button" class="asset-option" data-logo="assets/logos/OIP (4).webp">
-                                        <img src="./assets/logos/OIP (4).webp" alt="Crest">
-                                        <span>Crest</span>
+                                    <button type="button" class="asset-option" data-logo="assets/logos/brand-apex.svg">
+                                        <img src="./assets/logos/brand-apex.svg" alt="Apex Peak">
+                                        <span>Apex Peak</span>
                                     </button>
                                 </div>
                             </div>
@@ -930,7 +1097,7 @@
                 </div>
 
                 <!-- PREVIEW CANVAS -->
-                <div class="preview-canvas device-desktop">
+                <div class="preview-canvas device-desktop" id="previewCanvas">
                     <div id="previewRoot" class="preview-root preview-device-desktop">
                         <!-- Rendered dynamically by renderer.js -->
                     </div>
@@ -956,10 +1123,122 @@
     </div>
 
     <!-- =====================================================
+         USER ACCOUNT / AUTH MODAL
+    ====================================================== -->
+    <div class="app-modal" id="userAuthModal" role="dialog" aria-modal="true" aria-labelledby="userAuthModalTitle" hidden>
+        <div class="app-modal-backdrop" data-action="close-modal"></div>
+        <div class="app-modal-card">
+            <div class="app-modal-header">
+                <h3 id="userAuthModalTitle">User Account</h3>
+                <button type="button" class="app-modal-close" data-action="close-modal" aria-label="Close modal">×</button>
+            </div>
+            
+            <div class="app-modal-body">
+                <!-- Logged Out View -->
+                <div id="authLoggedOutView">
+                    <div class="modal-tabs">
+                        <button type="button" class="modal-tab active" data-auth-tab="login">Sign In</button>
+                        <button type="button" class="modal-tab" data-auth-tab="register">Register</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="backendLoginForm" class="modal-form">
+                        <div class="control-group">
+                            <label for="loginUserInput">Username, Email, or Mobile</label>
+                            <input type="text" id="loginUserInput" class="input-control" placeholder="Enter username, email, or phone" required />
+                        </div>
+                        <div class="control-group">
+                            <label for="loginUserPass">Password</label>
+                            <input type="password" id="loginUserPass" class="input-control" placeholder="Enter password" required />
+                        </div>
+                        <div class="form-feedback" id="loginFormFeedback"></div>
+                        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="backendRegisterForm" class="modal-form" style="display: none;">
+                        <div class="control-group">
+                            <label for="regFullName">Full Name</label>
+                            <input type="text" id="regFullName" class="input-control" placeholder="John Doe" required />
+                        </div>
+                        <div class="control-group">
+                            <label for="regUsername">Username</label>
+                            <input type="text" id="regUsername" class="input-control" placeholder="johndoe" required />
+                        </div>
+                        <div class="control-group">
+                            <label for="regEmail">Email Address</label>
+                            <input type="email" id="regEmail" class="input-control" placeholder="john@company.com" required />
+                        </div>
+                        <div class="control-group">
+                            <label for="regMobile">Mobile (Optional)</label>
+                            <input type="tel" id="regMobile" class="input-control" placeholder="+1 555-0199" />
+                        </div>
+                        <div class="control-group">
+                            <label for="regPassword">Password (Min 6 chars)</label>
+                            <input type="password" id="regPassword" class="input-control" placeholder="Create strong password" minlength="6" required />
+                        </div>
+                        <div class="form-feedback" id="regFormFeedback"></div>
+                        <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+                    </form>
+                </div>
+
+                <!-- Logged In View -->
+                <div id="authLoggedInView" style="display: none;">
+                    <div class="user-profile-card">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-info">
+                            <h4 id="userProfileName">User Name</h4>
+                            <p id="userProfileEmail">user@company.com</p>
+                            <span class="user-badge" id="userProfileUsername">@username</span>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <button type="button" class="btn btn-secondary btn-block" id="logoutButton">Sign Out</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         SAVED CONFIGURATIONS MODAL
+    ====================================================== -->
+    <div class="app-modal" id="configurationsModal" role="dialog" aria-modal="true" aria-labelledby="configurationsModalTitle" hidden>
+        <div class="app-modal-backdrop" data-action="close-modal"></div>
+        <div class="app-modal-card modal-card-lg">
+            <div class="app-modal-header">
+                <h3 id="configurationsModalTitle">Saved Cloud Configurations</h3>
+                <button type="button" class="app-modal-close" data-action="close-modal" aria-label="Close modal">×</button>
+            </div>
+            
+            <div class="app-modal-body">
+                <div class="configurations-actions-bar">
+                    <div class="config-save-input-group">
+                        <input type="text" id="newConfigNameInput" class="input-control" placeholder="Configuration name (e.g. Acme SaaS V2)" />
+                        <button type="button" class="btn btn-primary" id="saveNewConfigButton">Save Current State</button>
+                    </div>
+                </div>
+
+                <div class="configurations-list-container" id="configurationsListContainer">
+                    <div class="config-loading-spinner">Loading configurations...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
          JAVASCRIPT DEPENDENCY (JSZip for Packaging)
     ====================================================== -->
     <script src="./js/jszip.min.js"></script>
     <script>if (typeof JSZip === "undefined") document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\\/script>');</script>
+
+    <!-- =====================================================
+         API ABSTRACTION LAYER
+    ====================================================== -->
+    <script src="./js/api/client.js"></script>
+    <script src="./js/api/projects.js"></script>
+    <script src="./js/api/assets.js"></script>
+    <script src="./js/api/auth.js"></script>
 
     <!-- =====================================================
          CORE SCRIPTS

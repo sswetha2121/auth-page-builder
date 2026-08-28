@@ -52,9 +52,10 @@ body {
 
 @media (min-width: 1600px) {
 
-    .app-workspace {
+    .app-workspace,
+    .builder-layout {
         grid-template-columns:
-            minmax(380px, 440px)
+            minmax(480px, 520px)
             minmax(0, 1fr);
     }
 
@@ -85,9 +86,10 @@ body {
 
 @media (max-width: 1599px) {
 
-    .app-workspace {
+    .app-workspace,
+    .builder-layout {
         grid-template-columns:
-            minmax(330px, 390px)
+            minmax(440px, 480px)
             minmax(0, 1fr);
     }
 
@@ -111,9 +113,10 @@ body {
     }
 
 
-    .app-workspace {
+    .app-workspace,
+    .builder-layout {
         grid-template-columns:
-            minmax(290px, 340px)
+            minmax(400px, 440px)
             minmax(0, 1fr);
     }
 
@@ -167,15 +170,16 @@ body {
     }
 
 
-    .app-workspace {
+    .app-workspace,
+    .builder-layout {
         grid-template-columns:
-            minmax(270px, 320px)
+            minmax(380px, 420px)
             minmax(0, 1fr);
     }
 
 
     .customization-sidebar {
-        max-width: 320px;
+        max-width: 440px;
     }
 
 

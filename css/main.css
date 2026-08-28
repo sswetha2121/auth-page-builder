@@ -494,25 +494,6 @@ textarea:focus-visible,
 }
 
 
-.save-indicator::before {
-    content: "";
-
-    width: 7px;
-    height: 7px;
-
-    flex-shrink: 0;
-
-    border-radius: 50%;
-
-    background:
-        #22c55e;
-
-    box-shadow:
-        0 0 0 4px
-        rgba(34, 197, 94, 0.10);
-}
-
-
 .save-indicator.unsaved {
     color:
         var(--warning);
@@ -522,16 +503,6 @@ textarea:focus-visible,
 
     background:
         var(--warning-soft);
-}
-
-
-.save-indicator.unsaved::before {
-    background:
-        #f59e0b;
-
-    box-shadow:
-        0 0 0 4px
-        rgba(245, 158, 11, 0.10);
 }
 
 

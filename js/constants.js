@@ -38,57 +38,79 @@ const DEFAULT_BACKGROUND_ASSETS = Object.freeze([
     {
         id: "bg-1",
         name: "Geometric Dark",
-        path: "assets/backgrounds/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg"
+        path: "assets/backgrounds/background-1.svg"
     },
     {
         id: "bg-2",
-        name: "Creative Light",
-        path: "assets/backgrounds/idea-6900632_1280.png"
+        name: "Blue Gradient",
+        path: "assets/backgrounds/background-2.svg"
     },
     {
         id: "bg-3",
-        name: "Abstract Gradient",
-        path: "assets/backgrounds/OIP (3).webp"
+        name: "Clean Light",
+        path: "assets/backgrounds/background-3.svg"
     },
     {
         id: "bg-4",
-        name: "Deep Blue",
-        path: "assets/backgrounds/OIP (4).webp"
+        name: "Cyber Grid",
+        path: "assets/backgrounds/background-4.svg"
     },
     {
         id: "bg-5",
-        name: "Modern Texture",
-        path: "assets/backgrounds/OIP (5).webp"
+        name: "Purple Mesh",
+        path: "assets/backgrounds/background-5.svg"
+    },
+    {
+        id: "bg-6",
+        name: "Soft Aurora",
+        path: "assets/backgrounds/background-6.svg"
     }
 ]);
 
 const DEFAULT_LOGO_ASSETS = Object.freeze([
     {
         id: "logo-1",
-        name: "Prism Icon",
-        path: "assets/logos/1000_F_913783737_GrYZ3ld62JdNADjqXinbQ7ogaqWu5Og3.jpg"
+        name: "Shield Mark",
+        path: "assets/logos/brand-shield.svg"
     },
     {
         id: "logo-2",
-        name: "Lightbulb Emblem",
-        path: "assets/logos/idea-6900632_1280.png"
+        name: "Prism Emblem",
+        path: "assets/logos/brand-prism.svg"
     },
     {
         id: "logo-3",
-        name: "Shield Brand",
-        path: "assets/logos/OIP (4).webp"
+        name: "Nexus Tech",
+        path: "assets/logos/brand-nexus.svg"
     },
     {
         id: "logo-4",
-        name: "Aura Badge",
-        path: "assets/logos/OIP (3).webp"
+        name: "Aurora Wave",
+        path: "assets/logos/brand-aurora.svg"
     },
     {
         id: "logo-5",
-        name: "Vector Mark",
-        path: "assets/logos/OIP (5).webp"
+        name: "Apex Peak",
+        path: "assets/logos/brand-apex.svg"
     }
 ]);
+
+if (typeof window !== "undefined") {
+    window.APP_INFO = APP_INFO;
+    window.PAGE_TYPES = PAGE_TYPES;
+    window.DEVICE_TYPES = DEVICE_TYPES;
+    window.LAYOUT_TYPES = LAYOUT_TYPES;
+    window.DEFAULT_BACKGROUND_ASSETS = DEFAULT_BACKGROUND_ASSETS;
+    window.DEFAULT_LOGO_ASSETS = DEFAULT_LOGO_ASSETS;
+    window.Constants = {
+        APP_INFO,
+        PAGE_TYPES,
+        DEVICE_TYPES,
+        LAYOUT_TYPES,
+        DEFAULT_BACKGROUND_ASSETS,
+        DEFAULT_LOGO_ASSETS
+    };
+}
 
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {

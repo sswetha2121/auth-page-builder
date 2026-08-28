@@ -27,12 +27,30 @@ async function runDomTests() {
   window.JSZip = JSZip;
   window.URL.createObjectURL = () => "blob:mock-url";
   window.URL.revokeObjectURL = () => {};
+  window.fetch = (url) => {
+    const cleanPath = url.replace(/^\.\//, "").replace(/^\//, "");
+    const fullPath = path.join(__dirname, cleanPath);
+    if (fs.existsSync(fullPath)) {
+      const buffer = fs.readFileSync(fullPath);
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        arrayBuffer: () => Promise.resolve(buffer.buffer)
+      });
+    }
+    return Promise.reject(new Error("File not found: " + url));
+  };
+  global.fetch = window.fetch;
   window.HTMLElement.prototype.requestFullscreen = function () {
     return Promise.resolve();
   };
 
   // Load scripts in order into JSDOM window
   const scriptFiles = [
+    "js/api/client.js",
+    "js/api/projects.js",
+    "js/api/assets.js",
+    "js/api/auth.js",
     "js/constants.js",
     "js/config.js",
     "js/state.js",
@@ -99,8 +117,8 @@ async function runDomTests() {
   // TEST 4: Select Default Background Thumbnail
   // -------------------------------------------------------------
   const bgButtons = document.querySelectorAll("[data-background]");
-  bgButtons[1].click(); // Select Creative Graphic
-  assert(4, bgButtons[1].classList.contains("active") && getDynamicStyles().includes("idea-6900632_1280.png"), "Selecting background thumbnail updates active class & CSS variable");
+  bgButtons[2].click(); // Select background-2.svg
+  assert(4, bgButtons[2].classList.contains("active") && getDynamicStyles().includes("background-2.svg"), "Selecting background thumbnail updates active class & CSS variable");
 
   // -------------------------------------------------------------
   // TEST 5: Upload Custom Background
@@ -346,12 +364,19 @@ async function runDomTests() {
   // -------------------------------------------------------------
   // TEST 34: Form Submission Simulation Feedback
   // -------------------------------------------------------------
+  window.state.setActivePage("login");
   let submittedSuccess = false;
   window.Utils.showToast = (msg, type) => {
-    if (type === "success" && msg.includes("Redirect destination")) submittedSuccess = true;
+    if (type === "success" && (msg.includes("Redirect destination") || msg.includes("successful"))) submittedSuccess = true;
   };
-  const form = previewRoot.querySelector(".auth-main-form");
-  if (form) form.dispatchEvent(new window.Event("submit"));
+  const form = previewRoot.querySelector("#authLoginForm");
+  if (form) {
+    const idIn = form.querySelector("#loginIdentifier");
+    if (idIn) idIn.value = "admin@example.com";
+    const pwIn = form.querySelector("#loginPassword");
+    if (pwIn) pwIn.value = "secretPass123";
+    await window.handleAuthSubmit({ preventDefault: () => {}, target: form }, "login");
+  }
   assert(34, submittedSuccess, "Submitting preview form simulates redirect with feedback");
 
   // -------------------------------------------------------------
@@ -407,6 +432,8 @@ async function runDomTests() {
     console.log("==================================================");
     if (failed > 0) {
       process.exit(1);
+    } else {
+      process.exit(0);
     }
   }).catch(e => {
     console.error("Test 38 error:", e);

@@ -35,12 +35,19 @@
 
     // Background image calculation
     let bgImg = "none";
-    if (background.uploadedImage) {
+    if (background.uploadedImage && background.uploadedImage !== "none") {
       bgImg = `url("${background.uploadedImage}")`;
-    } else if (background.image) {
+    } else if (background.image && background.image !== "none" && background.type !== "color") {
       bgImg = `url("${background.image}")`;
-    } else if (background.selected) {
+    } else if (background.selected && background.selected !== "none" && background.type !== "color") {
       bgImg = `url("${background.selected}")`;
+    }
+
+    let bgColor = background.color || "#0f172a";
+    if (background.gradientEnabled) {
+      const gStart = background.gradientStart || bgColor;
+      const gEnd = background.gradientEnd || "#1e293b";
+      bgColor = `linear-gradient(135deg, ${gStart}, ${gEnd})`;
     }
 
     const overlayOpacity = background.overlayEnabled !== false 
@@ -93,7 +100,7 @@
 
         /* Background */
         --auth-background-image: ${bgImg};
-        --auth-background-color: ${background.color || "#0f172a"};
+        --auth-background-color: ${bgColor};
         --auth-background-position: ${background.position || "center"};
         --auth-background-size: ${background.size || "cover"};
         --auth-background-repeat: ${background.repeat || "no-repeat"};
@@ -199,6 +206,10 @@
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const targetPage = link.dataset.authNav;
+        const otpMethod = link.dataset.otpMethod;
+        if (otpMethod && window.state && typeof window.state.set === "function") {
+          window.state.set("authentication.otp.defaultMethod", otpMethod, { notify: false });
+        }
         if (targetPage && window.state && typeof window.state.setActivePage === "function") {
           window.state.setActivePage(targetPage);
         }
@@ -353,18 +364,6 @@
         }
       });
     }
-
-    // 7. Form Submission Simulation & Feedback
-    const forms = container.querySelectorAll(".auth-main-form");
-    forms.forEach(form => {
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const redirectUrl = config.urls?.redirectUrl || "https://customerwebsite.com/dashboard";
-        if (Utils.showToast) {
-          Utils.showToast(`Authentication simulated! Redirect destination: ${redirectUrl}`, "success", 4000);
-        }
-      });
-    });
   }
 
   /* =======================================================

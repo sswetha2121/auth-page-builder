@@ -5,14 +5,22 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test_suite.js && node test_dom_integration.js"
+    "start:django": "python django_backend/manage.py runserver 0.0.0.0:8000",
+    "test": "node test_suite.js && node test_dom_integration.js && node test_e2e_zip_export.js && node test_phase1_acceptance.js && node test_phase2_acceptance.js && node test_phase3_acceptance.js && node test_phase4_acceptance.js && node test_backend_phase1.js",
+    "test:django": "python django_backend/test_django_api.py"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "jsdom": "^30.0.1",
-    "jszip": "^3.10.1"
+    "jsonwebtoken": "^9.0.3",
+    "jszip": "^3.10.1",
+    "mysql2": "^3.24.2"
   }
 }

@@ -64,6 +64,14 @@
             value = input.value;
           }
 
+          // Live validation for URL fields
+          if (input.type === "url" && value) {
+            const isValid = Utils.isValidUrl(value);
+            input.classList.toggle("input-invalid", !isValid);
+          } else if (input.type === "url") {
+            input.classList.remove("input-invalid");
+          }
+
           if (window.state && typeof window.state.set === "function") {
             window.state.set(path, value);
           }
@@ -112,10 +120,38 @@
           bgButtons.forEach(b => b.classList.remove("active", "selected"));
           btn.classList.add("active", "selected");
           const bgPath = btn.dataset.background;
-          if (window.state && typeof window.state.set === "function") {
-            window.state.set("background.selected", bgPath, { notify: false });
-            window.state.set("background.image", bgPath, { notify: false });
-            window.state.set("background.uploadedImage", "", { notify: true });
+          if (window.state && typeof window.state.updateConfig === "function") {
+            if (bgPath === "none") {
+              window.state.updateConfig({
+                background: {
+                  type: "color",
+                  selected: "none",
+                  image: "",
+                  uploadedImage: ""
+                }
+              });
+            } else {
+              window.state.updateConfig({
+                background: {
+                  type: "default",
+                  selected: bgPath,
+                  image: bgPath,
+                  uploadedImage: ""
+                }
+              });
+            }
+          } else if (window.state && typeof window.state.set === "function") {
+            if (bgPath === "none") {
+              window.state.set("background.type", "color", { notify: false });
+              window.state.set("background.selected", "none", { notify: false });
+              window.state.set("background.image", "", { notify: false });
+              window.state.set("background.uploadedImage", "", { notify: true });
+            } else {
+              window.state.set("background.type", "default", { notify: false });
+              window.state.set("background.selected", bgPath, { notify: false });
+              window.state.set("background.image", bgPath, { notify: false });
+              window.state.set("background.uploadedImage", "", { notify: true });
+            }
           }
         });
       });
@@ -137,7 +173,7 @@
     }
 
     /* =======================================================
-       BIND FILE UPLOADS (BACKGROUND & LOGO)
+       BIND FILE UPLOADS (BACKGROUND & LOGO WITH VALIDATION)
     ======================================================= */
     bindFileUploads() {
       const fileInputs = document.querySelectorAll('input[type="file"][data-upload-type]');
@@ -153,6 +189,27 @@
           const file = e.target.files?.[0];
           if (!file) return;
 
+          // Validate file size (max 15MB for high-resolution backgrounds)
+          const maxBytes = 15 * 1024 * 1024;
+          if (file.size > maxBytes) {
+            if (Utils.showToast) {
+              Utils.showToast("File is too large. Maximum supported upload size is 15MB.", "error");
+            }
+            input.value = "";
+            return;
+          }
+
+          // Validate file type
+          const validTypes = ["image/jpeg", "image/png", "image/webp", "image/svg+xml", "image/gif"];
+          const fileExt = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "";
+          if (file.type && !validTypes.includes(file.type) && !["jpg", "jpeg", "png", "webp", "svg", "gif"].includes(fileExt)) {
+            if (Utils.showToast) {
+              Utils.showToast("Unsupported file format. Please upload JPG, PNG, WebP, SVG, or GIF.", "error");
+            }
+            input.value = "";
+            return;
+          }
+
           try {
             const dataUrl = await Utils.fileToDataURL(file);
 
@@ -164,17 +221,35 @@
               previewEl.hidden = false;
             }
 
-            if (window.state && typeof window.state.set === "function") {
+            const metadata = {
+              originalName: file.name,
+              extension: fileExt || "png",
+              mimeType: file.type || "image/png",
+              size: file.size
+            };
+
+            if (window.state && typeof window.state.setUploadedAsset === "function") {
               if (type === "background") {
                 document.querySelectorAll("[data-background]").forEach(b => b.classList.remove("active", "selected"));
-                window.state.setUploadedAsset("backgrounds", file.name, dataUrl);
-                window.state.set("background.uploadedImage", dataUrl, { notify: false });
-                window.state.set("background.image", dataUrl, { notify: true });
+                window.state.setUploadedAsset("backgrounds", file.name, dataUrl, metadata);
+                window.state.updateConfig({
+                  background: {
+                    type: "uploaded",
+                    uploadedImage: dataUrl,
+                    image: dataUrl,
+                    selected: ""
+                  }
+                });
               } else if (type === "logo") {
                 document.querySelectorAll("[data-logo]").forEach(b => b.classList.remove("active", "selected"));
-                window.state.setUploadedAsset("logos", file.name, dataUrl);
-                window.state.set("branding.uploadedLogo", dataUrl, { notify: false });
-                window.state.set("branding.logo", dataUrl, { notify: true });
+                window.state.setUploadedAsset("logos", file.name, dataUrl, metadata);
+                window.state.updateConfig({
+                  branding: {
+                    uploadedLogo: dataUrl,
+                    logo: dataUrl,
+                    selectedLogo: ""
+                  }
+                });
               }
             }
 
@@ -259,6 +334,7 @@
 
       resetBtn.addEventListener("click", () => {
         if (window.state && typeof window.state.reset === "function") {
+          document.querySelectorAll('input[type="file"]').forEach(fi => { fi.value = ""; });
           const newState = window.state.reset();
           this.syncControls(newState);
           if (Utils.showToast) {
@@ -314,12 +390,33 @@
         });
 
         // 5. Sync default asset buttons active state
-        const currentBg = state.background?.uploadedImage ? "" : (state.background?.selected || state.background?.image || "");
+        const isUploadedBg = Boolean(state.background?.uploadedImage);
+        const isColorOnly = state.background?.type === "color" || state.background?.selected === "none" || (!state.background?.image && !state.background?.uploadedImage);
+        const currentBg = isUploadedBg ? "" : (isColorOnly ? "none" : (state.background?.selected || state.background?.image || ""));
         document.querySelectorAll("[data-background]").forEach(btn => {
-          const match = btn.dataset.background === currentBg;
+          const btnBg = btn.dataset.background;
+          const match = (btnBg === currentBg) || (btnBg === "none" && isColorOnly && !isUploadedBg);
           btn.classList.toggle("active", match);
           btn.classList.toggle("selected", match);
         });
+
+        // Sync background upload preview
+        const bgUploadPreview = document.getElementById("backgroundUploadPreview");
+        const bgFileName = document.getElementById("backgroundFileName");
+        if (state.background?.uploadedImage) {
+          if (bgUploadPreview) {
+            bgUploadPreview.src = state.background.uploadedImage;
+            bgUploadPreview.hidden = false;
+          }
+        } else {
+          if (bgUploadPreview) {
+            bgUploadPreview.src = "";
+            bgUploadPreview.hidden = true;
+          }
+          if (bgFileName) {
+            bgFileName.textContent = "";
+          }
+        }
 
         const currentLogo = state.branding?.uploadedLogo ? "" : (state.branding?.selectedLogo || state.branding?.logo || "");
         document.querySelectorAll("[data-logo]").forEach(btn => {
@@ -327,6 +424,24 @@
           btn.classList.toggle("active", match);
           btn.classList.toggle("selected", match);
         });
+
+        // Sync logo upload preview
+        const logoUploadPreview = document.getElementById("logoUploadPreview");
+        const logoFileName = document.getElementById("logoFileName");
+        if (state.branding?.uploadedLogo) {
+          if (logoUploadPreview) {
+            logoUploadPreview.src = state.branding.uploadedLogo;
+            logoUploadPreview.hidden = false;
+          }
+        } else {
+          if (logoUploadPreview) {
+            logoUploadPreview.src = "";
+            logoUploadPreview.hidden = true;
+          }
+          if (logoFileName) {
+            logoFileName.textContent = "";
+          }
+        }
 
         // 6. Update Integration Snippet text
         const snippetEl = document.getElementById("integrationSnippetText");
