@@ -2382,3 +2382,284 @@ textarea {
     }
 
 }
+
+
+/* =========================================================
+   PHASE 7 — TWO-COLUMN RESPONSIVE LAYOUT GRIDS
+========================================================= */
+
+.control-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: flex-end;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.control-row-2col .control-group {
+    margin-top: 0;
+    width: 100%;
+}
+
+.control-row-2col .switch-control {
+    margin-top: 0;
+    height: 100%;
+    min-height: 44px;
+}
+
+.compact-switch {
+    padding: 8px 12px;
+    min-height: 42px;
+}
+
+.accordion-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.accordion-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* =========================================================
+   PHASE 7 — INSPECTOR PASSWORD STRENGTH DEMO & CHECKLIST
+========================================================= */
+
+.inspector-strength-card {
+    margin-top: 14px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.inspector-strength-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.inspector-strength-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.strength-pill {
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.strength-pill-weak {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.strength-pill-medium {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.strength-pill-strong {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.strength-meter-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.strength-bar-segment {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+}
+
+.strength-bar-segment.lvl-weak {
+    background: #ef4444;
+}
+
+.strength-bar-segment.lvl-medium {
+    background: #f59e0b;
+}
+
+.strength-bar-segment.lvl-strong {
+    background: #10b981;
+}
+
+/* Inspector Requirements Checklist */
+.inspector-reqs-card {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.inspector-reqs-title {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.inspector-reqs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inspector-reqs-list .req-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #475569;
+}
+
+.inspector-reqs-list .req-item .req-icon {
+    font-weight: 700;
+    color: #10b981;
+}
+
+/* =========================================================
+   PHASE 7 — LIVE PREVIEW PASSWORD STRENGTH & CHECKLIST
+========================================================= */
+
+.signup-password-meter {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.signup-meter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.signup-meter-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--auth-subtitle-color, #64748b);
+}
+
+.signup-meter-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.signup-meter-badge.lvl-weak {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.signup-meter-badge.lvl-medium {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.signup-meter-badge.lvl-strong {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.signup-meter-track {
+    width: 100%;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.signup-meter-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.25s ease, background-color 0.25s ease;
+}
+
+.signup-meter-bar.lvl-weak {
+    background: #ef4444;
+}
+
+.signup-meter-bar.lvl-medium {
+    background: #f59e0b;
+}
+
+.signup-meter-bar.lvl-strong {
+    background: #10b981;
+}
+
+/* Live Preview Requirements Checklist */
+.signup-requirements-card {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: rgba(248, 250, 252, 0.85);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 8px;
+}
+
+.signup-requirements-title {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--auth-subtitle-color, #64748b);
+    margin-bottom: 6px;
+}
+
+.signup-requirements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.signup-req-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #64748b;
+    transition: color 0.2s ease;
+}
+
+.signup-req-item .signup-req-icon {
+    font-size: 11px;
+    line-height: 1;
+    color: #94a3b8;
+    transition: color 0.2s ease;
+}
+
+.signup-req-item.passed {
+    color: #059669;
+    font-weight: 600;
+}
+
+.signup-req-item.passed .signup-req-icon {
+    color: #10b981;
+}

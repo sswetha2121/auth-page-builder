@@ -364,7 +364,84 @@
         }
       });
     }
+
+    // 7. Live Password Evaluation on Sign Up Page
+    const signupPasswordInput = container.querySelector("#signupPassword");
+    if (signupPasswordInput) {
+      const policy = config.passwordPolicy || {};
+      const minLen = Number(policy.minLength) || 8;
+      const minNums = Number(policy.minNumbers) || 1;
+      const minSpecials = Number(policy.minSpecialChars) || 1;
+      const allowedSpecials = policy.allowedSpecialChars || "!@#$%^&*()_+-=[]{}|;:,.<>?";
+      const escapedSpecials = allowedSpecials.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+      const specialRegex = new RegExp(`[${escapedSpecials}]`, "g");
+
+      const updateLivePasswordEvaluation = () => {
+        const val = signupPasswordInput.value || "";
+
+        // Rules check
+        const passLen = val.length >= minLen;
+        const passUpper = (policy.requireUppercase === false) || /[A-Z]/.test(val);
+        const passLower = (policy.requireLowercase === false) || /[a-z]/.test(val);
+        const passNum = (policy.requireNumber === false) || ((val.match(/[0-9]/g) || []).length >= minNums);
+        const passSpecial = (policy.requireSpecialChar === false) || ((val.match(specialRegex) || []).length >= minSpecials);
+
+        const updateReqItem = (id, passed) => {
+          const item = container.querySelector(id);
+          if (item) {
+            item.classList.toggle("passed", passed);
+            const icon = item.querySelector(".signup-req-icon");
+            if (icon) icon.textContent = passed ? "✓" : "○";
+          }
+        };
+
+        updateReqItem("#reqCheckMinLength", passLen);
+        updateReqItem("#reqCheckUpper", passUpper);
+        updateReqItem("#reqCheckLower", passLower);
+        updateReqItem("#reqCheckNumber", passNum);
+        updateReqItem("#reqCheckSpecial", passSpecial);
+
+        // Strength Calculation
+        let score = 0;
+        if (passLen) score++;
+        if (passUpper && passLower) score++;
+        if (passNum) score++;
+        if (passSpecial) score++;
+        if (val.length >= minLen + 4) score++;
+
+        const meterBar = container.querySelector("#signupMeterBar");
+        const meterBadge = container.querySelector("#signupMeterBadge");
+
+        if (meterBar && meterBadge) {
+          if (!val) {
+            meterBar.style.width = "10%";
+            meterBar.className = "signup-meter-bar lvl-weak";
+            meterBadge.textContent = "Empty";
+            meterBadge.className = "signup-meter-badge lvl-weak";
+          } else if (score <= 2) {
+            meterBar.style.width = "30%";
+            meterBar.className = "signup-meter-bar lvl-weak";
+            meterBadge.textContent = "Weak";
+            meterBadge.className = "signup-meter-badge lvl-weak";
+          } else if (score <= 4) {
+            meterBar.style.width = "65%";
+            meterBar.className = "signup-meter-bar lvl-medium";
+            meterBadge.textContent = "Medium";
+            meterBadge.className = "signup-meter-badge lvl-medium";
+          } else {
+            meterBar.style.width = "100%";
+            meterBar.className = "signup-meter-bar lvl-strong";
+            meterBadge.textContent = "Strong";
+            meterBadge.className = "signup-meter-badge lvl-strong";
+          }
+        }
+      };
+
+      signupPasswordInput.addEventListener("input", updateLivePasswordEvaluation);
+      updateLivePasswordEvaluation();
+    }
   }
+
 
   /* =======================================================
      MAIN RENDER FUNCTION (Non-Destructive Class Updates)

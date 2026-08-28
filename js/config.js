@@ -159,9 +159,35 @@ const defaultConfig = {
   },
 
   /* =======================================================
-     CUSTOM CSS
+     PASSWORD POLICY & AUTHENTICATION REQUIREMENTS
   ======================================================= */
-  customCSS: "",
+  passwordPolicy: {
+    minLength: 8,
+    maxLength: 64,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumber: true,
+    requireSpecialChar: true,
+    allowedSpecialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?",
+    minNumbers: 1,
+    minSpecialChars: 1,
+    preventUsername: true,
+    preventEmail: true,
+    strengthRequirement: "medium", // "weak", "medium", "strong"
+    showStrengthMeter: true,
+    showRequirementsList: true
+  },
+
+  /* =======================================================
+     ADVANCED NO-CODE SETTINGS
+  ======================================================= */
+  advanced: {
+    sessionTimeout: 30,
+    autoFocus: true,
+    smoothTransitions: true,
+    showPasswordToggle: true
+  },
+
 
   /* =======================================================
      PAGE-SPECIFIC CONFIGURATIONS

@@ -212,8 +212,60 @@
   }
 
   /* =======================================================
+     PASSWORD STRENGTH METER & REQUIREMENTS BUILDERS
+  ======================================================= */
+  function generatePasswordStrengthMeterHTML(config) {
+    const policy = config.passwordPolicy || {};
+    if (policy.showStrengthMeter === false) return "";
+
+    return `
+      <div class="signup-password-meter" id="signupPasswordMeterContainer">
+        <div class="signup-meter-header">
+          <span class="signup-meter-label">Password Strength:</span>
+          <span class="signup-meter-badge lvl-weak" id="signupMeterBadge">Weak</span>
+        </div>
+        <div class="signup-meter-track">
+          <div class="signup-meter-bar lvl-weak" id="signupMeterBar" style="width: 25%;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function generatePasswordRequirementsHTML(config) {
+    const policy = config.passwordPolicy || {};
+    if (policy.showRequirementsList === false) return "";
+
+    const minLen = policy.minLength || 8;
+    const reqs = [];
+
+    reqs.push(`<li class="signup-req-item" id="reqCheckMinLength" data-rule="min-length"><span class="signup-req-icon">○</span> At least ${minLen} characters</li>`);
+    if (policy.requireUppercase !== false) {
+      reqs.push(`<li class="signup-req-item" id="reqCheckUpper" data-rule="uppercase"><span class="signup-req-icon">○</span> One uppercase letter (A-Z)</li>`);
+    }
+    if (policy.requireLowercase !== false) {
+      reqs.push(`<li class="signup-req-item" id="reqCheckLower" data-rule="lowercase"><span class="signup-req-icon">○</span> One lowercase letter (a-z)</li>`);
+    }
+    if (policy.requireNumber !== false) {
+      reqs.push(`<li class="signup-req-item" id="reqCheckNumber" data-rule="number"><span class="signup-req-icon">○</span> One numeric digit (0-9)</li>`);
+    }
+    if (policy.requireSpecialChar !== false) {
+      reqs.push(`<li class="signup-req-item" id="reqCheckSpecial" data-rule="special"><span class="signup-req-icon">○</span> One special character (${escapeHtml((policy.allowedSpecialChars || "!@#$%").slice(0, 6))}...)</li>`);
+    }
+
+    return `
+      <div class="signup-requirements-card" id="signupRequirementsCard">
+        <span class="signup-requirements-title">Your password must contain:</span>
+        <ul class="signup-requirements-list">
+          ${reqs.join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+  /* =======================================================
      PAGE: LOGIN (Supports Standard & Inline OTP Modes)
   ======================================================= */
+
   function generateLoginPage(config) {
     const pageConfig = config.pages?.login || {};
     const title = escapeHtml(pageConfig.title || "Welcome back");
@@ -450,9 +502,8 @@
                 ${ICONS.eye}
               </button>
             </div>
-            <div class="password-strength-bar">
-              <div class="password-strength-fill" style="width: 70%;"></div>
-            </div>
+            ${generatePasswordStrengthMeterHTML(config)}
+            ${generatePasswordRequirementsHTML(config)}
           </div>
           ` : ""}
 

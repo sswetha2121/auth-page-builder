@@ -273,8 +273,76 @@
 
 
 /* =========================================================
+   CATEGORY NAVIGATION RAIL (INSPECTOR CATEGORIES)
+========================================================= */
+
+.sidebar-category-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    scrollbar-width: thin;
+}
+
+.sidebar-category-nav::-webkit-scrollbar {
+    height: 4px;
+}
+
+.sidebar-category-nav::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.sidebar-category-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-category-btn:hover {
+    color: #0f172a;
+    background: #f8fafc;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+}
+
+.sidebar-category-btn.active {
+    color: #ffffff;
+    background: #1e293b;
+    border-color: #0f172a;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+}
+
+.sidebar-category-btn .cat-icon {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.sidebar-category-btn .cat-label {
+    line-height: 1;
+}
+
+
+/* =========================================================
    LEGACY NAVIGATION SUPPORT
 ========================================================= */
+
 
 .sidebar-navigation {
     display: flex;

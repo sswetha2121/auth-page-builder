@@ -25,6 +25,8 @@
       this.bindAssetPickers();
       this.bindFileUploads();
       this.bindPageTabs();
+      this.bindCategoryNav();
+      this.bindPasswordPolicyMeter();
       this.bindAccordions();
       this.bindResetButton();
 
@@ -37,6 +39,106 @@
         });
       }
     }
+
+    /* =======================================================
+       BIND CATEGORY NAVIGATION
+    ======================================================= */
+    bindCategoryNav() {
+      const catButtons = document.querySelectorAll("[data-inspector-category]");
+      if (!catButtons || catButtons.length === 0) return;
+
+      catButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const targetCategory = btn.dataset.inspectorCategory;
+          if (!targetCategory) return;
+
+          catButtons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          const sections = document.querySelectorAll(".customization-section[data-category]");
+          let firstMatch = null;
+
+          sections.forEach(sec => {
+            const secCategory = sec.dataset.category;
+            if (targetCategory === "all" || secCategory === targetCategory) {
+              sec.style.display = "";
+              sec.classList.remove("cat-hidden");
+              if (!firstMatch) firstMatch = sec;
+            } else {
+              sec.style.display = "none";
+              sec.classList.add("cat-hidden");
+            }
+          });
+
+          // If filtering a specific category, make sure at least the first section is open
+          if (targetCategory !== "all" && firstMatch) {
+            firstMatch.classList.add("open");
+            const header = firstMatch.querySelector("[data-accordion-trigger]");
+            if (header) header.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+    }
+
+    /* =======================================================
+       BIND PASSWORD POLICY DYNAMIC METER & CHECKLIST
+    ======================================================= */
+    bindPasswordPolicyMeter() {
+      const updateChecklist = () => {
+        const minLenInput = document.querySelector('[data-config-path="passwordPolicy.minLength"]');
+        const reqUpperInput = document.querySelector('[data-config-path="passwordPolicy.requireUppercase"]');
+        const reqLowerInput = document.querySelector('[data-config-path="passwordPolicy.requireLowercase"]');
+        const reqNumInput = document.querySelector('[data-config-path="passwordPolicy.requireNumber"]');
+        const reqSpecialInput = document.querySelector('[data-config-path="passwordPolicy.requireSpecialChar"]');
+        const allowedSpecialInput = document.querySelector('[data-config-path="passwordPolicy.allowedSpecialChars"]');
+        const strengthSelect = document.querySelector('[data-config-path="passwordPolicy.strengthRequirement"]');
+
+        const minLen = minLenInput ? minLenInput.value : 8;
+        const minLenEl = document.getElementById("reqMinLen");
+        if (minLenEl) minLenEl.textContent = minLen;
+
+        const reqUpperItem = document.getElementById("reqUpperItem");
+        if (reqUpperItem) reqUpperItem.style.display = (reqUpperInput && !reqUpperInput.checked) ? "none" : "";
+
+        const reqLowerItem = document.getElementById("reqLowerItem");
+        if (reqLowerItem) reqLowerItem.style.display = (reqLowerInput && !reqLowerInput.checked) ? "none" : "";
+
+        const reqNumItem = document.getElementById("reqNumberItem");
+        if (reqNumItem) reqNumItem.style.display = (reqNumInput && !reqNumInput.checked) ? "none" : "";
+
+        const reqSpecialItem = document.getElementById("reqSpecialItem");
+        if (reqSpecialItem) reqSpecialItem.style.display = (reqSpecialInput && !reqSpecialInput.checked) ? "none" : "";
+
+        const reqSpecialCharsEl = document.getElementById("reqSpecialChars");
+        if (reqSpecialCharsEl && allowedSpecialInput) {
+          const chars = allowedSpecialInput.value || "!@#$%";
+          reqSpecialCharsEl.textContent = chars.length > 8 ? chars.slice(0, 8) + "..." : chars;
+        }
+
+        // Update strength meter badge & bar
+        const strength = strengthSelect ? strengthSelect.value : "medium";
+        const badge = document.getElementById("inspectorStrengthBadge");
+        const bar = document.getElementById("inspectorStrengthBar");
+
+        if (badge) {
+          badge.textContent = strength.charAt(0).toUpperCase() + strength.slice(1);
+          badge.className = `strength-pill strength-pill-${strength}`;
+        }
+        if (bar) {
+          bar.className = `strength-bar-segment active lvl-${strength}`;
+          bar.style.width = strength === "weak" ? "33%" : (strength === "strong" ? "100%" : "66%");
+        }
+      };
+
+      const policyInputs = document.querySelectorAll('[data-config-path^="passwordPolicy"]');
+      policyInputs.forEach(input => {
+        input.addEventListener("input", updateChecklist);
+        input.addEventListener("change", updateChecklist);
+      });
+
+      updateChecklist();
+    }
+
 
     /* =======================================================
        BIND ALL [data-config-path] INPUTS
