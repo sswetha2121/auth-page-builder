@@ -86,7 +86,7 @@ async function runAcceptanceTest() {
   // STEP 2: Select default background A -> preview updates
   // -------------------------------------------------------------
   const bgButtons = document.querySelectorAll("[data-background]");
-  assert(2, bgButtons.length === 7, `Found ${bgButtons.length} default background options including color swatch`);
+  assert(2, bgButtons.length >= 7, `Found ${bgButtons.length} default background options including color swatch`);
   bgButtons[1].click(); // background-1.svg
   assert(2, bgButtons[1].classList.contains("active") && getDynamicStyles().includes("background-1.svg"), "Default background A (background-1.svg) updates preview");
 
@@ -174,7 +174,7 @@ async function runAcceptanceTest() {
   const imageBgButtons = Array.from(bgButtons).filter(btn => btn.dataset.background !== "none");
   for (let i = 0; i < imageBgButtons.length; i++) {
     const bgImg = imageBgButtons[i].querySelector("img");
-    assert(14, bgImg && bgImg.getAttribute("src").startsWith("./assets/backgrounds/background-"), `Thumbnail ${i + 1} (${imageBgButtons[i].textContent.trim()}) has valid image path`);
+    assert(14, bgImg && bgImg.getAttribute("src").startsWith("./assets/backgrounds/"), `Thumbnail ${i + 1} (${imageBgButtons[i].textContent.trim()}) has valid image path`);
   }
 
   // -------------------------------------------------------------

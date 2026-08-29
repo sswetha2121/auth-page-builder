@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Modular Stylesheets in Exact Loading Order -->
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/global.css">
+  <link rel="stylesheet" href="./css/auth-layout.css">
+  <link rel="stylesheet" href="./css/auth-components.css">
+  <link rel="stylesheet" href="./css/responsive.css">
+</head>
+<body>
+
+  <div class="auth-preview-root" id="authAppRoot">
+    <div class="auth-preview-shell">
+      
+      <!-- Visual Image / Background Section -->
+      <div class="auth-image-section">
+        <div class="auth-image-overlay"></div>
+        <div class="auth-image-content" id="authBgTextBlock" style="display: none;">
+          <div class="auth-image-text-block">
+            <h2 class="auth-image-text" id="authBgHeading"></h2>
+            <p class="auth-image-subtext" id="authBgSubtext"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auth Form Section -->
+      <div class="auth-form-section">
+        <div class="auth-card" id="authCard">
+          
+          <div class="auth-landing-link-bar" id="backToWebBar" style="display: none;">
+            <a href="#" class="auth-landing-link" id="backToWebLink">
+              ← Back to Website
+            </a>
+          </div>
+
+          <div class="auth-logo-header" id="authLogoHeader">
+            <img src="./assets/logos/brand-shield.svg" alt="Brand Logo" class="auth-logo-img" id="authLogoImg">
+            <span class="auth-brand-name" id="authBrandName">Your Brand</span>
+          </div>
+
+          <div class="auth-page-container">
+            <!-- Login Form Tab -->
+            <div class="auth-page-tab-content" id="pageTabLogin">
+              <div class="auth-form-header">
+                <h1 class="auth-heading" id="loginHeading">Welcome back</h1>
+                <p class="auth-subheading" id="loginSubheading">Sign in to continue to your account</p>
+              </div>
+
+              <form class="auth-main-form" id="authLoginForm">
+                <div class="auth-field-group">
+                  <label class="auth-label" for="loginIdentifier">Email / Username / Phone</label>
+                  <div class="auth-input-wrapper">
+                    <input type="text" id="loginIdentifier" name="identifier" class="auth-input" placeholder="name@company.com" required />
+                  </div>
+                </div>
+
+                <div class="auth-field-group" id="loginPasswordGroup">
+                  <div class="auth-label-row">
+                    <label class="auth-label" for="loginPassword">Password</label>
+                    <a href="#forgot" class="auth-link auth-link-forgot" id="forgotPasswordLink">Forgot password?</a>
+                  </div>
+                  <div class="auth-input-wrapper">
+                    <input type="password" id="loginPassword" name="password" class="auth-input" placeholder="••••••••" required />
+                  </div>
+                </div>
+
+                <div class="auth-button-group">
+                  <button type="submit" class="auth-primary-btn" id="loginSubmitBtn">
+                    <span>Sign In</span>
+                  </button>
+                </div>
+
+                <div class="auth-alt-auth-group" id="otpBtnContainer" style="display: none;">
+                  <button type="button" class="auth-secondary-btn" id="switchToOtpBtn">
+                    <span>Continue with OTP</span>
+                  </button>
+                </div>
+
+                <div class="auth-footer-nav" id="signupNavFooter">
+                  <span>Don't have an account?</span>
+                  <a href="#signup" class="auth-link auth-link-action" id="switchToSignupBtn">Create account</a>
+                </div>
+              </form>
+            </div>
+
+            <!-- Signup Form Tab -->
+            <div class="auth-page-tab-content" id="pageTabSignup" style="display: none;">
+              <div class="auth-form-header">
+                <h1 class="auth-heading" id="signupHeading">Create account</h1>
+                <p class="auth-subheading" id="signupSubheading">Get started with your free account today</p>
+              </div>
+
+              <form class="auth-main-form" id="authSignupForm">
+                <div class="auth-field-group">
+                  <label class="auth-label" for="signupName">Full Name</label>
+                  <input type="text" id="signupName" class="auth-input" placeholder="Alex Morgan" required />
+                </div>
+
+                <div class="auth-field-group">
+                  <label class="auth-label" for="signupUsername">Username</label>
+                  <input type="text" id="signupUsername" class="auth-input" placeholder="alexmorgan" required />
+                </div>
+
+                <div class="auth-field-group">
+                  <label class="auth-label" for="signupEmail">Email Address</label>
+                  <input type="email" id="signupEmail" class="auth-input" placeholder="name@company.com" required />
+                </div>
+
+                <div class="auth-field-group">
+                  <label class="auth-label" for="signupPassword">Password</label>
+                  <input type="password" id="signupPassword" class="auth-input" placeholder="••••••••" required />
+                </div>
+
+                <div class="auth-button-group">
+                  <button type="submit" class="auth-primary-btn" id="signupSubmitBtn">
+                    <span>Create Account</span>
+                  </button>
+                </div>
+
+                <div class="auth-footer-nav">
+                  <span>Already have an account?</span>
+                  <a href="#login" class="auth-link auth-link-action" id="switchToLoginFromSignup">Sign in</a>
+                </div>
+              </form>
+            </div>
+
+            <!-- OTP Form Tab -->
+            <div class="auth-page-tab-content" id="pageTabOtp" style="display: none;">
+              <div class="auth-form-header">
+                <h1 class="auth-heading">Verify Code</h1>
+                <p class="auth-subheading">Enter the verification code sent to your device</p>
+              </div>
+
+              <form class="auth-main-form" id="authOtpForm">
+                <div class="auth-field-group">
+                  <label class="auth-label" for="otpIdentifier">Identifier</label>
+                  <input type="text" id="otpIdentifier" class="auth-input" placeholder="name@company.com" required />
+                </div>
+
+                <div class="auth-field-group">
+                  <label class="auth-label" for="otpCodeInput">Verification Code (Static: 123456)</label>
+                  <input type="text" id="otpCodeInput" class="auth-input" placeholder="123456" maxlength="6" required />
+                </div>
+
+                <div class="auth-button-group">
+                  <button type="submit" class="auth-primary-btn" id="otpSubmitBtn">
+                    <span>Verify & Continue</span>
+                  </button>
+                </div>
+
+                <div class="auth-footer-nav">
+                  <a href="#login" class="auth-link auth-link-action" id="switchToLoginFromOtp">← Back to Login</a>
+                </div>
+              </form>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JavaScript Modules in Order -->
+  <script src="./js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/validation.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

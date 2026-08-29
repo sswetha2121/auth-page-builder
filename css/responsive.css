@@ -786,6 +786,72 @@ body {
 
 
     /* =====================================================
+       SCOPED DEVICE PREVIEW REFLOW (AUTHORITATIVE ENGINE)
+    ===================================================== */
+
+    .preview-device-mobile .auth-layout,
+    .preview-device-mobile .auth-preview,
+    .preview-device-mobile .auth-preview-shell,
+    .preview-device-mobile.layout-split-left-image,
+    .preview-device-mobile.layout-split-right-image {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .preview-device-mobile .auth-image-section,
+    .preview-device-mobile .auth-preview-background {
+        width: 100% !important;
+        flex: 0 0 auto !important;
+        min-height: 180px !important;
+        max-height: 220px !important;
+        box-sizing: border-box !important;
+    }
+
+    .preview-device-mobile .auth-form-section,
+    .preview-device-mobile .auth-preview-form-area {
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        padding: 16px 12px !important;
+        box-sizing: border-box !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+    }
+
+    .preview-device-mobile .auth-card,
+    .preview-device-mobile .auth-preview-card {
+        width: calc(100% - 24px) !important;
+        max-width: 440px !important;
+        margin: 12px auto !important;
+        padding: 20px 16px !important;
+        box-sizing: border-box !important;
+    }
+
+    .preview-device-tablet .auth-layout,
+    .preview-device-tablet .auth-preview,
+    .preview-device-tablet.layout-split-left-image,
+    .preview-device-tablet.layout-split-right-image {
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 440px) !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .preview-device-tablet .auth-card,
+    .preview-device-tablet .auth-preview-card {
+        width: 100% !important;
+        max-width: 440px !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
        AUTH PREVIEW
     ===================================================== */
 

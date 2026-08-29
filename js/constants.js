@@ -38,32 +38,74 @@ const DEFAULT_BACKGROUND_ASSETS = Object.freeze([
     {
         id: "bg-1",
         name: "Geometric Dark",
-        path: "assets/backgrounds/background-1.svg"
+        path: "assets/backgrounds/background-1.svg",
+        type: "svg"
     },
     {
         id: "bg-2",
         name: "Blue Gradient",
-        path: "assets/backgrounds/background-2.svg"
+        path: "assets/backgrounds/background-2.svg",
+        type: "svg"
     },
     {
         id: "bg-3",
         name: "Clean Light",
-        path: "assets/backgrounds/background-3.svg"
+        path: "assets/backgrounds/background-3.svg",
+        type: "svg"
     },
     {
         id: "bg-4",
         name: "Cyber Grid",
-        path: "assets/backgrounds/background-4.svg"
+        path: "assets/backgrounds/background-4.svg",
+        type: "svg"
     },
     {
         id: "bg-5",
         name: "Purple Mesh",
-        path: "assets/backgrounds/background-5.svg"
+        path: "assets/backgrounds/background-5.svg",
+        type: "svg"
     },
     {
         id: "bg-6",
         name: "Soft Aurora",
-        path: "assets/backgrounds/background-6.svg"
+        path: "assets/backgrounds/background-6.svg",
+        type: "svg"
+    },
+    {
+        id: "b1",
+        name: "Cosmic Dark",
+        path: "assets/backgrounds/b1.webp",
+        type: "webp"
+    },
+    {
+        id: "b2",
+        name: "Neon Gradient",
+        path: "assets/backgrounds/b2.webp",
+        type: "webp"
+    },
+    {
+        id: "b3",
+        name: "Abstract Wave",
+        path: "assets/backgrounds/b3.webp",
+        type: "webp"
+    },
+    {
+        id: "b4",
+        name: "Minimal Grid",
+        path: "assets/backgrounds/b4.webp",
+        type: "webp"
+    },
+    {
+        id: "b5",
+        name: "Vibrant HD",
+        path: "assets/backgrounds/b5.jpg",
+        type: "jpg"
+    },
+    {
+        id: "b6",
+        name: "Creative Studio",
+        path: "assets/backgrounds/idea-6900632_1280.png",
+        type: "png"
     }
 ]);
 

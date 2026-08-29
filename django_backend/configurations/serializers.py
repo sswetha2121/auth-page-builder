@@ -19,12 +19,14 @@ class ConfigurationSerializer(serializers.ModelSerializer):
     Serializer for AuthConfiguration records.
     """
     configuration_data = serializers.JSONField(required=True)
+    builder_session_id = serializers.CharField(max_length=255, required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = AuthConfiguration
         fields = [
             "id",
             "user_id",
+            "builder_session_id",
             "configuration_name",
             "landing_url",
             "redirect_url",
@@ -66,3 +68,15 @@ class ConfigurationSerializer(serializers.ModelSerializer):
         if not isinstance(value, dict):
             raise serializers.ValidationError("configuration_data must be a valid JSON object.")
         return value
+
+    def validate(self, attrs):
+        config_data = attrs.get("configuration_data") or {}
+        if isinstance(config_data, dict):
+            urls = config_data.get("urls") or {}
+            if not attrs.get("landing_url") and urls.get("landingPageUrl"):
+                attrs["landing_url"] = urls.get("landingPageUrl")
+            if not attrs.get("redirect_url") and urls.get("redirectUrl"):
+                attrs["redirect_url"] = urls.get("redirectUrl")
+        if not attrs.get("configuration_name"):
+            attrs["configuration_name"] = "My Auth Page Experience"
+        return attrs

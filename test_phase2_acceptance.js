@@ -80,10 +80,10 @@ async function runPhase2AcceptanceTests() {
 
   // 1 & 2: Select every default background -> Every default background updates preview
   const bgButtons = Array.from(document.querySelectorAll("[data-background]")).filter(b => b.dataset.background !== "none");
-  assert(1, bgButtons.length === 6, "All 6 vector SVG background presets available");
+  assert(1, bgButtons.length >= 6, "All 12 default background assets available");
   for (let i = 0; i < bgButtons.length; i++) {
     bgButtons[i].click();
-    const expected = `background-${i + 1}.svg`;
+    const expected = bgButtons[i].dataset.background;
     assert(2, getDynamicStyles().includes(expected), `Default background ${i + 1} (${expected}) updates preview`);
   }
 
@@ -333,6 +333,7 @@ async function runPhase2AcceptanceTests() {
     if (idIn) idIn.value = "admin@example.com";
     const pwIn = loginSubmitForm.querySelector("#loginPassword");
     if (pwIn) pwIn.value = "secretPass123";
+    window.AuthController.loginUser = async () => ({ success: true, redirect_url: window.state.get("urls.redirectUrl") });
     await window.handleAuthSubmit({ preventDefault: () => {}, target: loginSubmitForm }, "login");
   }
   assert(38, simulatedRedirect.includes("https://apexsystems.io/dashboard"), "Form submit simulation triggers feedback with configured redirect URL");

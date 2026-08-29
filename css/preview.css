@@ -19,7 +19,7 @@
     overflow: hidden;
     color: var(--auth-title-color, #0f172a);
     font-family: var(--auth-font-family, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
-    background: var(--auth-background-color, #0f172a);
+    background-color: var(--auth-background-color, #0f172a);
     background-image: var(--auth-background-image, none);
     background-size: var(--auth-background-size, cover);
     background-position: var(--auth-background-position, center);
@@ -237,7 +237,7 @@
     position: relative;
     display: flex;
     overflow: hidden;
-    background: var(--auth-background-color, #0f172a);
+    background-color: var(--auth-background-color, #0f172a);
     background-image: var(--auth-background-image, none);
     background-size: var(--auth-background-size, cover);
     background-position: var(--auth-background-position, center);
@@ -400,6 +400,8 @@
 .auth-logo-box {
     width: var(--auth-logo-size, 64px);
     height: var(--auth-logo-size, 64px);
+    max-width: 120px;
+    max-height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -411,6 +413,18 @@
     -webkit-clip-path: var(--auth-logo-clip, none);
     flex-shrink: 0;
     transition: all 0.2s ease;
+}
+
+.auth-logo-box img,
+.auth-logo-img,
+.brand-logo-container img {
+    display: block !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
 }
 
 .auth-logo-shape-square {
@@ -1048,50 +1062,174 @@
 }
 
 /* =========================================================
-   RESPONSIVE PREVIEW DEVICE BREAKPOINTS
+   RESPONSIVE PREVIEW DEVICE BREAKPOINTS & REFLOW ENGINE
+   Controlled strictly by simulated device classes:
+   .preview-device-mobile, .preview-device-tablet, .preview-device-desktop
 ========================================================= */
+
+/* ---------------------------------------------------------
+   1. MOBILE SIMULATED PREVIEW (.preview-device-mobile)
+--------------------------------------------------------- */
+.preview-root.preview-device-mobile,
 .preview-root.preview-device-mobile .auth-preview-shell,
-.preview-canvas.device-mobile .auth-preview-shell {
+.preview-canvas-area.device-mobile .preview-root,
+.preview-canvas-area.device-mobile .auth-preview-shell,
+.fullscreen-preview-root.preview-device-mobile,
+.fullscreen-preview-root.preview-device-mobile .auth-preview-shell {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-x: hidden;
+}
+
+/* Split Layouts Reflow Vertically on Mobile */
+.preview-device-mobile.layout-split-left-image .auth-preview-shell,
+.preview-device-mobile.layout-split-right-image .auth-preview-shell,
+.device-mobile .layout-split-left-image .auth-preview-shell,
+.device-mobile .layout-split-right-image .auth-preview-shell {
+    display: flex !important;
     flex-direction: column !important;
 }
-.preview-root.preview-device-mobile .auth-image-section,
-.preview-canvas.device-mobile .auth-image-section {
-    display: none !important;
-}
-.preview-root.preview-device-mobile .auth-form-section,
-.preview-canvas.device-mobile .auth-form-section {
+
+/* Mobile Image Section */
+.preview-device-mobile.layout-split-left-image .auth-image-section,
+.preview-device-mobile.layout-split-right-image .auth-image-section,
+.device-mobile .layout-split-left-image .auth-image-section,
+.device-mobile .layout-split-right-image .auth-image-section {
+    display: flex !important;
     width: 100% !important;
-    padding: 20px 14px !important;
+    flex: 0 0 auto !important;
+    min-height: 180px;
+    max-height: 220px;
 }
-.preview-root.preview-device-mobile .auth-card,
-.preview-canvas.device-mobile .auth-card {
-    padding: 24px 16px !important;
+
+.preview-device-mobile .auth-image-text-block {
+    padding: 16px !important;
+}
+.preview-device-mobile .auth-image-text {
+    font-size: 20px !important;
+    line-height: 1.25 !important;
+}
+.preview-device-mobile .auth-image-subtext {
+    font-size: 13px !important;
+}
+
+/* Mobile Form Section */
+.preview-device-mobile .auth-form-section,
+.device-mobile .auth-form-section {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 14px 10px !important;
+    flex: 1 1 auto;
+}
+
+/* Mobile Authentication Card */
+.preview-device-mobile .auth-card,
+.device-mobile .auth-card {
+    width: calc(100% - 16px) !important;
     max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 8px auto !important;
+    padding: 18px 14px !important;
+    border-radius: var(--auth-card-radius, 14px) !important;
 }
-.preview-root.preview-device-mobile .otp-digit-box,
-.preview-canvas.device-mobile .otp-digit-box {
-    max-width: 38px;
+
+/* Mobile Controls & Social Login Stacking */
+.preview-device-mobile .auth-social-login,
+.device-mobile .auth-social-login {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+.preview-device-mobile .auth-social-btn,
+.device-mobile .auth-social-btn {
+    width: 100% !important;
+}
+
+.preview-device-mobile .otp-digit-box,
+.device-mobile .otp-digit-box {
+    max-width: 36px;
     height: 44px;
     font-size: 18px;
 }
 
-.preview-root.preview-device-tablet .auth-card,
-.preview-canvas.device-tablet .auth-card {
-    padding: 32px 26px !important;
+/* Mobile Box Sizing & Anti-Overflow */
+.preview-device-mobile *,
+.preview-device-mobile *::before,
+.preview-device-mobile *::after,
+.device-mobile *,
+.device-mobile *::before,
+.device-mobile *::after {
+    box-sizing: border-box !important;
+    max-width: 100%;
 }
 
-@media (max-width: 768px) {
-    .auth-preview-shell {
-        flex-direction: column !important;
-    }
-    .auth-image-section {
-        display: none !important;
-    }
-    .auth-form-section {
-        width: 100% !important;
-        padding: 24px 16px !important;
-    }
-    .auth-card {
-        padding: 28px 20px !important;
-    }
+.preview-device-mobile input,
+.preview-device-mobile select,
+.preview-device-mobile textarea,
+.preview-device-mobile button,
+.device-mobile input,
+.device-mobile select,
+.device-mobile textarea,
+.device-mobile button {
+    max-width: 100%;
+}
+
+/* ---------------------------------------------------------
+   2. TABLET SIMULATED PREVIEW (.preview-device-tablet)
+--------------------------------------------------------- */
+.preview-root.preview-device-tablet .auth-preview-shell,
+.preview-canvas-area.device-tablet .auth-preview-shell,
+.fullscreen-preview-root.preview-device-tablet .auth-preview-shell {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.preview-device-tablet.layout-split-left-image .auth-preview-shell,
+.preview-device-tablet.layout-split-right-image .auth-preview-shell,
+.device-tablet .layout-split-left-image .auth-preview-shell,
+.device-tablet .layout-split-right-image .auth-preview-shell {
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1.1fr);
+}
+
+.preview-device-tablet.is-narrow .auth-preview-shell,
+.device-tablet.is-narrow .auth-preview-shell {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.preview-device-tablet .auth-card,
+.device-tablet .auth-card {
+    padding: 28px 22px !important;
+    max-width: 440px;
+}
+
+.preview-device-tablet .auth-image-text {
+    font-size: 24px !important;
+}
+
+/* ---------------------------------------------------------
+   3. LOGO FITTING ENGINE (ALL DEVICE MODES)
+--------------------------------------------------------- */
+.auth-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.auth-logo img,
+.auth-logo-img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }

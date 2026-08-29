@@ -111,8 +111,21 @@
     });
   }
 
+  let lastToastMsg = "";
+  let lastToastTimestamp = 0;
+  let redirectInProgress = false;
+
   function showToast(message, type = "info", duration = 3000) {
-    if (typeof document === "undefined") return;
+    if (typeof document === "undefined" || !message) return;
+
+    // Suppress duplicate identical toast messages within 1500ms
+    const now = Date.now();
+    if (message === lastToastMsg && (now - lastToastTimestamp) < 1500) {
+      return;
+    }
+    lastToastMsg = message;
+    lastToastTimestamp = now;
+
     let toastContainer = document.getElementById("toastContainer");
     if (!toastContainer) {
       toastContainer = document.createElement("div");
@@ -143,6 +156,40 @@
     }, duration);
   }
 
+  function redirectAfterSuccess(targetUrl, delay = 600) {
+    if (redirectInProgress) return;
+    redirectInProgress = true;
+
+    const url = targetUrl || (typeof window !== "undefined" && window.state ? window.state.get("urls.redirectUrl") : null) || "https://customerwebsite.com/dashboard";
+
+    try {
+      if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+        window.dispatchEvent(
+          new CustomEvent("auth:redirect", {
+            detail: { url }
+          })
+        );
+      }
+    } catch (e) {}
+
+    setTimeout(() => {
+      if (typeof window !== "undefined" && typeof window.onAuthRedirect === "function") {
+        window.onAuthRedirect(url);
+      }
+      try {
+        if (typeof window !== "undefined" && window.location && typeof window.location.assign === "function") {
+          window.location.assign(url);
+        } else if (typeof window !== "undefined" && window.location) {
+          window.location.href = url;
+        }
+      } catch (e) {
+        if (typeof window !== "undefined" && window.location) {
+          window.location.href = url;
+        }
+      }
+    }, delay);
+  }
+
   function debounce(fn, delay = 150) {
     let timer = null;
     return function (...args) {
@@ -161,6 +208,7 @@
     dataURLToBlob,
     fileToDataURL,
     showToast,
+    redirectAfterSuccess,
     debounce
   };
 });

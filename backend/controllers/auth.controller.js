@@ -146,15 +146,29 @@ async function login(req, res, next) {
       { expiresIn: "7d" }
     );
 
-    // Lookup user's saved redirect_url if available
+    // Lookup configuration-specific redirect_url if configuration_id is provided
+    const { configuration_id, config_id } = req.body;
+    const targetConfigId = configuration_id || config_id;
     let redirectUrl = null;
+
     try {
-      const [configs] = await db.pool.query(
-        "SELECT redirect_url FROM auth_configurations WHERE user_id = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1",
-        [user.id]
-      );
-      if (configs && configs.length > 0 && configs[0].redirect_url) {
-        redirectUrl = configs[0].redirect_url;
+      if (targetConfigId) {
+        const [targetConfigs] = await db.pool.query(
+          "SELECT redirect_url FROM auth_configurations WHERE id = ? AND is_active = TRUE LIMIT 1",
+          [targetConfigId]
+        );
+        if (targetConfigs && targetConfigs.length > 0 && targetConfigs[0].redirect_url) {
+          redirectUrl = targetConfigs[0].redirect_url;
+        }
+      }
+      if (!redirectUrl) {
+        const [configs] = await db.pool.query(
+          "SELECT redirect_url FROM auth_configurations WHERE user_id = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1",
+          [user.id]
+        );
+        if (configs && configs.length > 0 && configs[0].redirect_url) {
+          redirectUrl = configs[0].redirect_url;
+        }
       }
     } catch {
       // Non-fatal if config query fails

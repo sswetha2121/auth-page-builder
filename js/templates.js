@@ -236,6 +236,8 @@
     if (policy.showRequirementsList === false) return "";
 
     const minLen = policy.minLength || 8;
+    const minNum = Number(policy.minNumbers) || 1;
+    const minSpec = Number(policy.minSpecialChars) || 1;
     const reqs = [];
 
     reqs.push(`<li class="signup-req-item" id="reqCheckMinLength" data-rule="min-length"><span class="signup-req-icon">○</span> At least ${minLen} characters</li>`);
@@ -246,10 +248,12 @@
       reqs.push(`<li class="signup-req-item" id="reqCheckLower" data-rule="lowercase"><span class="signup-req-icon">○</span> One lowercase letter (a-z)</li>`);
     }
     if (policy.requireNumber !== false) {
-      reqs.push(`<li class="signup-req-item" id="reqCheckNumber" data-rule="number"><span class="signup-req-icon">○</span> One numeric digit (0-9)</li>`);
+      const numLabel = minNum > 1 ? `At least ${minNum} numeric digits (0-9)` : `One numeric digit (0-9)`;
+      reqs.push(`<li class="signup-req-item" id="reqCheckNumber" data-rule="number"><span class="signup-req-icon">○</span> ${numLabel}</li>`);
     }
     if (policy.requireSpecialChar !== false) {
-      reqs.push(`<li class="signup-req-item" id="reqCheckSpecial" data-rule="special"><span class="signup-req-icon">○</span> One special character (${escapeHtml((policy.allowedSpecialChars || "!@#$%").slice(0, 6))}...)</li>`);
+      const specLabel = minSpec > 1 ? `At least ${minSpec} special characters` : `One special character`;
+      reqs.push(`<li class="signup-req-item" id="reqCheckSpecial" data-rule="special"><span class="signup-req-icon">○</span> ${specLabel} (${escapeHtml((policy.allowedSpecialChars || "!@#$%").slice(0, 6))}...)</li>`);
     }
 
     return `

@@ -103,6 +103,8 @@
     bindPasswordPolicyMeter() {
       const updateChecklist = () => {
         const minLenInput = document.querySelector('[data-config-path="passwordPolicy.minLength"]');
+        const minNumInput = document.querySelector('[data-config-path="passwordPolicy.minNumbers"]');
+        const minSpecialInput = document.querySelector('[data-config-path="passwordPolicy.minSpecialChars"]');
         const reqUpperInput = document.querySelector('[data-config-path="passwordPolicy.requireUppercase"]');
         const reqLowerInput = document.querySelector('[data-config-path="passwordPolicy.requireLowercase"]');
         const reqNumInput = document.querySelector('[data-config-path="passwordPolicy.requireNumber"]');
@@ -110,9 +112,27 @@
         const allowedSpecialInput = document.querySelector('[data-config-path="passwordPolicy.allowedSpecialChars"]');
         const strengthSelect = document.querySelector('[data-config-path="passwordPolicy.strengthRequirement"]');
 
-        const minLen = minLenInput ? minLenInput.value : 8;
+        const minLen = minLenInput ? (minLenInput.value || 8) : 8;
         const minLenEl = document.getElementById("reqMinLen");
         if (minLenEl) minLenEl.textContent = minLen;
+
+        const minNum = minNumInput ? (Number(minNumInput.value) || 1) : 1;
+        const reqNumberText = document.getElementById("reqNumberText");
+        if (reqNumberText) {
+          reqNumberText.textContent = minNum > 1 ? `At least ${minNum} numeric digits (0-9)` : `At least 1 numeric digit (0-9)`;
+        }
+
+        const minSpecial = minSpecialInput ? (Number(minSpecialInput.value) || 1) : 1;
+        const reqSpecialText = document.getElementById("reqSpecialText");
+        const reqSpecialCharsEl = document.getElementById("reqSpecialChars");
+        const chars = allowedSpecialInput ? (allowedSpecialInput.value || "!@#$%") : "!@#$%";
+        const charDisplay = chars.length > 8 ? chars.slice(0, 8) + "..." : chars;
+        if (reqSpecialCharsEl) {
+          reqSpecialCharsEl.textContent = charDisplay;
+        }
+        if (reqSpecialText) {
+          reqSpecialText.innerHTML = `At least ${minSpecial} special character${minSpecial > 1 ? "s" : ""} (<span id="reqSpecialChars">${charDisplay}</span>)`;
+        }
 
         const reqUpperItem = document.getElementById("reqUpperItem");
         if (reqUpperItem) reqUpperItem.style.display = (reqUpperInput && !reqUpperInput.checked) ? "none" : "";
@@ -125,12 +145,6 @@
 
         const reqSpecialItem = document.getElementById("reqSpecialItem");
         if (reqSpecialItem) reqSpecialItem.style.display = (reqSpecialInput && !reqSpecialInput.checked) ? "none" : "";
-
-        const reqSpecialCharsEl = document.getElementById("reqSpecialChars");
-        if (reqSpecialCharsEl && allowedSpecialInput) {
-          const chars = allowedSpecialInput.value || "!@#$%";
-          reqSpecialCharsEl.textContent = chars.length > 8 ? chars.slice(0, 8) + "..." : chars;
-        }
 
         // Update strength meter badge & bar
         const strength = strengthSelect ? strengthSelect.value : "medium";
@@ -146,6 +160,8 @@
           bar.style.width = strength === "weak" ? "33%" : (strength === "strong" ? "100%" : "66%");
         }
       };
+
+      this.updatePasswordPolicyChecklist = updateChecklist;
 
       const policyInputs = document.querySelectorAll('[data-config-path^="passwordPolicy"]');
       policyInputs.forEach(input => {
@@ -318,25 +334,42 @@
             return;
           }
 
-          // Validate file type
-          const validTypes = ["image/jpeg", "image/png", "image/webp", "image/svg+xml", "image/gif"];
+          // Validate file type (support all standard image formats, reject non-images)
+          const validExts = ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp", "avif"];
           const fileExt = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "";
-          if (file.type && !validTypes.includes(file.type) && !["jpg", "jpeg", "png", "webp", "svg", "gif"].includes(fileExt)) {
+          const isImageMime = file.type ? file.type.startsWith("image/") : false;
+          const isValidExt = validExts.includes(fileExt);
+
+          if (!isImageMime && !isValidExt) {
             if (Utils.showToast) {
-              Utils.showToast("Unsupported file format. Please upload JPG, PNG, WebP, SVG, or GIF.", "error");
+              Utils.showToast("Only image files (.jpg, .png, .webp, .svg, .gif, .bmp, .avif, etc.) are allowed for background upload.", "error");
             }
             input.value = "";
             return;
           }
 
           try {
-            const dataUrl = await Utils.fileToDataURL(file);
+            let assetUrl = null;
+            if (window.ConfigurationsApi && typeof window.ConfigurationsApi.uploadAsset === "function") {
+              try {
+                const uploadRes = await window.ConfigurationsApi.uploadAsset(file);
+                if (uploadRes && uploadRes.url) {
+                  assetUrl = uploadRes.url;
+                }
+              } catch (upErr) {
+                console.warn("[Upload] Django upload endpoint unavailable, falling back to data URL:", upErr.message);
+              }
+            }
+
+            if (!assetUrl) {
+              assetUrl = await Utils.fileToDataURL(file);
+            }
 
             if (fileNameEl) {
               fileNameEl.textContent = file.name;
             }
             if (previewEl) {
-              previewEl.src = dataUrl;
+              previewEl.src = assetUrl;
               previewEl.hidden = false;
             }
 
@@ -350,22 +383,22 @@
             if (window.state && typeof window.state.setUploadedAsset === "function") {
               if (type === "background") {
                 document.querySelectorAll("[data-background]").forEach(b => b.classList.remove("active", "selected"));
-                window.state.setUploadedAsset("backgrounds", file.name, dataUrl, metadata);
+                window.state.setUploadedAsset("backgrounds", file.name, assetUrl, metadata);
                 window.state.updateConfig({
                   background: {
                     type: "uploaded",
-                    uploadedImage: dataUrl,
-                    image: dataUrl,
+                    uploadedImage: assetUrl,
+                    image: assetUrl,
                     selected: ""
                   }
                 });
               } else if (type === "logo") {
                 document.querySelectorAll("[data-logo]").forEach(b => b.classList.remove("active", "selected"));
-                window.state.setUploadedAsset("logos", file.name, dataUrl, metadata);
+                window.state.setUploadedAsset("logos", file.name, assetUrl, metadata);
                 window.state.updateConfig({
                   branding: {
-                    uploadedLogo: dataUrl,
-                    logo: dataUrl,
+                    uploadedLogo: assetUrl,
+                    logo: assetUrl,
                     selectedLogo: ""
                   }
                 });
@@ -378,7 +411,7 @@
           } catch (err) {
             console.error("Upload error:", err);
             if (Utils.showToast) {
-              Utils.showToast("Failed to read image file.", "error");
+              Utils.showToast("Failed to process image file.", "error");
             }
           }
         });
@@ -579,6 +612,10 @@
             otp: "OTP Verification Page"
           };
           titleEl.textContent = names[activePage] || "Authentication Page";
+        }
+
+        if (typeof this.updatePasswordPolicyChecklist === "function") {
+          this.updatePasswordPolicyChecklist();
         }
       } catch (err) {
         console.error("syncControls error:", err);

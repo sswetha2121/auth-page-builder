@@ -16,6 +16,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "auth_page_builder_backend.setti
 import django
 django.setup()
 
+from authentication.models import AuthUser
+from configurations.models import AuthConfiguration
+
+# Clean previous test records safely
+AuthUser.objects.filter(username__in=["testuser1", "testuser2"]).delete()
+AuthConfiguration.objects.filter(configuration_name__in=["Integration Config", "Updated Config"]).delete()
 from rest_framework.test import APIClient
 from authentication.models import AuthUser
 from configurations.models import AuthConfiguration

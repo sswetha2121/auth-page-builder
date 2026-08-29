@@ -19,37 +19,96 @@ from authentication.auth import generate_jwt_token
 from authentication.services.otp_service import OTPService, EmailOTPProvider, WhatsAppOTPProvider
 
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 class RegisterView(APIView):
     """
     Register a new user account.
-    POST /api/auth/register, /api/auth/signup/
+    POST /api/auth/register, /api/auth/register/, /api/auth/signup/
     """
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
-        serializer = UserRegisterSerializer(data=request.data)
-        if not serializer.is_valid():
-            errors = serializer.errors
-            first_key = list(errors.keys())[0]
-            first_err = errors[first_key]
-            err_msg = first_err[0] if isinstance(first_err, list) else str(first_err)
-            status_code = status.HTTP_409_CONFLICT if "already" in err_msg.lower() or "taken" in err_msg.lower() else status.HTTP_400_BAD_REQUEST
-            return Response({"success": False, "message": err_msg, "errors": errors}, status=status_code)
+        try:
+            serializer = UserRegisterSerializer(data=request.data)
+            if not serializer.is_valid():
+                errors = serializer.errors
+                err_msg = "Registration validation failed."
+                if "username" in errors:
+                    err_msg = str(errors["username"][0])
+                elif "email" in errors:
+                    err_msg = str(errors["email"][0])
+                elif "password" in errors:
+                    err_msg = str(errors["password"][0])
+                elif errors:
+                    first_key = list(errors.keys())[0]
+                    first_err = errors[first_key]
+                    err_msg = first_err[0] if isinstance(first_err, list) else str(first_err)
 
-        user = serializer.save()
-        token = generate_jwt_token(user)
-        user_data = UserProfileSerializer(user).data
+                status_code = status.HTTP_409_CONFLICT if "already" in err_msg.lower() or "taken" in err_msg.lower() else status.HTTP_400_BAD_REQUEST
+                return Response({"success": False, "message": err_msg, "errors": errors}, status=status_code)
 
-        return Response(
-            {
-                "success": True,
-                "message": "User registered successfully.",
-                "token": token,
-                "user": user_data,
-                "redirect_url": None,
-            },
-            status=status.HTTP_201_CREATED,
-        )
+            from django.utils import timezone
+            from authentication.services.redirect_service import get_redirect_url
+
+            user = serializer.save()
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
+
+            # Account linking inside transaction.atomic() (Rules 4, 7, 8)
+            session_id = (
+                (request.data.get("builder_session_id") if isinstance(request.data, dict) else None)
+                or request.META.get("HTTP_X_BUILDER_SESSION_ID")
+                or request.META.get("x-builder-session-id")
+            )
+            if session_id:
+                try:
+                    from django.db import transaction
+                    with transaction.atomic():
+                        from configurations.models import AuthConfiguration
+                        anon_configs = AuthConfiguration.objects.filter(builder_session_id=session_id, user_id__isnull=True, is_active=True)
+                        user_config = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).first()
+                        if anon_configs.exists():
+                            if not user_config:
+                                primary_anon = anon_configs.order_by("-updated_at").first()
+                                primary_anon.user_id = user.id
+                                primary_anon.save(update_fields=["user_id", "updated_at"])
+                                anon_configs.exclude(id=primary_anon.id).update(is_active=False)
+                            else:
+                                primary_anon = anon_configs.order_by("-updated_at").first()
+                                if primary_anon.configuration_data:
+                                    user_config.configuration_data = primary_anon.configuration_data
+                                    user_config.updated_at = timezone.now()
+                                    user_config.save()
+                                anon_configs.update(is_active=False)
+                except Exception as ex:
+                    logger.warning(f"[RegisterView] Ownership transfer warning: {str(ex)}")
+
+            token = generate_jwt_token(user)
+            user_data = UserProfileSerializer(user).data
+            config_id = request.data.get("configuration_id") or request.data.get("config_id")
+            redirect_url = get_redirect_url(config_id, user.id)
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Registration successful.",
+                    "user": user_data,
+                    "token": token,
+                    "redirect_url": redirect_url,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            safe_username = str(request.data.get("username", "")).strip() if isinstance(request.data, dict) else ""
+            logger.error(f"[RegisterView] Unexpected error during registration for user='{safe_username}': {str(e)}", exc_info=True)
+            return Response(
+                {"success": False, "message": "An unexpected error occurred during registration. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class LoginView(APIView):
@@ -58,6 +117,7 @@ class LoginView(APIView):
     POST /api/auth/login, /api/auth/login/
     """
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
@@ -71,13 +131,47 @@ class LoginView(APIView):
             )
             return Response({"success": False, "message": str(err_msg)}, status=status.HTTP_401_UNAUTHORIZED)
 
+        from django.utils import timezone
+        from authentication.services.redirect_service import get_redirect_url
+
         user = serializer.validated_data["user"]
+        user.last_login = timezone.now()
+        user.save(update_fields=["last_login"])
+
+        # Account linking inside transaction.atomic() (Rules 4, 7, 8)
+        session_id = (
+            (request.data.get("builder_session_id") if isinstance(request.data, dict) else None)
+            or request.META.get("HTTP_X_BUILDER_SESSION_ID")
+            or request.META.get("x-builder-session-id")
+        )
+        if session_id:
+            try:
+                from django.db import transaction
+                with transaction.atomic():
+                    from configurations.models import AuthConfiguration
+                    anon_configs = AuthConfiguration.objects.filter(builder_session_id=session_id, user_id__isnull=True, is_active=True)
+                    user_config = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).first()
+                    if anon_configs.exists():
+                        if not user_config:
+                            primary_anon = anon_configs.order_by("-updated_at").first()
+                            primary_anon.user_id = user.id
+                            primary_anon.save(update_fields=["user_id", "updated_at"])
+                            anon_configs.exclude(id=primary_anon.id).update(is_active=False)
+                        else:
+                            primary_anon = anon_configs.order_by("-updated_at").first()
+                            if primary_anon.configuration_data:
+                                user_config.configuration_data = primary_anon.configuration_data
+                                user_config.updated_at = timezone.now()
+                                user_config.save()
+                            anon_configs.update(is_active=False)
+            except Exception as ex:
+                logger.warning(f"[LoginView] Ownership transfer warning: {str(ex)}")
+
         token = generate_jwt_token(user)
         user_data = UserProfileSerializer(user).data
 
-        # Get active configuration redirect_url if available
-        active_config = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).order_by("-updated_at").first()
-        redirect_url = active_config.redirect_url if active_config and active_config.redirect_url else None
+        config_id = request.data.get("configuration_id") or request.data.get("config_id")
+        redirect_url = get_redirect_url(config_id, user.id)
 
         return Response(
             {
@@ -219,10 +313,16 @@ class VerifyOTPView(APIView):
 
         # If login verification, issue JWT and retrieve redirect_url
         if purpose == "login" and user:
+            from django.utils import timezone
+            from authentication.services.redirect_service import get_redirect_url
+
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
+
             token = generate_jwt_token(user)
             user_data = UserProfileSerializer(user).data
-            active_config = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).order_by("-updated_at").first()
-            redirect_url = active_config.redirect_url if active_config and active_config.redirect_url else None
+            config_id = request.data.get("configuration_id") or request.data.get("config_id")
+            redirect_url = get_redirect_url(config_id, user.id)
 
             return Response(
                 {
@@ -347,6 +447,7 @@ class PasswordResetConfirmView(APIView):
         identifier = serializer.validated_data["identifier"]
         otp = serializer.validated_data["otp"]
         new_password = serializer.validated_data["new_password"]
+        config_id = request.data.get("configuration_id") or request.data.get("config_id")
 
         # Resolve user
         user = (
@@ -356,6 +457,14 @@ class PasswordResetConfirmView(APIView):
 
         if not user:
             return Response({"success": False, "message": "Account not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Enforce Password Policy Validation
+        from authentication.validators import get_password_policy, validate_password_policy
+        policy = get_password_policy(config_id)
+        is_valid_pw, pw_errors = validate_password_policy(new_password, policy, username=user.username, email=user.email)
+        if not is_valid_pw:
+            err_msg = pw_errors.get("password", ["Password policy validation failed."])[0]
+            return Response({"success": False, "message": err_msg, "errors": pw_errors}, status=status.HTTP_400_BAD_REQUEST)
 
         # Hash new password with bcrypt
         salt = bcrypt.gensalt(rounds=10)

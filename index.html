@@ -69,6 +69,15 @@
                     <span>⛶ Fullscreen</span>
                 </button>
 
+                <button type="button" class="header-button primary" id="headerSaveButton" title="Save Customization Changes to Database">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    <span>Save Changes</span>
+                </button>
+
                 <button type="button" class="header-button primary" id="downloadButton" data-action="download-package">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -95,6 +104,11 @@
                     <div class="category-nav-header">
                         <span class="category-nav-title">CATEGORIES</span>
                     </div>
+
+                    <button type="button" class="sidebar-category-btn" data-inspector-category="all" title="All Customizations">
+                        <span class="cat-icon">⚡</span>
+                        <span class="cat-label">All</span>
+                    </button>
 
                     <button type="button" class="sidebar-category-btn active" data-inspector-category="appearance" title="Appearance & Styles">
                         <span class="cat-icon">🎨</span>
@@ -259,13 +273,37 @@
                                                 <img src="./assets/backgrounds/background-6.svg" alt="Soft Aurora">
                                                 <span>Soft Aurora</span>
                                             </button>
+                                            <button type="button" class="asset-option" data-background="assets/backgrounds/b1.webp">
+                                                <img src="./assets/backgrounds/b1.webp" alt="Cosmic Dark">
+                                                <span>Cosmic Dark</span>
+                                            </button>
+                                            <button type="button" class="asset-option" data-background="assets/backgrounds/b2.webp">
+                                                <img src="./assets/backgrounds/b2.webp" alt="Neon Gradient">
+                                                <span>Neon Gradient</span>
+                                            </button>
+                                            <button type="button" class="asset-option" data-background="assets/backgrounds/b3.webp">
+                                                <img src="./assets/backgrounds/b3.webp" alt="Abstract Wave">
+                                                <span>Abstract Wave</span>
+                                            </button>
+                                            <button type="button" class="asset-option" data-background="assets/backgrounds/b4.webp">
+                                                <img src="./assets/backgrounds/b4.webp" alt="Minimal Grid">
+                                                <span>Minimal Grid</span>
+                                            </button>
+                                            <button type="button" class="asset-option" data-background="assets/backgrounds/b5.jpg">
+                                                <img src="./assets/backgrounds/b5.jpg" alt="Vibrant HD">
+                                                <span>Vibrant HD</span>
+                                            </button>
+                                            <button type="button" class="asset-option" data-background="assets/backgrounds/idea-6900632_1280.png">
+                                                <img src="./assets/backgrounds/idea-6900632_1280.png" alt="Creative Studio">
+                                                <span>Creative Studio</span>
+                                            </button>
                                         </div>
                                     </div>
 
                                     <div class="control-group">
                                         <label class="upload-label">
                                             <span>Upload Custom Background</span>
-                                            <input type="file" accept="image/*" data-upload-type="background" data-upload-preview="#backgroundUploadPreview" data-file-name-target="#backgroundFileName">
+                                            <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.bmp,.avif,image/*" data-upload-type="background" data-upload-preview="#backgroundUploadPreview" data-file-name-target="#backgroundFileName">
                                         </label>
                                         <img id="backgroundUploadPreview" class="upload-preview" alt="Background preview" hidden>
                                         <span id="backgroundFileName" class="file-name"></span>
@@ -615,7 +653,7 @@
                                     <div class="control-group">
                                         <label class="upload-label">
                                             <span>Upload Custom Logo</span>
-                                            <input type="file" accept="image/*" data-upload-type="logo" data-upload-preview="#logoUploadPreview" data-file-name-target="#logoFileName">
+                                            <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,.bmp,.avif,image/*" data-upload-type="logo" data-upload-preview="#logoUploadPreview" data-file-name-target="#logoFileName">
                                         </label>
                                         <img id="logoUploadPreview" class="upload-preview logo-upload-preview" alt="Logo preview" hidden>
                                         <span id="logoFileName" class="file-name"></span>
@@ -1333,10 +1371,13 @@
 
                     </div>
 
-                    <!-- Reset Section -->
-                    <div class="sidebar-footer">
-                        <button type="button" class="reset-button" id="resetConfigurationButton" data-action="reset-configuration">
-                            ↺ Reset All Customizations
+                    <!-- Action Footer Section -->
+                    <div class="sidebar-footer" style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-primary" id="panelSaveButton" style="flex: 1; padding: 10px 14px; font-weight: 600;">
+                            💾 Save Changes
+                        </button>
+                        <button type="button" class="reset-button" id="resetConfigurationButton" data-action="reset-configuration" style="flex: 1;">
+                            ↺ Reset All
                         </button>
                     </div>
 

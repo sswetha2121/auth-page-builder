@@ -1,0 +1,65 @@
+/* =========================================================
+   AUTHENTICATION PACKAGE - LAYOUT & GRID ARCHITECTURE
+   File: css/auth-layout.css
+========================================================= */
+
+.auth-preview-root {
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  background-color: var(--auth-background-color);
+}
+
+.auth-preview-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  position: relative;
+}
+
+.auth-preview-root.layout-split-left-image .auth-preview-shell { flex-direction: row; }
+.auth-preview-root.layout-split-right-image .auth-preview-shell { flex-direction: row-reverse; }
+
+.auth-preview-root.layout-centered { background-color: var(--auth-background-color); }
+.auth-preview-root.layout-centered .auth-image-section { display: none !important; }
+.auth-preview-root.layout-centered .auth-form-section { width: 100%; background: transparent; }
+
+.auth-preview-root.layout-full-background {
+  background-image: var(--auth-background-image);
+  background-size: var(--auth-background-size);
+  background-position: var(--auth-background-position);
+  background-repeat: var(--auth-background-repeat);
+}
+
+.auth-preview-root.layout-full-background .auth-image-section { display: none !important; }
+.auth-preview-root.layout-full-background .auth-form-section { width: 100%; z-index: 2; background: transparent; }
+
+.auth-image-section {
+  width: var(--auth-image-width);
+  min-height: 100vh;
+  position: relative;
+  background-image: var(--auth-background-image);
+  background-color: var(--auth-background-color);
+  background-position: var(--auth-background-position);
+  background-size: var(--auth-background-size);
+  background-repeat: var(--auth-background-repeat);
+  filter: blur(var(--auth-background-blur)) brightness(var(--auth-background-brightness));
+}
+
+.auth-image-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: var(--auth-overlay-color);
+  opacity: var(--auth-overlay-opacity);
+  z-index: 1;
+}
+
+.auth-form-section {
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--auth-content-padding);
+}

@@ -21,56 +21,98 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserRegisterSerializer(serializers.Serializer):
-    full_name = serializers.CharField(max_length=150, required=True)
-    username = serializers.CharField(max_length=100, required=True)
+    full_name = serializers.CharField(max_length=150, required=False, allow_blank=True, default="")
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True, default="")
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True, default="")
+    username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(max_length=254, required=True)
-    password = serializers.CharField(min_length=6, write_only=True, required=True)
+    password = serializers.CharField(min_length=1, write_only=True, required=True)
+    confirm_password = serializers.CharField(min_length=1, write_only=True, required=False, allow_blank=True, default="")
+    confirmPassword = serializers.CharField(min_length=1, write_only=True, required=False, allow_blank=True, default="")
     mobile = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
+    phone = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
+    configuration_id = serializers.IntegerField(required=False, allow_null=True)
+    config_id = serializers.IntegerField(required=False, allow_null=True)
 
     def validate_username(self, value):
-        cleaned = value.strip()
+        cleaned = value.strip() if value else ""
+        if not cleaned:
+            raise serializers.ValidationError("Username is required.")
         if len(cleaned) < 3:
             raise serializers.ValidationError("Username must be at least 3 characters long.")
         if AuthUser.objects.filter(username__iexact=cleaned).exists():
-            raise serializers.ValidationError("Username is already taken. Please choose another.")
+            raise serializers.ValidationError("Username already exists.")
         return cleaned
 
     def validate_email(self, value):
-        cleaned = value.strip().lower()
+        cleaned = value.strip().lower() if value else ""
+        if not cleaned:
+            raise serializers.ValidationError("Email is required.")
         if AuthUser.objects.filter(email__iexact=cleaned).exists():
-            raise serializers.ValidationError("Email address is already registered. Please login.")
+            raise serializers.ValidationError("Email already exists.")
         return cleaned
 
+    def validate(self, attrs):
+        from authentication.validators import get_password_policy, validate_password_policy
+        config_id = attrs.get("configuration_id") or attrs.get("config_id")
+        password = attrs.get("password")
+        confirm_pass = attrs.get("confirm_password") or attrs.get("confirmPassword")
+        username = attrs.get("username")
+        email = attrs.get("email")
+
+        if confirm_pass and password != confirm_pass:
+            raise serializers.ValidationError({"confirm_password": ["Passwords do not match."]})
+
+        policy = get_password_policy(config_id)
+        is_valid, errors = validate_password_policy(password, policy, username=username, email=email)
+        if not is_valid:
+            raise serializers.ValidationError(errors)
+
+        return attrs
+
     def create(self, validated_data):
-        full_name = validated_data["full_name"].strip()
+        from django.db import transaction
+        from django.contrib.auth.hashers import make_password
+        from django.utils import timezone
+
+        first_name = validated_data.get("first_name", "").strip()
+        last_name = validated_data.get("last_name", "").strip()
+        full_name = validated_data.get("full_name", "").strip()
+
+        if full_name and (not first_name or not last_name):
+            name_parts = full_name.split()
+            if not first_name:
+                first_name = name_parts[0] if name_parts else ""
+            if not last_name:
+                last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+        elif not full_name and (first_name or last_name):
+            full_name = f"{first_name} {last_name}".strip()
+
         username = validated_data["username"].strip()
         email = validated_data["email"].strip().lower()
-        mobile = validated_data.get("mobile", "").strip()
+        mobile = validated_data.get("mobile", "").strip() or validated_data.get("phone", "").strip()
         raw_password = validated_data["password"]
 
-        # Hash password with bcrypt
-        salt = bcrypt.gensalt(rounds=10)
-        password_hash = bcrypt.hashpw(raw_password.encode("utf-8"), salt).decode("utf-8")
+        with transaction.atomic():
+            # Hash password using Django's make_password
+            password_hash = make_password(raw_password)
 
-        name_parts = full_name.split()
-        first_name = name_parts[0] if name_parts else ""
-        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-
-        user = AuthUser(
-            full_name=full_name,
-            first_name=first_name,
-            last_name=last_name,
-            username=username,
-            email=email,
-            mobile=mobile,
-            password=password_hash[:128],
-            password_hash=password_hash,
-            is_active=True,
-            is_staff=False,
-            is_superuser=False,
-        )
-        user.save()
-        return user
+            user = AuthUser(
+                full_name=full_name,
+                first_name=first_name,
+                last_name=last_name,
+                username=username,
+                email=email,
+                mobile=mobile,
+                password=password_hash[:128],
+                password_hash=password_hash,
+                is_active=True,
+                date_joined=timezone.now(),
+                is_staff=False,
+                is_superuser=False,
+            )
+            user.save()
+            return user
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -94,19 +136,27 @@ class UserLoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Invalid credentials. Please check your details and try again.")
 
-        hash_to_verify = user.password_hash or user.password
-        try:
-            is_valid = bcrypt.checkpw(password.encode("utf-8"), hash_to_verify.encode("utf-8"))
-        except Exception:
-            is_valid = False
+        from django.contrib.auth.hashers import check_password as django_check_password
 
-        if not is_valid:
-            # Fallback to Django check_password if bcrypt failed
-            from django.contrib.auth.hashers import check_password as django_check_password
+        is_valid = False
+        if user.password_hash:
             try:
-                is_valid = django_check_password(password, hash_to_verify)
+                is_valid = django_check_password(password, user.password_hash)
             except Exception:
                 is_valid = False
+        if not is_valid and user.password:
+            try:
+                is_valid = django_check_password(password, user.password)
+            except Exception:
+                is_valid = False
+
+        if not is_valid:
+            hash_str = user.password_hash or user.password
+            if hash_str:
+                try:
+                    is_valid = bcrypt.checkpw(password.encode("utf-8"), hash_str.encode("utf-8"))
+                except Exception:
+                    is_valid = False
 
         if not is_valid:
             raise serializers.ValidationError("Invalid credentials. Please check your password and try again.")

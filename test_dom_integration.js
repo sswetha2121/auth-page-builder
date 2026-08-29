@@ -375,6 +375,7 @@ async function runDomTests() {
     if (idIn) idIn.value = "admin@example.com";
     const pwIn = form.querySelector("#loginPassword");
     if (pwIn) pwIn.value = "secretPass123";
+    window.AuthController.loginUser = async () => ({ success: true, redirect_url: "https://customerwebsite.com/dashboard" });
     await window.handleAuthSubmit({ preventDefault: () => {}, target: form }, "login");
   }
   assert(34, submittedSuccess, "Submitting preview form simulates redirect with feedback");

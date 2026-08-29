@@ -9,9 +9,6 @@ const express = require("express");
 const cors = require("cors");
 const { testConnection, isDbConnected } = require("./backend/config/database");
 
-// Route imports
-const authRoutes = require("./backend/routes/auth.routes");
-const configurationRoutes = require("./backend/routes/configuration.routes");
 const { errorHandler } = require("./backend/middleware/error.middleware");
 
 const app = express();
@@ -23,23 +20,63 @@ app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
-// 2. Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    database: isDbConnected() ? "connected" : "disconnected",
-    timestamp: new Date().toISOString()
+// 2. Health check & Django REST API Proxy
+const http = require("http");
+
+app.use("/api", (req, res, next) => {
+  if (req.path === "/health" || req.path === "/health/") {
+    return res.status(200).json({
+      status: "ok",
+      backend: "django",
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  const djangoHost = process.env.DJANGO_HOST || "127.0.0.1";
+  const djangoPort = Number(process.env.DJANGO_PORT || 8000);
+  const targetPath = `/api${req.url}`;
+
+  const proxyHeaders = { ...req.headers };
+  delete proxyHeaders["host"];
+  delete proxyHeaders["content-length"];
+
+  let bodyData = null;
+  if (req.body && Object.keys(req.body).length > 0) {
+    bodyData = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+    proxyHeaders["content-type"] = "application/json";
+    proxyHeaders["content-length"] = Buffer.byteLength(bodyData);
+  }
+
+  const options = {
+    hostname: djangoHost,
+    port: djangoPort,
+    path: targetPath,
+    method: req.method,
+    headers: proxyHeaders
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.status(proxyRes.statusCode);
+    Object.keys(proxyRes.headers).forEach((key) => {
+      res.setHeader(key, proxyRes.headers[key]);
+    });
+    proxyRes.pipe(res, { end: true });
   });
+
+  proxyReq.on("error", (err) => {
+    console.error(`[Django Proxy Error] ${req.method} ${targetPath} ->`, err.message);
+    res.status(503).json({
+      success: false,
+      message: "Django authentication service is currently unavailable. Please start Django server on port 8000."
+    });
+  });
+
+  if (bodyData) {
+    proxyReq.write(bodyData);
+  }
+
+  proxyReq.end();
 });
-
-// 3. API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/configurations", configurationRoutes);
-
-// Compatibility aliases
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/projects", configurationRoutes);
-app.use("/api/projects", configurationRoutes);
 
 // 4. Serve Static Frontend Files
 app.use(express.static(ROOT_DIR, {
@@ -57,11 +94,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-// 5. Centralized Error Handling
-app.use(errorHandler);
-
-const http = require("http");
 
 let currentPort = Number(PORT);
 

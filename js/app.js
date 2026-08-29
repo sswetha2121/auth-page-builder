@@ -9,6 +9,34 @@ let appInitialized = false;
 let autosaveTimeout = null;
 let isAutosaving = false;
 
+/* =========================================================
+   STARTUP CONFIGURATION RESTORATION
+========================================================= */
+async function loadSavedConfigurationOnStartup() {
+  if (!window.ConfigurationsApi) return;
+  try {
+    const res = await window.ConfigurationsApi.getCurrentConfiguration();
+    if (res && res.configuration) {
+      const config = res.configuration;
+      window.ConfigurationsApi.activeConfigId = config.id;
+      window.ConfigurationsApi.activeConfigName = config.configuration_name || "Default Auth Experience";
+      if (config.configuration_data && window.state && typeof window.state.loadState === "function") {
+        window.state.loadState(config.configuration_data);
+        if (window.controlsInstance) {
+          window.controlsInstance.syncControls(window.state.getState());
+        }
+        if (window.previewInstance) {
+          window.previewInstance.render();
+        }
+        console.log(`[Startup] Loaded active configuration: ID ${config.id} (${config.configuration_name})`);
+      }
+    }
+  } catch (err) {
+    console.log("[Startup] Startup configuration restoration skipped:", err.message);
+  }
+}
+window.loadSavedConfigurationOnStartup = loadSavedConfigurationOnStartup;
+
 document.addEventListener("DOMContentLoaded", () => {
   initializeApp();
 });
@@ -58,6 +86,9 @@ async function initializeApp() {
     });
   }
 
+  // 8. Restore Saved Configuration from Session / Cloud on Startup
+  loadSavedConfigurationOnStartup();
+
   // Check existing session
   if (window.AuthController) {
     window.AuthController.getCurrentUser().then(user => {
@@ -105,8 +136,7 @@ function triggerDebouncedAutosave(state) {
   const indicator = document.querySelector("[data-unsaved-indicator]");
   const indicatorText = indicator?.querySelector(".indicator-text");
 
-  // Only autosave if user is authenticated and has an active configuration
-  if (!window.AuthController || !window.AuthController.isAuthenticated() || !window.ConfigurationsApi?.activeConfigId) {
+  if (!window.ConfigurationsApi) {
     return;
   }
 
@@ -119,11 +149,32 @@ function triggerDebouncedAutosave(state) {
     }
 
     try {
-      await window.ConfigurationsApi.saveConfiguration(
-        window.ConfigurationsApi.activeConfigName,
-        state,
-        window.ConfigurationsApi.activeConfigId
-      );
+      const currentState = window.state ? window.state.getState() : state;
+      const activeId = window.ConfigurationsApi.activeConfigId;
+
+      if (activeId) {
+        console.log(`[Autosave] Updating configuration: ID ${activeId}`);
+        await window.ConfigurationsApi.saveConfiguration(
+          window.ConfigurationsApi.activeConfigName || "Default Auth Experience",
+          currentState,
+          activeId
+        );
+        console.log(`[Autosave] Configuration updated successfully`);
+      } else {
+        console.log("[Autosave] Creating configuration...");
+        const result = await window.ConfigurationsApi.saveConfiguration(
+          "Default Auth Experience",
+          currentState,
+          null
+        );
+
+        if (result?.configuration?.id) {
+          window.ConfigurationsApi.activeConfigId = result.configuration.id;
+          window.ConfigurationsApi.activeConfigName = result.configuration.configuration_name || "Default Auth Experience";
+          console.log(`[Autosave] Configuration created: ID ${result.configuration.id}`);
+        }
+      }
+
       if (indicatorText) {
         indicatorText.textContent = "Saved to Cloud";
       }
@@ -341,34 +392,58 @@ function initializeConfigurationsManager() {
     });
   }
 
-  // Save new configuration button
-  const saveBtn = document.getElementById("saveNewConfigButton");
-  const nameInput = document.getElementById("newConfigNameInput");
+  const handleSaveClick = async (btnElement, defaultName = "My Auth Page Experience") => {
+    if (!window.ConfigurationsApi) return;
+    const nameInput = document.getElementById("newConfigNameInput");
+    const configName = nameInput?.value?.trim() || window.ConfigurationsApi.activeConfigName || defaultName;
 
-  if (saveBtn) {
-    saveBtn.addEventListener("click", async () => {
-      const configName = nameInput?.value?.trim() || "My Auth Page Experience";
-      saveBtn.disabled = true;
-      saveBtn.textContent = "Saving...";
+    if (btnElement) {
+      btnElement.disabled = true;
+      btnElement.dataset.originalText = btnElement.innerHTML;
+      btnElement.innerHTML = `<span>Saving...</span>`;
+    }
 
-      try {
-        const state = window.state ? window.state.getState() : {};
-        const result = await window.ConfigurationsApi.saveConfiguration(configName, state, null);
+    try {
+      const state = window.state ? window.state.getState() : {};
+      const activeId = window.ConfigurationsApi.activeConfigId;
+      const result = await window.ConfigurationsApi.saveConfiguration(configName, state, activeId);
 
-        if (nameInput) nameInput.value = "";
-        if (window.Utils?.showToast) {
-          window.Utils.showToast(`Saved "${configName}" to cloud!`, "success");
-        }
-        await loadAndRenderConfigurations();
-      } catch (err) {
-        if (window.Utils?.showToast) {
-          window.Utils.showToast(err.message || "Failed to save configuration. Please sign in.", "error");
-        }
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = "Save Current State";
+      if (result?.configuration?.id) {
+        window.ConfigurationsApi.activeConfigId = result.configuration.id;
+        window.ConfigurationsApi.activeConfigName = result.configuration.configuration_name || configName;
       }
-    });
+
+      if (nameInput) nameInput.value = "";
+      if (window.Utils?.showToast) {
+        window.Utils.showToast(`Saved "${configName}" to database!`, "success");
+      }
+      await loadAndRenderConfigurations();
+    } catch (err) {
+      if (window.Utils?.showToast) {
+        window.Utils.showToast(err.message || "Failed to save configuration.", "error");
+      }
+    } finally {
+      if (btnElement) {
+        btnElement.disabled = false;
+        btnElement.innerHTML = btnElement.dataset.originalText || `<span>Save Changes</span>`;
+      }
+    }
+  };
+
+  const headerSaveBtn = document.getElementById("headerSaveButton");
+  if (headerSaveBtn) {
+    headerSaveBtn.addEventListener("click", () => handleSaveClick(headerSaveBtn));
+  }
+
+  const panelSaveBtn = document.getElementById("panelSaveButton");
+  if (panelSaveBtn) {
+    panelSaveBtn.addEventListener("click", () => handleSaveClick(panelSaveBtn));
+  }
+
+  // Save new configuration button inside modal
+  const saveBtn = document.getElementById("saveNewConfigButton");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => handleSaveClick(saveBtn));
   }
 }
 
@@ -526,42 +601,22 @@ window.handleAuthSubmit = async function (event, pageType) {
         }
 
         let result = null;
-        try {
-          // Attempt real backend authentication
-          result = await window.AuthController.loginUser({ identifier, password });
-        } catch (apiErr) {
-          // Fallback to controller simulation if network/offline
-          const isNetworkErr = !apiErr || !apiErr.message || apiErr.message.includes("fetch") || apiErr.message.includes("NetworkError") || apiErr.message.includes("File not found") || apiErr.message.includes("404");
-          if (!isNetworkErr) {
-            throw apiErr;
-          }
-          result = await window.AuthController.handleLogin({ identifier, password }, config);
-        }
+        const configId = window.ConfigurationsApi?.activeConfigId || config.id || null;
+        
+        result = await window.AuthController.loginUser({ identifier, password, configuration_id: configId });
 
         if (result && result.redirect_url) {
           targetRedirectUrl = result.redirect_url;
         }
 
-        const successMsg = `Authentication successful! Redirect destination: ${targetRedirectUrl}`;
+        const successMsg = `${result?.message || "Login successful."} Redirect destination: ${targetRedirectUrl}`;
         if (window.Utils && typeof window.Utils.showToast === "function") {
           window.Utils.showToast(successMsg, "success", 3000);
         }
 
-        // Perform actual browser redirection
-        setTimeout(() => {
-          if (typeof window.onAuthRedirect === "function") {
-            window.onAuthRedirect(targetRedirectUrl);
-          }
-          try {
-            if (window.location && typeof window.location.assign === "function") {
-              window.location.assign(targetRedirectUrl);
-            } else {
-              window.location.href = targetRedirectUrl;
-            }
-          } catch (e) {
-            window.location.href = targetRedirectUrl;
-          }
-        }, 400);
+        if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
+          window.Utils.redirectAfterSuccess(targetRedirectUrl, 600);
+        }
 
       } else if (pageType === "signup") {
         const fullName = form?.querySelector("#signupName")?.value?.trim() || "User";
@@ -573,75 +628,57 @@ window.handleAuthSubmit = async function (event, pageType) {
         if (config.pages?.signup?.fields?.fullName && !fullName) {
           throw new Error("Please enter your full name.");
         }
-        if (config.pages?.signup?.fields?.email && (!email || !window.AuthController.validateEmail(email))) {
+        if (config.pages?.signup?.fields?.email && (!email || (window.AuthController.validateEmail && !window.AuthController.validateEmail(email)))) {
           throw new Error("Please enter a valid email address.");
         }
-        if (config.pages?.signup?.fields?.password && (!password || password.length < 6)) {
-          throw new Error("Password must be at least 6 characters.");
+        if (config.pages?.signup?.fields?.password) {
+          if (window.AuthController && typeof window.AuthController.validatePasswordPolicy === "function") {
+            const valRes = window.AuthController.validatePasswordPolicy(password, config.passwordPolicy || {}, { username: email ? email.split("@")[0] : "", email });
+            if (!valRes.valid) {
+              throw new Error(valRes.message);
+            }
+          } else if (!password || password.length < 6) {
+            throw new Error("Password must be at least 6 characters.");
+          }
         }
         if (config.pages?.signup?.fields?.confirmPassword && password !== confirmPassword) {
           throw new Error("Passwords do not match.");
         }
 
         const username = email ? email.split("@")[0] : `user_${Date.now()}`;
-        let result = null;
-        try {
-          result = await window.AuthController.registerUser({
-            full_name: fullName,
-            username,
-            email,
-            password,
-            mobile
-          });
-        } catch (apiErr) {
-          const isNetworkErr = !apiErr || !apiErr.message || apiErr.message.includes("fetch") || apiErr.message.includes("NetworkError") || apiErr.message.includes("File not found") || apiErr.message.includes("404");
-          if (!isNetworkErr) {
-            throw apiErr;
-          }
-          result = await window.AuthController.handleSignup({ fullName, email, password, confirmPassword }, config);
-        }
+        const configId = window.ConfigurationsApi?.activeConfigId || config.id || null;
+        
+        const result = await window.AuthController.registerUser({
+          full_name: fullName,
+          username,
+          email,
+          password,
+          mobile,
+          configuration_id: configId
+        });
 
         if (result && result.redirect_url) {
           targetRedirectUrl = result.redirect_url;
         }
 
-        const successMsg = `Registration successful! Redirect destination: ${targetRedirectUrl}`;
+        const successMsg = `${result?.message || "Account created successfully."} Redirect destination: ${targetRedirectUrl}`;
         if (window.Utils && typeof window.Utils.showToast === "function") {
           window.Utils.showToast(successMsg, "success", 3000);
         }
 
-        setTimeout(() => {
-          if (typeof window.onAuthRedirect === "function") {
-            window.onAuthRedirect(targetRedirectUrl);
-          }
-          try {
-            if (window.location && typeof window.location.assign === "function") {
-              window.location.assign(targetRedirectUrl);
-            } else {
-              window.location.href = targetRedirectUrl;
-            }
-          } catch (e) {
-            window.location.href = targetRedirectUrl;
-          }
-        }, 400);
+        if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
+          window.Utils.redirectAfterSuccess(targetRedirectUrl, 600);
+        }
 
       } else if (pageType === "forgotPassword") {
         const identifier = form?.querySelector("#forgotIdentifier")?.value?.trim() || "";
         if (!identifier) {
           throw new Error("Please enter your email or username.");
         }
-        let result = null;
-        try {
-          result = await window.AuthController.requestPasswordReset(identifier);
-        } catch (apiErr) {
-          const isNetworkErr = !apiErr || !apiErr.message || apiErr.message.includes("fetch") || apiErr.message.includes("NetworkError") || apiErr.message.includes("File not found") || apiErr.message.includes("404");
-          if (!isNetworkErr) {
-            throw apiErr;
-          }
-          result = await window.AuthController.handleForgotPassword({ identifier }, config);
-        }
+        
+        const result = await window.AuthController.requestPasswordReset(identifier);
 
-        const msg = result?.message || (result?.masked_email ? `Password reset code sent to ${result.masked_email}` : "Password reset link sent to your registered contact.");
+        const msg = result?.message || "Password reset link sent to your registered contact.";
         if (window.Utils && typeof window.Utils.showToast === "function") {
           window.Utils.showToast(msg, "success", 4000);
         }
@@ -655,51 +692,29 @@ window.handleAuthSubmit = async function (event, pageType) {
         if (otpBoxes && otpBoxes.length > 0) {
           otpValue = Array.from(otpBoxes).map(b => b.value || "").join("");
         }
-        const expectedLen = config.pages?.otp?.length || 6;
-        if (!otpValue || otpValue.length < expectedLen) {
-          otpValue = "123456".slice(0, expectedLen);
-        }
 
         const identifier = (window.state && window.state.get("auth")?.identifier) || "user";
-        let result = null;
-        try {
-          result = await window.AuthController.verifyOtp(identifier, otpValue, "login");
-        } catch (apiErr) {
-          const isNetworkErr = !apiErr || !apiErr.message || apiErr.message.includes("fetch") || apiErr.message.includes("NetworkError") || apiErr.message.includes("File not found") || apiErr.message.includes("404");
-          if (!isNetworkErr) {
-            throw apiErr;
-          }
-          result = await window.AuthController.handleOtpVerification({ otp: otpValue }, config);
-        }
+        const configId = window.ConfigurationsApi?.activeConfigId || config.id || null;
+
+        const result = await window.AuthController.verifyOtp(identifier, otpValue, "login", configId);
 
         if (result && result.redirect_url) {
           targetRedirectUrl = result.redirect_url;
         }
 
-        const successMsg = `OTP verified successfully! Redirect destination: ${targetRedirectUrl}`;
+        const successMsg = `OTP verified successfully. Redirect destination: ${targetRedirectUrl}`;
         if (window.Utils && typeof window.Utils.showToast === "function") {
           window.Utils.showToast(successMsg, "success", 3000);
         }
 
-        setTimeout(() => {
-          if (typeof window.onAuthRedirect === "function") {
-            window.onAuthRedirect(targetRedirectUrl);
-          }
-          try {
-            if (window.location && typeof window.location.assign === "function") {
-              window.location.assign(targetRedirectUrl);
-            } else {
-              window.location.href = targetRedirectUrl;
-            }
-          } catch (e) {
-            window.location.href = targetRedirectUrl;
-          }
-        }, 400);
+        if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
+          window.Utils.redirectAfterSuccess(targetRedirectUrl, 600);
+        }
       }
     }
   } catch (err) {
     if (window.Utils && typeof window.Utils.showToast === "function") {
-      window.Utils.showToast(err.message || "Authentication error occurred.", "error", 4000);
+      window.Utils.showToast(err.message || "Invalid OTP. Please try again.", "error", 4000);
     }
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -709,3 +724,30 @@ window.handleAuthSubmit = async function (event, pageType) {
     window._isAuthSubmitting = false;
   }
 };
+
+/* =========================================================
+   STARTUP CONFIGURATION RESTORATION
+========================================================= */
+async function loadSavedConfigurationOnStartup() {
+  if (!window.ConfigurationsApi) return;
+  try {
+    const res = await window.ConfigurationsApi.getCurrentConfiguration();
+    if (res && res.configuration) {
+      const config = res.configuration;
+      window.ConfigurationsApi.activeConfigId = config.id;
+      window.ConfigurationsApi.activeConfigName = config.configuration_name || "Default Auth Experience";
+      if (config.configuration_data && window.state && typeof window.state.loadState === "function") {
+        window.state.loadState(config.configuration_data);
+        if (window.controlsInstance) {
+          window.controlsInstance.syncControls(window.state.getState());
+        }
+        if (window.previewInstance) {
+          window.previewInstance.render();
+        }
+        console.log(`[Startup] Loaded active configuration: ID ${config.id} (${config.configuration_name})`);
+      }
+    }
+  } catch (err) {
+    console.log("[Startup] Startup configuration restoration skipped:", err.message);
+  }
+}

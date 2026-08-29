@@ -26,6 +26,7 @@ class JWTAuthentication(BaseAuthentication):
     """
     Custom JWT Authentication class for Django REST Framework.
     Extracts Bearer token from `Authorization` header.
+    If header format, token decoding, or user lookup fails, returns None so AllowAny views can proceed.
     """
     def authenticate(self, request):
         auth_header = request.headers.get("Authorization") or request.headers.get("authorization")
@@ -34,23 +35,15 @@ class JWTAuthentication(BaseAuthentication):
 
         parts = auth_header.split()
         if len(parts) != 2 or parts[0].lower() != "bearer":
-            raise AuthenticationFailed("Invalid Authorization header format. Expected 'Bearer <token>'.")
+            return None
 
         token = parts[1]
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed("Session expired. Please log in again.")
-        except jwt.InvalidTokenError:
-            raise AuthenticationFailed("Invalid authentication token.")
-
-        user_id = payload.get("id")
-        if not user_id:
-            raise AuthenticationFailed("Token payload missing user identifier.")
-
-        try:
+            user_id = payload.get("id")
+            if not user_id:
+                return None
             user = AuthUser.objects.get(id=user_id, is_active=True)
-        except AuthUser.DoesNotExist:
-            raise AuthenticationFailed("User not found or account deactivated.")
-
-        return (user, token)
+            return (user, token)
+        except Exception:
+            return None

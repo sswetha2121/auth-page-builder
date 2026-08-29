@@ -285,10 +285,56 @@ const defaultConfig = {
   }
 };
 
+function normalizePasswordPolicy(policy = {}) {
+  const minLen = Number(policy.minLength || policy.min_length) || 8;
+  const maxLen = Number(policy.maxLength || policy.max_length) || 64;
+
+  const reqUpper = policy.requireUppercase !== undefined ? Boolean(policy.requireUppercase) : (policy.requireUpper !== undefined ? Boolean(policy.requireUpper) : true);
+  const reqLower = policy.requireLowercase !== undefined ? Boolean(policy.requireLowercase) : (policy.requireLower !== undefined ? Boolean(policy.requireLower) : true);
+
+  const reqNum = policy.requireNumber !== undefined ? Boolean(policy.requireNumber) : (policy.requireNumbers !== undefined ? Boolean(policy.requireNumbers) : true);
+  const minNums = Number(policy.minNumbers || policy.min_numbers) || 1;
+
+  const reqSpec = policy.requireSpecialChar !== undefined ? Boolean(policy.requireSpecialChar) : (policy.requireSpecialChars !== undefined ? Boolean(policy.requireSpecialChars) : (policy.requireSpecialCharacter !== undefined ? Boolean(policy.requireSpecialCharacter) : true));
+  const minSpec = Number(policy.minSpecialChars || policy.min_special_chars) || 1;
+  const allowedSpec = policy.allowedSpecialChars || policy.allowedSpecialCharacters || "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+  const prevUser = policy.preventUsernameInPassword !== undefined ? Boolean(policy.preventUsernameInPassword) : Boolean(policy.preventUsername);
+  const prevEmail = policy.preventEmailInPassword !== undefined ? Boolean(policy.preventEmailInPassword) : Boolean(policy.preventEmail);
+
+  return {
+    minLength: minLen,
+    maxLength: maxLen,
+
+    requireUppercase: reqUpper,
+    requireLowercase: reqLower,
+
+    requireNumber: reqNum,
+    requireNumbers: reqNum,
+    minNumbers: minNums,
+
+    requireSpecialChar: reqSpec,
+    requireSpecialChars: reqSpec,
+    minSpecialChars: minSpec,
+    allowedSpecialChars: allowedSpec,
+    allowedSpecialCharacters: allowedSpec,
+
+    preventUsername: prevUser,
+    preventUsernameInPassword: prevUser,
+    preventEmail: prevEmail,
+    preventEmailInPassword: prevEmail,
+
+    showStrengthMeter: policy.showStrengthMeter !== false,
+    showRequirementsList: policy.showRequirementsList !== false,
+    strengthRequirement: policy.strengthRequirement || "medium"
+  };
+}
+
 if (typeof window !== "undefined") {
   window.defaultConfig = defaultConfig;
+  window.normalizePasswordPolicy = normalizePasswordPolicy;
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { defaultConfig };
+  module.exports = { defaultConfig, normalizePasswordPolicy };
 }

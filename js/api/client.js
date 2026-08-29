@@ -12,6 +12,23 @@
 })(typeof window !== "undefined" ? window : globalThis, function () {
 
   const TOKEN_KEY = "auth_page_builder_jwt_token";
+  const SESSION_STORAGE_KEY = "auth_page_builder_session_id";
+
+  function getOrCreateBuilderSessionId() {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return "session_fallback_id";
+    }
+    let sessionId = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!sessionId) {
+      if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        sessionId = crypto.randomUUID();
+      } else {
+        sessionId = "sess_" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+      }
+      window.localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    }
+    return sessionId;
+  }
 
   class ApiClient {
     constructor(baseURL = "/api") {
@@ -22,13 +39,17 @@
       };
       this.mockMode = false;
 
-      // Restore saved JWT token
+      // Restore saved JWT token if available
       if (typeof window !== "undefined" && window.localStorage) {
         const savedToken = window.localStorage.getItem(TOKEN_KEY);
         if (savedToken) {
           this.setAuthToken(savedToken);
         }
       }
+    }
+
+    getBuilderSessionId() {
+      return getOrCreateBuilderSessionId();
     }
 
     setAuthToken(token) {
@@ -53,9 +74,20 @@
 
     async request(endpoint, options = {}) {
       const url = `${this.baseURL}${endpoint}`;
+      const token = this.getAuthToken();
+      const requestHeaders = {
+        ...this.headers,
+        "X-Builder-Session-ID": getOrCreateBuilderSessionId(),
+        ...options.headers
+      };
+
+      if (token && !requestHeaders["Authorization"]) {
+        requestHeaders["Authorization"] = `Bearer ${token}`;
+      }
+
       const config = {
-        headers: { ...this.headers, ...options.headers },
-        ...options
+        ...options,
+        headers: requestHeaders
       };
 
       if (this.mockMode) {
@@ -64,7 +96,7 @@
 
       try {
         if (typeof fetch === "undefined") {
-          return this.handleMockRequest(endpoint, config);
+          throw new Error("HTTP fetch is not supported in this environment.");
         }
 
         const response = await fetch(url, config);
@@ -77,53 +109,69 @@
         }
         return data;
       } catch (error) {
-        // In local node / offline test environments without fetch server, provide mock fallback
-        if (error.code === "ECONNREFUSED" || error.name === "TypeError" && error.message.includes("fetch failed")) {
-          console.warn(`[ApiClient] Network connection failed for ${endpoint}, using local fallback.`);
-          return this.handleMockRequest(endpoint, config);
+        if (error.code === "ECONNREFUSED" || (error.name === "TypeError" && (error.message.includes("fetch failed") || error.message.includes("Failed to fetch") || error.message.includes("NetworkError")))) {
+          console.warn("[ApiClient] Backend unavailable. Switching to static demo mode.");
+          const err = new Error("Backend unavailable");
+          err.name = "BackendUnavailableError";
+          err.isBackendUnavailable = true;
+          err.status = 503;
+          throw err;
         }
         throw error;
       }
     }
 
-    async get(endpoint, params = {}) {
-      const queryString = new URLSearchParams(params).toString();
-      const path = queryString ? `${endpoint}?${queryString}` : endpoint;
-      return this.request(path, { method: "GET" });
+    async get(endpoint, options = {}) {
+      return this.request(endpoint, { method: "GET", ...options });
     }
 
-    async post(endpoint, body = {}) {
+    async post(endpoint, body, options = {}) {
       return this.request(endpoint, {
         method: "POST",
-        body: JSON.stringify(body)
+        body: typeof body === "string" ? body : JSON.stringify(body),
+        ...options
       });
     }
 
-    async put(endpoint, body = {}) {
+    async put(endpoint, body, options = {}) {
       return this.request(endpoint, {
         method: "PUT",
-        body: JSON.stringify(body)
+        body: typeof body === "string" ? body : JSON.stringify(body),
+        ...options
       });
     }
 
-    async delete(endpoint) {
-      return this.request(endpoint, { method: "DELETE" });
+    async delete(endpoint, options = {}) {
+      return this.request(endpoint, { method: "DELETE", ...options });
     }
 
-    async handleMockRequest(endpoint, options) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      if (endpoint.startsWith("/configurations") || endpoint.startsWith("/projects")) {
-        return { success: true, message: "Local fallback response", count: 0, configurations: [] };
-      }
-      if (endpoint.startsWith("/auth/me")) {
-        return { success: true, user: { id: 1, full_name: "Developer", username: "developer", email: "dev@example.com" } };
-      }
-      if (endpoint.startsWith("/auth")) {
-        return { success: true, token: "mock_jwt_token", user: { id: 1, full_name: "Developer", username: "developer", email: "dev@example.com" } };
+    async upload(endpoint, formData, options = {}) {
+      const url = `${this.baseURL}${endpoint}`;
+      const token = this.getAuthToken();
+      const requestHeaders = {
+        "X-Builder-Session-ID": getOrCreateBuilderSessionId(),
+        ...options.headers
+      };
+      if (token) {
+        requestHeaders["Authorization"] = `Bearer ${token}`;
       }
 
-      return { success: true, data: {} };
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: requestHeaders,
+          body: formData
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const err = new Error(data.message || `HTTP ${response.status}`);
+          err.status = response.status;
+          throw err;
+        }
+        return data;
+      } catch (error) {
+        throw error;
+      }
     }
   }
 

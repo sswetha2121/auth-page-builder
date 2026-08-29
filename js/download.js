@@ -27,8 +27,9 @@
   ======================================================= */
   async function fetchAsset(url) {
     try {
-      if (typeof window === "undefined") {
-        // Node environment fallback for testing
+      const isNode = typeof process !== "undefined" && process.versions && process.versions.node;
+      if (isNode || typeof window === "undefined") {
+        // Node environment fallback for testing & CLI builds
         const fs = require("fs");
         const path = require("path");
         const cleanPath = url.replace(/^\.\//, "").replace(/^\//, "");
@@ -37,13 +38,15 @@
           return fs.readFileSync(fullPath);
         }
       }
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.arrayBuffer();
+      if (typeof fetch !== "undefined") {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.arrayBuffer();
+      }
     } catch (e) {
       console.warn(`Could not fetch asset ${url}:`, e.message || e);
-      return null;
     }
+    return null;
   }
 
   /* =======================================================
@@ -914,11 +917,379 @@ generated-auth-page/
   }
 
   /* =======================================================
+     MODULAR CSS GENERATORS
+  ======================================================= */
+  function generateCSSVariablesOnly(config) {
+    return Renderer ? Renderer.computeStyleVariables(config) : "";
+  }
+
+  function generateCSSGlobalOnly() {
+    return `* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: var(--auth-font-family, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  color: var(--auth-title-color, #0f172a);
+  background-color: var(--auth-background-color, #0f172a);
+  -webkit-font-smoothing: antialiased;
+}`;
+  }
+
+  function generateCSSLayoutOnly() {
+    return `.auth-preview-root {
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  background-color: var(--auth-background-color, #0f172a);
+}
+
+.auth-preview-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  position: relative;
+}
+
+.auth-preview-root.layout-split-left-image .auth-preview-shell { flex-direction: row; }
+.auth-preview-root.layout-split-right-image .auth-preview-shell { flex-direction: row-reverse; }
+
+.auth-preview-root.layout-centered { background-color: var(--auth-background-color, #f8fafc); }
+.auth-preview-root.layout-centered .auth-image-section { display: none !important; }
+.auth-preview-root.layout-centered .auth-form-section { width: 100%; background: transparent; }
+
+.auth-preview-root.layout-full-background {
+  background-image: var(--auth-background-image, none);
+  background-size: var(--auth-background-size, cover);
+  background-position: var(--auth-background-position, center);
+  background-repeat: var(--auth-background-repeat, no-repeat);
+}
+
+.auth-preview-root.layout-full-background .auth-image-section { display: none !important; }
+.auth-preview-root.layout-full-background .auth-form-section { width: 100%; z-index: 2; background: transparent; }`;
+  }
+
+  function generateCSSComponentsOnly() {
+    return `.auth-card {
+  width: 100%;
+  max-width: var(--auth-card-width, 460px);
+  background: var(--auth-card-background, #ffffff);
+  border-radius: var(--auth-card-radius, 20px);
+  padding: var(--auth-card-padding, 40px);
+  box-shadow: var(--auth-card-shadow, 0 20px 45px rgba(15, 23, 42, 0.10));
+}
+
+.auth-primary-btn {
+  width: 100%;
+  height: var(--auth-button-height, 48px);
+  background: var(--auth-button-bg, linear-gradient(135deg, #2563eb 0%, #4f46e5 100%));
+  color: var(--auth-button-color, #ffffff);
+  border-radius: var(--auth-button-radius, 12px);
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.auth-primary-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}`;
+  }
+
+  function generateCSSResponsiveOnly() {
+    return `@media (max-width: 1024px) {
+  .auth-preview-shell {
+    flex-direction: column !important;
+  }
+  .auth-image-section {
+    display: none !important;
+  }
+  .auth-form-section {
+    width: 100% !important;
+    padding: 24px 16px !important;
+  }
+}`;
+  }
+
+  /* =======================================================
+     RUNNABLE DJANGO BACKEND GENERATOR
+  ======================================================= */
+  function generateRunnableBackendFiles() {
+    return {
+      managePy: `#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+import os
+import sys
+
+def main():
+    """Run administrative tasks."""
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
+if __name__ == '__main__':
+    main()
+`,
+      requirementsTxt: `Django>=4.2.0,<5.0.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.0.0
+PyMySQL>=1.0.2
+bcrypt>=4.0.1
+PyJWT>=2.6.0
+python-dotenv>=1.0.0
+`,
+      envExample: `SECRET_KEY=django-insecure-generated-package-key
+DEBUG=True
+ALLOWED_HOSTS=*
+OTP_MODE=development
+STATIC_OTP=123456
+DB_NAME=internship
+DB_USER=internship_user
+DB_PASSWORD=
+DB_HOST=127.0.0.1
+DB_PORT=3306
+`,
+      settingsPy: `import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-package-key")
+DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t", "yes")
+ALLOWED_HOSTS = ["*"]
+
+INSTALLED_APPS = [
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "corsheaders",
+    "rest_framework",
+    "authentication",
+]
+
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+]
+
+ROOT_URLCONF = "project.urls"
+WSGI_APPLICATION = "project.wsgi.application"
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
+
+REST_FRAMEWORK = {
+    "UNAUTHENTICATED_USER": None,
+}
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = "static/"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+OTP_MODE = os.getenv("OTP_MODE", "development")
+STATIC_OTP = os.getenv("STATIC_OTP", "123456")
+`,
+      urlsPy: `from django.urls import path, include
+
+urlpatterns = [
+    path("api/auth/", include("authentication.urls")),
+    path("api/auth", include("authentication.urls")),
+]
+`,
+      wsgiPy: `import os
+from django.core.wsgi import get_wsgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+application = get_wsgi_application()
+`,
+      authModelsPy: `from django.db import models
+
+class AuthUser(models.Model):
+    id = models.AutoField(primary_key=True)
+    full_name = models.CharField(max_length=150, null=True, blank=True)
+    username = models.CharField(max_length=150, unique=True)
+    email = models.CharField(max_length=254, unique=True)
+    mobile = models.CharField(max_length=20, null=True, blank=True)
+    password = models.CharField(max_length=128)
+    password_hash = models.CharField(max_length=255, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "auth_user"
+`,
+      authSerializersPy: `import bcrypt
+from rest_framework import serializers
+from authentication.models import AuthUser
+
+class UserRegisterSerializer(serializers.Serializer):
+    full_name = serializers.CharField(max_length=150)
+    username = serializers.CharField(max_length=100)
+    email = serializers.EmailField(max_length=254)
+    password = serializers.CharField(min_length=6, write_only=True)
+    mobile = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
+
+class UserLoginSerializer(serializers.Serializer):
+    identifier = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+    configuration_id = serializers.IntegerField(required=False, allow_null=True)
+`,
+      authViewsPy: `import bcrypt
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from authentication.models import AuthUser
+from authentication.serializers import UserRegisterSerializer, UserLoginSerializer
+from authentication.services.otp_service import OTPService
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"success": False, "message": "Invalid registration data."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"success": True, "message": "User registered successfully."}, status=status.HTTP_201_CREATED)
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"success": False, "message": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"success": True, "message": "Login successful.", "redirect_url": "https://customerwebsite.com/dashboard"}, status=status.HTTP_200_OK)
+
+class SendOTPView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        ident = request.data.get("identifier", "")
+        return Response({"success": True, "message": "OTP request successful. Development mode is active.", "otp_code": "123456"}, status=status.HTTP_200_OK)
+
+class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        ident = request.data.get("identifier", "")
+        otp = request.data.get("otp", "")
+        is_valid, msg, user = OTPService.verify_otp(ident, otp)
+        if not is_valid:
+            return Response({"success": False, "message": msg}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"success": True, "message": "OTP verified successfully.", "redirect_url": "https://customerwebsite.com/dashboard"}, status=status.HTTP_200_OK)
+`,
+      authUrlsPy: `from django.urls import path
+from authentication.views import RegisterView, LoginView, SendOTPView, VerifyOTPView
+
+urlpatterns = [
+    path("register", RegisterView.as_view()),
+    path("login", LoginView.as_view()),
+    path("otp/send-email", SendOTPView.as_view()),
+    path("otp/verify", VerifyOTPView.as_view()),
+]
+`,
+      otpServicePy: `from django.conf import settings
+import os
+
+class OTPService:
+    @classmethod
+    def verify_otp(cls, identifier: str, otp_raw: str, purpose: str = "login"):
+        static_otp = str(getattr(settings, "STATIC_OTP", os.getenv("STATIC_OTP", "123456"))).strip()
+        if str(otp_raw).strip() == static_otp:
+            return True, "Verification successful.", None
+        return False, "Invalid verification code.", None
+`,
+      otpBasePy: `from abc import ABC, abstractmethod
+
+class BaseOTPProvider(ABC):
+    @abstractmethod
+    def send_otp(self, identifier: str, channel: str = "email", purpose: str = "login") -> dict:
+        pass
+
+    @abstractmethod
+    def verify_otp(self, identifier: str, otp_code: str, purpose: str = "login") -> dict:
+        pass
+`,
+      otpDevPy: `from django.conf import settings
+import os
+from .base import BaseOTPProvider
+
+class DevelopmentOTPProvider(BaseOTPProvider):
+    def __init__(self):
+        self.static_otp = str(getattr(settings, "STATIC_OTP", os.getenv("STATIC_OTP", "123456"))).strip()
+
+    def send_otp(self, identifier: str, channel: str = "email", purpose: str = "login") -> dict:
+        return {"success": True, "message": "OTP request successful. Development mode is active.", "otp_code": self.static_otp}
+
+    def verify_otp(self, identifier: str, otp_code: str, purpose: str = "login") -> dict:
+        if str(otp_code).strip() == self.static_otp:
+            return {"success": True, "message": "Verification successful."}
+        return {"success": False, "message": "Invalid verification code."}
+`
+    };
+  }
+
+  /* =======================================================
+     EXPORT TEMPLATE LOADER
+  ======================================================= */
+  async function loadExportTemplate(relativePath) {
+    try {
+      const isNode = typeof process !== "undefined" && process.versions && process.versions.node;
+      if (isNode || typeof window === "undefined") {
+        const fs = require("fs");
+        const path = require("path");
+        const fullPath = path.resolve(__dirname, "..", "export_templates", relativePath);
+        if (fs.existsSync(fullPath)) {
+          return fs.readFileSync(fullPath, "utf-8");
+        }
+      } else if (typeof fetch !== "undefined") {
+        const response = await fetch(`./export_templates/${relativePath}`);
+        if (response && response.ok && typeof response.text === "function") {
+          return await response.text();
+        }
+      }
+    } catch (e) {
+      console.warn(`Template load fallback for ${relativePath}:`, e.message || e);
+    }
+    return null;
+  }
+
+  /* =======================================================
      MAIN DOWNLOAD FUNCTION (ZIP CREATION WITH ASSET PRESERVATION)
   ======================================================= */
   async function downloadPackage() {
     if (typeof JSZip === "undefined") {
-      alert("JSZip library is loading. Please try again in a moment.");
+      if (typeof alert !== "undefined") {
+        alert("JSZip library is loading. Please try again in a moment.");
+      }
       return;
     }
 
@@ -928,90 +1299,78 @@ generated-auth-page/
 
     try {
       const config = getCleanConfig();
-      const zip = new JSZip();
-      const folder = zip.folder("generated-auth-page");
-
-      const cssFolder = folder.folder("css");
-      const jsFolder = folder.folder("js");
-      const assetsFolder = folder.folder("assets");
-      const bgFolder = assetsFolder.folder("backgrounds");
-      const logoFolder = assetsFolder.folder("logos");
-
       const exportConfig = JSON.parse(JSON.stringify(config));
 
-      // 1. Process Background Image (Preserve original extension)
-      if (config.background?.uploadedImage && config.background.uploadedImage.startsWith("data:")) {
-        const { ext } = detectMimeAndExt(config.background.uploadedImage, "png");
-        const base64Data = config.background.uploadedImage.split(",")[1];
-        if (base64Data) {
-          const bgFileName = `background-custom.${ext}`;
-          bgFolder.file(bgFileName, base64Data, { base64: true });
-          exportConfig.background.image = `./assets/backgrounds/${bgFileName}`;
-          exportConfig.background.uploadedImage = "";
+      // ----------------------------------------------------
+      // STAGE 1: PRE-GENERATION ASSET RESOLUTION & VALIDATION
+      // ----------------------------------------------------
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+      let resolvedBgData = null;
+      let resolvedBgFileName = "background-1.svg";
+
+      const bgRef = config.background?.uploadedImage || config.background?.image || "";
+      if (bgRef.startsWith("data:")) {
+        const { ext } = detectMimeAndExt(bgRef, "png");
+        const base64Data = bgRef.split(",")[1];
+        if (!base64Data) {
+          throw new Error("Uploaded background image data URL is invalid or corrupt.");
         }
-      } else if (config.background?.image && !config.background.image.startsWith("data:")) {
-        const bgData = await fetchAsset(config.background.image);
-        if (bgData) {
-          const filename = config.background.image.split("/").pop() || "background.jpg";
-          bgFolder.file(filename, bgData);
-          exportConfig.background.image = `./assets/backgrounds/${filename}`;
-        }
+        resolvedBgData = base64Data;
+        resolvedBgFileName = `custom-background.${ext}`;
+        exportConfig.background.image = `./assets/backgrounds/${resolvedBgFileName}`;
+        exportConfig.background.uploadedImage = "";
+      } else if (bgRef) {
+        const cleanBgPath = bgRef.replace(/^https?:\/\/[^\/]+/, "").replace(/^\.\//, "").replace(/^\//, "");
+        resolvedBgData = await fetchAsset(cleanBgPath);
+        resolvedBgFileName = cleanBgPath.split("/").pop() || "custom-background.jpg";
+        exportConfig.background.image = `./assets/backgrounds/${resolvedBgFileName}`;
+        exportConfig.background.uploadedImage = "";
       }
 
-      // Copy default backgrounds to ZIP
-      const defaultBgs = [
-        "background-1.svg",
-        "background-2.svg",
-        "background-3.svg",
-        "background-4.svg",
-        "background-5.svg",
-        "background-6.svg"
-      ];
-      for (const bg of defaultBgs) {
-        const data = await fetchAsset(`assets/backgrounds/${bg}`);
-        if (data) {
-          bgFolder.file(bg, data);
+      let resolvedLogoData = null;
+      let resolvedLogoFileName = "brand-shield.svg";
+
+      const logoRef = config.branding?.uploadedLogo || config.branding?.logoAsset || config.branding?.logo || "";
+      if (logoRef.startsWith("data:")) {
+        const { ext } = detectMimeAndExt(logoRef, "png");
+        const base64Data = logoRef.split(",")[1];
+        if (!base64Data) {
+          throw new Error("Uploaded logo image data URL is invalid or corrupt.");
         }
+        resolvedLogoData = base64Data;
+        resolvedLogoFileName = `custom-logo.${ext}`;
+        exportConfig.branding.logo = `./assets/logos/${resolvedLogoFileName}`;
+        exportConfig.branding.uploadedLogo = "";
+      } else if (logoRef) {
+        const cleanLogoPath = logoRef.replace(/^https?:\/\/[^\/]+/, "").replace(/^\.\//, "").replace(/^\//, "");
+        resolvedLogoData = await fetchAsset(cleanLogoPath);
+        resolvedLogoFileName = cleanLogoPath.split("/").pop() || "brand-shield.svg";
+        exportConfig.branding.logo = `./assets/logos/${resolvedLogoFileName}`;
+        exportConfig.branding.uploadedLogo = "";
       }
 
-      // 2. Process Logo Image (Preserve original extension)
-      if (config.branding?.uploadedLogo && config.branding.uploadedLogo.startsWith("data:")) {
-        const { ext } = detectMimeAndExt(config.branding.uploadedLogo, "png");
-        const base64Data = config.branding.uploadedLogo.split(",")[1];
-        if (base64Data) {
-          const logoFileName = `logo-custom.${ext}`;
-          logoFolder.file(logoFileName, base64Data, { base64: true });
-          exportConfig.branding.logo = `./assets/logos/${logoFileName}`;
-          exportConfig.branding.uploadedLogo = "";
-        }
-      } else if (config.branding?.logo && !config.branding.logo.startsWith("data:")) {
-        const logoData = await fetchAsset(config.branding.logo);
-        if (logoData) {
-          const filename = config.branding.logo.split("/").pop() || "brand-shield.svg";
-          logoFolder.file(filename, logoData);
-          exportConfig.branding.logo = `./assets/logos/${filename}`;
-        }
-      }
+      // ----------------------------------------------------
+      // STAGE 2: BUILD ZIP PACKAGE STRUCTURE
+      // ----------------------------------------------------
+      const zip = new JSZip();
 
-      // Copy default vector logos to ZIP
-      const defaultLogos = [
-        "brand-shield.svg",
-        "brand-prism.svg",
-        "brand-nexus.svg",
-        "brand-aurora.svg",
-        "brand-apex.svg"
-      ];
-      for (const lg of defaultLogos) {
-        const data = await fetchAsset(`assets/logos/${lg}`);
-        if (data) {
-          logoFolder.file(lg, data);
-        }
-      }
+      // Root Package Files
+      const readmeTpl = await loadExportTemplate("README.md") || generateReadme(exportConfig);
+      const packageJsonTpl = await loadExportTemplate("package.json") || JSON.stringify({ name: "auth-page-package", version: "1.0.0" }, null, 2);
+      const envExampleTpl = await loadExportTemplate(".env.example") || "SECRET_KEY=django-key\nOTP_MODE=development\nSTATIC_OTP=123456\n";
 
-      // 3. Build config.json
+      zip.file("README.md", readmeTpl);
+      zip.file("package.json", packageJsonTpl);
+      zip.file(".env.example", envExampleTpl);
+
+      // 1. Single Source of Truth Config
       const configJSON = {
+        apiBaseUrl: exportConfig.urls?.authPageUrl || "http://localhost:8000/api",
         landingPageUrl: exportConfig.urls?.landingPageUrl || "",
-        redirectUrl: exportConfig.urls?.redirectUrl || "",
+        redirectUrl: exportConfig.urls?.redirectUrl || "https://customerwebsite.com/dashboard",
         authPageUrl: exportConfig.urls?.authPageUrl || "",
         showBackToWebsite: exportConfig.urls?.showBackToWebsite !== false,
         backToWebsiteText: exportConfig.urls?.backToWebsiteText || "Back to Website",
@@ -1023,34 +1382,167 @@ generated-auth-page/
         typography: exportConfig.typography || {},
         button: exportConfig.button || {},
         social: exportConfig.social || {},
-        pages: exportConfig.pages || {}
+        pages: exportConfig.pages || {},
+        passwordPolicy: exportConfig.passwordPolicy || {},
+        otp: exportConfig.otp || {}
       };
-      folder.file("config.json", JSON.stringify(configJSON, null, 2));
 
-      // 4. Build js files
-      jsFolder.file("config.js", `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`);
-      jsFolder.file("app.js", generateStandaloneAppJS());
-      jsFolder.file("integration.js", generateIntegrationJS(exportConfig));
+      const configFolder = zip.folder("config");
+      configFolder.file("auth-config.json", JSON.stringify(configJSON, null, 2));
 
-      // 5. Build integration-snippet.html
-      folder.file("integration-snippet.html", generateIntegrationSnippetHTML(exportConfig));
+      // 2. Modular Frontend Folder
+      const frontendFolder = zip.folder("frontend");
+      const indexHtmlTpl = await loadExportTemplate("frontend/index.html") || generateStandaloneIndexHTML(exportConfig);
+      frontendFolder.file("index.html", indexHtmlTpl);
 
-      // 6. Build css/styles.css
-      cssFolder.file("styles.css", generateStandaloneCSS(exportConfig));
+      const frontendCssFolder = frontendFolder.folder("css");
+      const varCssTpl = await loadExportTemplate("frontend/css/variables.css") || generateCSSVariablesOnly(exportConfig);
+      const globCssTpl = await loadExportTemplate("frontend/css/global.css") || generateCSSGlobalOnly();
+      const layoutCssTpl = await loadExportTemplate("frontend/css/auth-layout.css") || generateCSSLayoutOnly();
+      const compCssTpl = await loadExportTemplate("frontend/css/auth-components.css") || generateCSSComponentsOnly();
+      const respCssTpl = await loadExportTemplate("frontend/css/responsive.css") || generateCSSResponsiveOnly();
 
-      // 7. Build index.html
-      folder.file("index.html", generateStandaloneIndexHTML(exportConfig));
+      frontendCssFolder.file("variables.css", varCssTpl);
+      frontendCssFolder.file("global.css", globCssTpl);
+      frontendCssFolder.file("auth-layout.css", layoutCssTpl);
+      frontendCssFolder.file("auth-components.css", compCssTpl);
+      frontendCssFolder.file("responsive.css", respCssTpl);
 
-      // 8. Build README.md
-      folder.file("README.md", generateReadme(exportConfig));
+      const frontendJsFolder = frontendFolder.folder("js");
+      const configJsTpl = await loadExportTemplate("frontend/js/config.js") || `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`;
+      const apiJsTpl = await loadExportTemplate("frontend/js/api.js") || "console.log('API Client initialized');";
+      const valJsTpl = await loadExportTemplate("frontend/js/validation.js") || "console.log('Validation Engine initialized');";
+      const appJsTpl = await loadExportTemplate("frontend/js/app.js") || generateStandaloneAppJS();
 
-      // 9. Generate ZIP Blob and trigger download
+      frontendJsFolder.file("config.js", configJsTpl);
+      frontendJsFolder.file("api.js", apiJsTpl);
+      frontendJsFolder.file("validation.js", valJsTpl);
+      frontendJsFolder.file("app.js", appJsTpl);
+
+      // Asset Bundling inside Frontend Assets
+      const frontendAssets = frontendFolder.folder("assets");
+      const frontendBgDir = frontendAssets.folder("backgrounds");
+      const frontendLogoDir = frontendAssets.folder("logos");
+
+      if (typeof resolvedBgData === "string") {
+        frontendBgDir.file(resolvedBgFileName, resolvedBgData, { base64: true });
+      } else if (resolvedBgData) {
+        frontendBgDir.file(resolvedBgFileName, resolvedBgData);
+      }
+
+      if (typeof resolvedLogoData === "string") {
+        frontendLogoDir.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
+      } else if (resolvedLogoData) {
+        frontendLogoDir.file(resolvedLogoFileName, resolvedLogoData);
+      }
+
+      // Bundle Default Background & Logo Presets (All 12 background assets)
+      const defaultBgs = [
+        "background-1.svg", "background-2.svg", "background-3.svg", "background-4.svg", "background-5.svg", "background-6.svg",
+        "b1.webp", "b2.webp", "b3.webp", "b4.webp", "b5.jpg", "idea-6900632_1280.png"
+      ];
+      for (const bg of defaultBgs) {
+        const bgBytes = await fetchAsset(`assets/backgrounds/${bg}`);
+        if (bgBytes) frontendBgDir.file(bg, bgBytes);
+      }
+
+      const defaultLogos = ["brand-shield.svg", "brand-prism.svg", "brand-nexus.svg", "brand-aurora.svg", "brand-apex.svg"];
+      for (const lg of defaultLogos) {
+        const lgBytes = await fetchAsset(`assets/logos/${lg}`);
+        if (lgBytes) frontendLogoDir.file(lg, lgBytes);
+      }
+
+      // 3. Runnable Backend Folder
+      const backendFolder = zip.folder("backend");
+      const backendFiles = generateRunnableBackendFiles();
+      backendFolder.file("manage.py", await loadExportTemplate("backend/manage.py") || backendFiles.managePy);
+      backendFolder.file("requirements.txt", await loadExportTemplate("backend/requirements.txt") || backendFiles.requirementsTxt);
+      backendFolder.file(".env.example", await loadExportTemplate("backend/.env.example") || backendFiles.envExample);
+
+      const projFolder = backendFolder.folder("project");
+      projFolder.file("__init__.py", await loadExportTemplate("backend/project/__init__.py") || "");
+      projFolder.file("settings.py", await loadExportTemplate("backend/project/settings.py") || backendFiles.settingsPy);
+      projFolder.file("urls.py", await loadExportTemplate("backend/project/urls.py") || backendFiles.urlsPy);
+      projFolder.file("wsgi.py", await loadExportTemplate("backend/project/wsgi.py") || backendFiles.wsgiPy);
+
+      const authAppFolder = backendFolder.folder("authentication");
+      authAppFolder.file("__init__.py", await loadExportTemplate("backend/authentication/__init__.py") || "");
+      authAppFolder.file("models.py", await loadExportTemplate("backend/authentication/models.py") || backendFiles.authModelsPy);
+      authAppFolder.file("serializers.py", await loadExportTemplate("backend/authentication/serializers.py") || backendFiles.authSerializersPy);
+      authAppFolder.file("views.py", await loadExportTemplate("backend/authentication/views.py") || backendFiles.authViewsPy);
+      authAppFolder.file("urls.py", await loadExportTemplate("backend/authentication/urls.py") || backendFiles.authUrlsPy);
+
+      const servicesFolder = authAppFolder.folder("services");
+      servicesFolder.file("__init__.py", await loadExportTemplate("backend/authentication/services/__init__.py") || "");
+      servicesFolder.file("otp_service.py", await loadExportTemplate("backend/authentication/services/otp_service.py") || backendFiles.otpServicePy);
+
+      // ----------------------------------------------------
+      // LEGACY COMPATIBILITY MAPPING FOR TEST RUNNERS
+      // ----------------------------------------------------
+      const genAuthFolder = zip.folder("generated-auth-page");
+      genAuthFolder.file("index.html", generateStandaloneIndexHTML(exportConfig));
+      genAuthFolder.file("config.json", JSON.stringify(configJSON, null, 2));
+      genAuthFolder.file("integration-snippet.html", generateIntegrationSnippetHTML(exportConfig));
+      genAuthFolder.file("README.md", readmeTpl);
+
+      const legacyCss = genAuthFolder.folder("css");
+      legacyCss.file("styles.css", generateStandaloneCSS(exportConfig));
+
+      const legacyJs = genAuthFolder.folder("js");
+      legacyJs.file("config.js", `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`);
+      legacyJs.file("app.js", generateStandaloneAppJS());
+      legacyJs.file("integration.js", generateIntegrationJS(exportConfig));
+
+      const legacyAssets = genAuthFolder.folder("assets");
+      const legacyBgDir = legacyAssets.folder("backgrounds");
+      const legacyLogoDir = legacyAssets.folder("logos");
+
+      if (typeof resolvedBgData === "string") {
+        legacyBgDir.file(resolvedBgFileName, resolvedBgData, { base64: true });
+      } else if (resolvedBgData) {
+        legacyBgDir.file(resolvedBgFileName, resolvedBgData);
+      }
+
+      if (typeof resolvedLogoData === "string") {
+        legacyLogoDir.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
+      } else if (resolvedLogoData) {
+        legacyLogoDir.file(resolvedLogoFileName, resolvedLogoData);
+      }
+
+      for (const bg of defaultBgs) {
+        const bgBytes = await fetchAsset(`assets/backgrounds/${bg}`);
+        if (bgBytes) legacyBgDir.file(bg, bgBytes);
+      }
+
+      for (const lg of defaultLogos) {
+        const lgBytes = await fetchAsset(`assets/logos/${lg}`);
+        if (lgBytes) legacyLogoDir.file(lg, lgBytes);
+      }
+
+      // ----------------------------------------------------
+      // STAGE 3: POST-GENERATION ZIP ENTRY VALIDATION
+      // ----------------------------------------------------
+      const bgImg = configJSON.background?.image || "";
+      const logoImg = configJSON.branding?.logo || "";
+      if (bgImg.includes("blob:") || bgImg.includes("data:") || bgImg.includes("file:") || logoImg.includes("blob:") || logoImg.includes("data:") || logoImg.includes("file:")) {
+        throw new Error("Post-generation validation failed: Unsanitized blob or absolute URL detected in asset paths.");
+      }
+
+      if (!zip.file("config/auth-config.json") || !zip.file("frontend/index.html") || !zip.file("backend/manage.py")) {
+        throw new Error("Post-generation validation failed: Critical ZIP package entries are missing.");
+      }
+
+      // ----------------------------------------------------
+      // STAGE 4: GENERATE ZIP BLOB & TRIGGER DOWNLOAD
+      // ----------------------------------------------------
       const content = await zip.generateAsync({ type: "blob" });
+      const filename = `auth-page-package-${timestamp}.zip`;
+
       if (typeof document !== "undefined" && document.createElement) {
         const a = document.createElement("a");
         const url = (typeof URL !== "undefined" && URL.createObjectURL) ? URL.createObjectURL(content) : "#";
         a.href = url;
-        a.download = "generated-auth-page.zip";
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
@@ -1068,7 +1560,7 @@ generated-auth-page/
     } catch (err) {
       console.error("ZIP Generation error:", err);
       if (Utils.showToast) {
-        Utils.showToast("Failed to generate ZIP package.", "error");
+        Utils.showToast(err.message || "Failed to generate ZIP package.", "error");
       }
       throw err;
     }

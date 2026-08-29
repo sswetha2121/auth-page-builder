@@ -1,0 +1,10 @@
+{
+  "name": "auth-page-package",
+  "version": "1.0.0",
+  "description": "Generated authentication package from Auth Page Builder",
+  "scripts": {
+    "start": "npx serve frontend -p 3000"
+  },
+  "keywords": ["auth", "django", "frontend"],
+  "license": "MIT"
+}

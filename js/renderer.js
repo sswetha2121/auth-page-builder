@@ -35,12 +35,9 @@
 
     // Background image calculation
     let bgImg = "none";
-    if (background.uploadedImage && background.uploadedImage !== "none") {
-      bgImg = `url("${background.uploadedImage}")`;
-    } else if (background.image && background.image !== "none" && background.type !== "color") {
-      bgImg = `url("${background.image}")`;
-    } else if (background.selected && background.selected !== "none" && background.type !== "color") {
-      bgImg = `url("${background.selected}")`;
+    const selectedBgUrl = background.uploadedImage || background.image || background.selected;
+    if (selectedBgUrl && selectedBgUrl !== "none" && selectedBgUrl !== "") {
+      bgImg = `url("${selectedBgUrl}")`;
     }
 
     let bgColor = background.color || "#0f172a";
@@ -101,7 +98,7 @@
         /* Background */
         --auth-background-image: ${bgImg};
         --auth-background-color: ${bgColor};
-        --auth-background-position: ${background.position || "center"};
+        --auth-background-position: ${background.position || `${background.horizontalPosition || "center"} ${background.verticalPosition || "center"}`};
         --auth-background-size: ${background.size || "cover"};
         --auth-background-repeat: ${background.repeat || "no-repeat"};
         --auth-overlay-color: ${background.overlayColor || "#000000"};
@@ -228,7 +225,7 @@
           window.state.set("authentication.otp.defaultMethod", method, { notify: false });
         }
         if (Utils.showToast) {
-          Utils.showToast(`Verification delivery method set to: ${method.toUpperCase()}`, "info", 2000);
+          Utils.showToast("OTP request successful. Use 123456 for this demo.", "info", 3000);
         }
       });
     });
@@ -509,6 +506,30 @@
 
     // Attach interactive behaviors
     attachInteractiveBehaviors(root, config);
+
+    // Apply direct element background styles and output required diagnostics
+    const bgConfig = config.background || {};
+    const selectedBackground = bgConfig.uploadedImage || bgConfig.image || bgConfig.selected || "";
+    
+    const previewElement = root.querySelector(".auth-image-section") || root;
+    if (previewElement) {
+      if (selectedBackground && selectedBackground !== "none" && selectedBackground !== "") {
+        previewElement.style.backgroundImage = `url("${selectedBackground}")`;
+        previewElement.style.backgroundSize = bgConfig.size || "cover";
+        previewElement.style.backgroundPosition = bgConfig.position || "center";
+        previewElement.style.backgroundRepeat = bgConfig.repeat || "no-repeat";
+      } else {
+        previewElement.style.backgroundImage = "none";
+      }
+
+      console.log("Selected background:", selectedBackground);
+      console.log("State background:", bgConfig);
+      console.log("Applied backgroundImage:", previewElement.style.backgroundImage);
+      console.log(
+        "Computed backgroundImage:",
+        typeof getComputedStyle !== "undefined" ? getComputedStyle(previewElement).backgroundImage : previewElement.style.backgroundImage
+      );
+    }
 
     // Trigger completion event
     if (typeof document !== "undefined" && document.dispatchEvent) {

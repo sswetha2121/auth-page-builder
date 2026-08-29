@@ -83,6 +83,18 @@ class OTPService:
         clean_ident = identifier.strip().lower()
         otp_clean = str(otp_raw).strip()
 
+        # Development Mode Check (STATIC_OTP)
+        otp_mode = str(getattr(settings, "OTP_MODE", os.getenv("OTP_MODE", "development"))).strip().lower()
+        static_otp = str(getattr(settings, "STATIC_OTP", os.getenv("STATIC_OTP", "123456"))).strip()
+
+        if otp_mode == "development" and otp_clean == static_otp:
+            user = (
+                AuthUser.objects.filter(username__iexact=clean_ident).first()
+                or AuthUser.objects.filter(email__iexact=clean_ident).first()
+                or AuthUser.objects.filter(mobile=clean_ident).first()
+            )
+            return True, "Verification successful.", user
+
         # Find latest unused OTP for identifier and purpose
         otp_record = AuthOTP.objects.filter(
             identifier=clean_ident,

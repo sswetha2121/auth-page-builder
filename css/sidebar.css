@@ -26,6 +26,7 @@
     width: 100%;
     min-width: 0;
     height: 100%;
+    max-height: calc(100vh - 64px);
 
     display: flex;
     flex-direction: column;
@@ -39,6 +40,23 @@
         var(--border, #e4e7ec);
 
     z-index: 20;
+}
+
+/* =========================================================
+   SIDEBAR SETTINGS PANEL (INNER FLEX CONTAINER)
+========================================================= */
+
+.sidebar-settings-panel {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    position: relative;
 }
 
 
@@ -277,6 +295,9 @@
 ========================================================= */
 
 .sidebar-category-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -507,14 +528,18 @@
 
     min-height: 0;
 
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 
     padding: 14px;
 
     scroll-behavior: smooth;
 
     overscroll-behavior: contain;
+
+    scrollbar-width: thin !important;
+
+    scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 
@@ -525,8 +550,8 @@
 
     min-height: 0;
 
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 
     padding: 14px;
 
@@ -535,32 +560,34 @@
 
 
 /* =========================================================
-   SCROLLBAR
+   SCROLLBAR (ALWAYS VISIBLE & HIGH CONTRAST)
 ========================================================= */
 
 .customization-scroll::-webkit-scrollbar,
 .sidebar-content::-webkit-scrollbar {
-    width: 7px;
+    width: 10px !important;
+    display: block !important;
 }
 
 
 .customization-scroll::-webkit-scrollbar-track,
 .sidebar-content::-webkit-scrollbar-track {
-    background: transparent;
+    background: #f1f5f9 !important;
+    border-radius: 6px !important;
 }
 
 
 .customization-scroll::-webkit-scrollbar-thumb,
 .sidebar-content::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-
-    background: #cbd5e1;
+    background: #94a3b8 !important;
+    border-radius: 6px !important;
+    border: 2px solid #f1f5f9 !important;
 }
 
 
 .customization-scroll::-webkit-scrollbar-thumb:hover,
 .sidebar-content::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #475569 !important;
 }
 
 
@@ -1469,6 +1496,9 @@
 ========================================================= */
 
 .sidebar-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
 

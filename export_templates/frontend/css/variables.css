@@ -1,0 +1,53 @@
+/* =========================================================
+   AUTHENTICATION PACKAGE - CSS VARIABLES (DYNAMIC THEMING)
+   File: css/variables.css
+========================================================= */
+
+:root {
+  /* Layout & Sizing */
+  --auth-image-width: 50%;
+  --auth-form-width: 460px;
+  --auth-content-padding: 48px;
+
+  /* Background Customization */
+  --auth-background-image: none;
+  --auth-background-color: #0f172a;
+  --auth-background-position: center;
+  --auth-background-size: cover;
+  --auth-background-repeat: no-repeat;
+  --auth-overlay-color: #000000;
+  --auth-overlay-opacity: 0.35;
+  --auth-background-blur: 0px;
+  --auth-background-brightness: 100%;
+
+  /* Branding & Logo */
+  --auth-logo-size: 64px;
+  --auth-logo-radius: 50%;
+  --auth-logo-bg: transparent;
+  --auth-brand-primary: #2563eb;
+  --auth-brand-accent: #4f46e5;
+
+  /* Card Styling */
+  --auth-card-background: #ffffff;
+  --auth-card-opacity: 1;
+  --auth-card-width: 460px;
+  --auth-card-radius: 20px;
+  --auth-card-border-width: 1px;
+  --auth-card-border-color: #e2e8f0;
+  --auth-card-shadow: 0 20px 45px rgba(15, 23, 42, 0.10);
+  --auth-card-padding: 40px;
+
+  /* Typography */
+  --auth-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --auth-title-color: #0f172a;
+  --auth-title-size: 32px;
+  --auth-title-weight: 700;
+  --auth-subtitle-color: #64748b;
+  --auth-subtitle-size: 15px;
+
+  /* Button Styling */
+  --auth-button-bg: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  --auth-button-color: #ffffff;
+  --auth-button-radius: 12px;
+  --auth-button-height: 48px;
+}

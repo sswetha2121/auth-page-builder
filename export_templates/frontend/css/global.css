@@ -1,0 +1,34 @@
+/* =========================================================
+   AUTHENTICATION PACKAGE - GLOBAL BASE RESET & TYPOGRAPHY
+   File: css/global.css
+========================================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: var(--auth-font-family);
+  color: var(--auth-title-color);
+  background-color: var(--auth-background-color);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--auth-brand-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--auth-brand-accent);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}

@@ -63,21 +63,40 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "auth_page_builder_backend.wsgi.application"
 
-# Database Configuration (MySQL)
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("DB_NAME", "internship"),
-        "USER": os.getenv("DB_USER", "internship_user"),
-        "PASSWORD": os.getenv("DB_PASSWORD", ""),
-        "HOST": os.getenv("DB_HOST", "zdotapps-devenviron.cvuouqwaej9d.ap-south-1.rds.amazonaws.com"),
-        "PORT": os.getenv("DB_PORT", "3306"),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-            "connect_timeout": 10,
-        },
+# Database Configuration (MySQL with SQLite fallback)
+explicit_sqlite = os.getenv("USE_SQLITE", "").lower() in ("true", "1", "t", "yes")
+db_host = os.getenv("DB_HOST", "")
+db_name = os.getenv("DB_NAME", "")
+db_engine = os.getenv("DB_ENGINE", "")
+
+if not explicit_sqlite and (db_host or db_name or "mysql" in db_engine):
+    try:
+        import pymysql
+        pymysql.install_as_MySQLdb()
+    except Exception:
+        pass
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": db_name or "internship",
+            "USER": os.getenv("DB_USER", "internship_user"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": db_host or "127.0.0.1",
+            "PORT": os.getenv("DB_PORT", "3306"),
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "connect_timeout": 5,
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
@@ -101,6 +120,7 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "x-builder-session-id",
 ]
 
 # Internationalization
@@ -109,8 +129,10 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# Static files & Media files
 STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Email Configuration (SMTP with fallback to console backend)
@@ -125,4 +147,9 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("true", "1", "t", "yes")
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() in ("true", "1", "t", "yes")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Auth Page Builder <no-reply@authbuilder.com>")
+
+# Development Static OTP Configuration
+OTP_MODE = os.getenv("OTP_MODE", "development")
+STATIC_OTP = os.getenv("STATIC_OTP", "123456")
+
 

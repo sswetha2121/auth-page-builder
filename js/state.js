@@ -58,11 +58,15 @@
     if (normalized.background.uploadedImage) {
       normalized.background.type = "uploaded";
       normalized.background.image = normalized.background.uploadedImage;
-    } else if (normalized.background.type === "color" || normalized.background.selected === "none") {
+    } else if (normalized.background.selected && normalized.background.selected !== "none") {
+      normalized.background.type = "default";
+      normalized.background.image = normalized.background.selected;
+    } else if (normalized.background.image && normalized.background.image !== "none") {
+      normalized.background.type = "default";
+      normalized.background.selected = normalized.background.image;
+    } else {
       normalized.background.type = "color";
       normalized.background.image = "";
-    } else if (!normalized.background.image && normalized.background.selected) {
-      normalized.background.image = normalized.background.selected;
     }
 
     // Ensure OTP length is valid (4, 6, 8)

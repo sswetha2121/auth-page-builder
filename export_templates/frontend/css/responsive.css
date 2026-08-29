@@ -1,0 +1,47 @@
+/* =========================================================
+   AUTHENTICATION PACKAGE - RESPONSIVE STYLING
+   File: css/responsive.css
+========================================================= */
+
+@media (max-width: 1024px) {
+  .auth-layout,
+  .auth-preview-shell,
+  .layout-split-left-image,
+  .layout-split-right-image {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .auth-image-section {
+    width: 100% !important;
+    min-height: 180px !important;
+    max-height: 240px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .auth-form-section {
+    width: 100% !important;
+    padding: 24px 16px !important;
+    flex: 1 1 auto !important;
+  }
+
+  .auth-card {
+    width: calc(100% - 24px) !important;
+    max-width: 460px !important;
+    margin: 0 auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 20px 16px !important;
+    border-radius: 14px !important;
+    width: 100% !important;
+  }
+
+  .auth-heading {
+    font-size: 22px !important;
+  }
+}
