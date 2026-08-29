@@ -49,32 +49,49 @@
 
       catButtons.forEach(btn => {
         btn.addEventListener("click", () => {
-          const targetCategory = btn.dataset.inspectorCategory;
+          const targetCategory = btn.dataset ? btn.dataset.inspectorCategory : btn.getAttribute("data-inspector-category");
           if (!targetCategory) return;
 
           catButtons.forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
 
-          const sections = document.querySelectorAll(".customization-section[data-category]");
-          let firstMatch = null;
+          // 1. Unhide outer category section groups
+          const groups = document.querySelectorAll(".category-section-group[data-category]");
+          let firstGroupMatch = null;
 
+          groups.forEach(grp => {
+            const cat = grp.dataset ? grp.dataset.category : grp.getAttribute("data-category");
+            if (targetCategory === "all" || cat === targetCategory) {
+              grp.style.display = "block";
+              grp.classList.remove("cat-hidden");
+              if (!firstGroupMatch) firstGroupMatch = grp;
+            } else {
+              grp.style.display = "none";
+              grp.classList.add("cat-hidden");
+            }
+          });
+
+          // 2. Unhide individual customization sections
+          const sections = document.querySelectorAll(".customization-section[data-category]");
           sections.forEach(sec => {
-            const secCategory = sec.dataset.category;
+            const secCategory = sec.dataset ? sec.dataset.category : sec.getAttribute("data-category");
             if (targetCategory === "all" || secCategory === targetCategory) {
               sec.style.display = "";
               sec.classList.remove("cat-hidden");
-              if (!firstMatch) firstMatch = sec;
             } else {
               sec.style.display = "none";
               sec.classList.add("cat-hidden");
             }
           });
 
-          // If filtering a specific category, make sure at least the first section is open
-          if (targetCategory !== "all" && firstMatch) {
-            firstMatch.classList.add("open");
-            const header = firstMatch.querySelector("[data-accordion-trigger]");
-            if (header) header.setAttribute("aria-expanded", "true");
+          // 3. Ensure first section inside target group is open
+          if (firstGroupMatch) {
+            const firstSec = firstGroupMatch.querySelector(".customization-section");
+            if (firstSec) {
+              firstSec.classList.add("open");
+              const header = firstSec.querySelector("[data-accordion-trigger]");
+              if (header) header.setAttribute("aria-expanded", "true");
+            }
           }
         });
       });
