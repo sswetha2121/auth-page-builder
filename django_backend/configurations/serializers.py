@@ -3,16 +3,20 @@ import json
 from rest_framework import serializers
 from configurations.models import AuthConfiguration
 
+DANGEROUS_SCHEMES = ["javascript:", "data:", "vbscript:", "file:"]
 
 def is_valid_url(url_str):
     if not url_str or not isinstance(url_str, str):
         return False
-    try:
-        parsed = urlparse(url_str)
-        return parsed.scheme in ["http", "https"] and bool(parsed.netloc)
-    except Exception:
-        return False
-
+    clean = url_str.strip().lower()
+    for scheme in DANGEROUS_SCHEMES:
+        if clean.startswith(scheme):
+            return False
+    if clean.startswith("http://") or clean.startswith("https://") or clean.startswith("/"):
+        return True
+    if not ":" in clean:
+        return True
+    return False
 
 class ConfigurationSerializer(serializers.ModelSerializer):
     """
@@ -47,7 +51,7 @@ class ConfigurationSerializer(serializers.ModelSerializer):
         if value:
             cleaned = value.strip()
             if not is_valid_url(cleaned):
-                raise serializers.ValidationError("Invalid landing URL. Must be a valid http:// or https:// URL.")
+                raise serializers.ValidationError("Invalid landing URL. Must be a valid http:// or https:// URL or relative path.")
             return cleaned
         return None
 
@@ -55,7 +59,7 @@ class ConfigurationSerializer(serializers.ModelSerializer):
         if value:
             cleaned = value.strip()
             if not is_valid_url(cleaned):
-                raise serializers.ValidationError("Invalid redirect URL. Must be a valid http:// or https:// URL.")
+                raise serializers.ValidationError("Invalid redirect URL. Must be a valid http:// or https:// URL or relative path.")
             return cleaned
         return None
 
@@ -73,10 +77,11 @@ class ConfigurationSerializer(serializers.ModelSerializer):
         config_data = attrs.get("configuration_data") or {}
         if isinstance(config_data, dict):
             urls = config_data.get("urls") or {}
+            red = config_data.get("redirect") or {}
             if not attrs.get("landing_url") and urls.get("landingPageUrl"):
                 attrs["landing_url"] = urls.get("landingPageUrl")
-            if not attrs.get("redirect_url") and urls.get("redirectUrl"):
-                attrs["redirect_url"] = urls.get("redirectUrl")
+            if not attrs.get("redirect_url"):
+                attrs["redirect_url"] = red.get("redirectUrl") or urls.get("redirectUrl")
         if not attrs.get("configuration_name"):
             attrs["configuration_name"] = "My Auth Page Experience"
         return attrs

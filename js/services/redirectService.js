@@ -112,8 +112,13 @@
       delay: Number(redirectConfig.delay) || 0
     };
 
+    if (!redirectConfig || typeof redirectConfig !== "object") {
+      console.log("[Redirect] No redirect configuration found");
+      return Promise.resolve({ success: false, reason: "missing_config" });
+    }
+
     if (!config.enabled) {
-      console.log("[RedirectService] Redirection is disabled in configuration.");
+      console.log("[Redirect] Redirect disabled");
       return Promise.resolve({ success: false, reason: "disabled" });
     }
 
@@ -170,7 +175,9 @@
       setTimeout(() => {
         // If inside Builder Preview Editor, NEVER navigate main window away from builder!
         if (options.isPreview || (typeof window !== "undefined" && window.location && window.location.pathname.endsWith("index.html") && document.getElementById("authBuilderApp"))) {
-          console.log(`[RedirectService] Builder Preview Demo Redirection simulated to: ${rawTarget}`);
+          console.log("[Redirect] Preview mode");
+          console.log(`[Redirect] Target: ${rawTarget}`);
+          console.log("[Redirect] Navigation suppressed in builder preview");
           resolve({ success: true, simulated: true, url: rawTarget });
           return;
         }

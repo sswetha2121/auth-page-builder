@@ -245,6 +245,23 @@
       return false;
     }
 
+    loadState(savedConfig) {
+      if (!savedConfig || typeof savedConfig !== "object") return this.state;
+      const normalized = validateAndNormalize(savedConfig, this.defaultConfig);
+      this.state = normalized;
+      this.saveToStorage();
+      this.notify("*", this.state);
+      return this.state;
+    }
+
+    serializeCurrentConfiguration() {
+      return validateAndNormalize(this.state, this.defaultConfig);
+    }
+
+    serialize() {
+      return this.serializeCurrentConfiguration();
+    }
+
     setActivePage(page) {
       const valid = ["login", "signup", "forgotPassword", "otp"];
       if (!valid.includes(page)) page = "login";

@@ -129,9 +129,12 @@ function initializeDownloadButton() {
    DEBOUNCED CLOUD AUTOSAVE
 ========================================================= */
 function triggerDebouncedAutosave(state) {
+  console.log("[Autosave] State change detected");
+
   if (autosaveTimeout) {
     clearTimeout(autosaveTimeout);
   }
+  console.log("[Autosave] Debounce scheduled");
 
   const indicator = document.querySelector("[data-unsaved-indicator]");
   const indicatorText = indicator?.querySelector(".indicator-text");
@@ -144,24 +147,29 @@ function triggerDebouncedAutosave(state) {
     if (isAutosaving) return;
     isAutosaving = true;
 
+    console.log("[Autosave] Saving configuration");
+
     if (indicatorText) {
       indicatorText.textContent = "Saving to Cloud...";
     }
 
     try {
-      const currentState = window.state ? window.state.getState() : state;
+      const currentState = window.state ? window.state.serializeCurrentConfiguration() : state;
       const activeId = window.ConfigurationsApi.activeConfigId;
+      const currentUser = window.AuthController ? window.AuthController.currentUser : null;
+      const userId = currentUser ? currentUser.id : "11 (Session/Auth)";
 
       if (activeId) {
-        console.log(`[Autosave] Updating configuration: ID ${activeId}`);
+        console.log(`[Autosave] Configuration ID: ${activeId}`);
+        console.log(`[Autosave] User ID: ${userId}`);
         await window.ConfigurationsApi.saveConfiguration(
           window.ConfigurationsApi.activeConfigName || "Default Auth Experience",
           currentState,
           activeId
         );
-        console.log(`[Autosave] Configuration updated successfully`);
+        console.log("[Autosave] Save successful");
       } else {
-        console.log("[Autosave] Creating configuration...");
+        console.log(`[Autosave] User ID: ${userId}`);
         const result = await window.ConfigurationsApi.saveConfiguration(
           "Default Auth Experience",
           currentState,
@@ -171,7 +179,8 @@ function triggerDebouncedAutosave(state) {
         if (result?.configuration?.id) {
           window.ConfigurationsApi.activeConfigId = result.configuration.id;
           window.ConfigurationsApi.activeConfigName = result.configuration.configuration_name || "Default Auth Experience";
-          console.log(`[Autosave] Configuration created: ID ${result.configuration.id}`);
+          console.log(`[Autosave] Configuration ID: ${result.configuration.id}`);
+          console.log("[Autosave] Save successful");
         }
       }
 
@@ -179,7 +188,9 @@ function triggerDebouncedAutosave(state) {
         indicatorText.textContent = "Saved to Cloud";
       }
     } catch (err) {
-      console.warn("[Autosave] Cloud sync skipped:", err.message);
+      console.warn("[Autosave] Save failed");
+      console.warn(`[Autosave] HTTP status: ${err.status || "Network/Offline"}`);
+      console.warn(`[Autosave] Error: ${err.message || err}`);
       if (indicatorText) {
         indicatorText.textContent = "Live Sync Active";
       }
@@ -192,6 +203,23 @@ function triggerDebouncedAutosave(state) {
       }, 3000);
     }
   }, 1200);
+}
+
+// Flush pending autosave before page unload
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", () => {
+    if (autosaveTimeout && window.state && window.ConfigurationsApi) {
+      clearTimeout(autosaveTimeout);
+      const stateToSave = window.state.serializeCurrentConfiguration();
+      const activeId = window.ConfigurationsApi.activeConfigId;
+      const payload = JSON.stringify(window.ConfigurationsApi.createPayload(window.ConfigurationsApi.activeConfigName, stateToSave));
+      const url = activeId ? `/api/configurations/${activeId}` : "/api/configurations";
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon(url, blob);
+      }
+    }
+  });
 }
 
 /* =========================================================
@@ -699,21 +727,25 @@ window.handleAuthSubmit = async function (event, pageType) {
           otpValue = Array.from(otpBoxes).map(b => b.value || "").join("");
         }
 
+        console.log("[OTP] Verification started");
+        console.log(`[OTP] Entered code: ${otpValue ? otpValue.replace(/./g, "*") : "none"}`);
+
         const identifier = (window.state && window.state.get("auth")?.identifier) || "user";
         const configId = window.ConfigurationsApi?.activeConfigId || config.id || null;
 
         const result = await window.AuthController.verifyOtp(identifier, otpValue, "login", configId);
+        console.log("[OTP] Verification successful");
 
-        if (result && result.redirect && result.redirect.redirectUrl) {
-          redirectConfig.redirectUrl = result.redirect.redirectUrl;
-        } else if (result && result.redirect_url) {
-          redirectConfig.redirectUrl = result.redirect_url;
-        }
+        console.log("[OTP] Loading current configuration");
+        const currentCanonicalState = window.state ? window.state.serializeCurrentConfiguration() : config;
+        const targetRedirect = result.redirect || currentCanonicalState.redirect || redirectConfig;
+        console.log("[OTP] Redirect config:", targetRedirect);
 
+        console.log("[OTP] Executing redirect");
         if (redirectService && typeof redirectService.execute === "function") {
-          await redirectService.execute(redirectConfig, { isPreview: true, context: "otp" });
+          await redirectService.execute(targetRedirect, { isPreview: true, context: "otp", authMethod: "otp" });
         } else if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
-          window.Utils.redirectAfterSuccess(redirectConfig.redirectUrl, redirectConfig.delay || 600, true);
+          window.Utils.redirectAfterSuccess(targetRedirect.redirectUrl || "/dashboard", targetRedirect.delay || 600, true);
         }
       }
     }
