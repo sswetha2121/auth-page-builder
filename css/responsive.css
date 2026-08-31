@@ -798,10 +798,9 @@ body {
         flex-direction: column !important;
         grid-template-columns: 1fr !important;
         width: 100% !important;
-        height: auto !important;
-        min-height: 100% !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
         box-sizing: border-box !important;
     }
 
@@ -809,8 +808,8 @@ body {
     .preview-device-mobile .auth-preview-background {
         width: 100% !important;
         flex: 0 0 auto !important;
-        min-height: 180px !important;
-        max-height: 220px !important;
+        min-height: 140px !important;
+        max-height: 180px !important;
         box-sizing: border-box !important;
     }
 
@@ -818,6 +817,9 @@ body {
     .preview-device-mobile .auth-preview-form-area {
         width: 100% !important;
         flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         padding: 16px 12px !important;
         box-sizing: border-box !important;
         justify-content: flex-start !important;

@@ -55,6 +55,7 @@ async function runDomTests() {
     "js/config.js",
     "js/state.js",
     "js/utils.js",
+    "js/services/redirectService.js",
     "js/templates.js",
     "js/renderer.js",
     "js/controls.js",
@@ -350,10 +351,10 @@ async function runDomTests() {
   // -------------------------------------------------------------
   // TEST 32: Post-Authentication Redirect URL
   // -------------------------------------------------------------
-  const redirectInput = document.querySelector('input[data-config-path="urls.redirectUrl"]');
+  const redirectInput = document.querySelector('input[data-config-path="redirect.redirectUrl"]') || document.getElementById("redirectUrlInput");
   redirectInput.value = "https://mytenant.io/app/home";
   redirectInput.dispatchEvent(new window.Event("input"));
-  assert(32, window.state.get("urls.redirectUrl") === "https://mytenant.io/app/home", "Post-Auth Redirect URL persists in state");
+  assert(32, window.state.get("redirect.redirectUrl") === "https://mytenant.io/app/home", "Post-Auth Redirect URL persists in state");
 
   // -------------------------------------------------------------
   // TEST 33: Integration Snippet Auto-Generation

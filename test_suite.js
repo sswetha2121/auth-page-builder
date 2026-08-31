@@ -42,7 +42,8 @@ assert(Object.keys(Constants.LAYOUT_TYPES).length === 7, "LAYOUT_TYPES includes 
 assert(Constants.DEFAULT_BACKGROUND_ASSETS.length >= 6, "12 default background assets registered");
 assert(Constants.DEFAULT_LOGO_ASSETS.length === 5, "5 default logo assets registered");
 assert(defaultConfig.urls.landingPageUrl === "https://customerwebsite.com", "Default landingPageUrl set");
-assert(defaultConfig.urls.redirectUrl === "https://customerwebsite.com/dashboard", "Default redirectUrl set");
+assert(defaultConfig.redirect.enabled === true, "Default redirect.enabled is true");
+assert(defaultConfig.redirect.redirectUrl === "/dashboard", "Default redirect.redirectUrl set to '/dashboard'");
 assert(defaultConfig.pages.otp.displayMode === "separate", "Default OTP displayMode set to 'separate'");
 
 // -----------------------------------------------------------------------------
@@ -55,8 +56,9 @@ assert(state.get("urls.landingPageUrl") === "https://customerwebsite.com", "stat
 state.set("urls.landingPageUrl", "https://mycustomsite.org");
 assert(state.get("urls.landingPageUrl") === "https://mycustomsite.org", "state.set('urls.landingPageUrl') updates state");
 
-state.set("urls.redirectUrl", "https://mycustomsite.org/app");
-assert(state.get("urls.redirectUrl") === "https://mycustomsite.org/app", "state.set('urls.redirectUrl') updates state");
+state.set("redirect.redirectUrl", "/profile");
+assert(state.get("redirect.redirectUrl") === "/profile", "state.set('redirect.redirectUrl') updates state");
+assert(state.get("urls.redirectUrl") === "/profile", "state syncs legacy urls.redirectUrl property");
 
 // Test independent page customization
 state.set("pages.login.title", "Custom Sign In Header");
@@ -73,16 +75,28 @@ assert(state.get("previewMode") === "mobile", "setPreviewMode('mobile') works");
 // Reset test
 state.reset();
 assert(state.get("urls.landingPageUrl") === "https://customerwebsite.com", "Reset restores default landing URL");
+assert(state.get("redirect.redirectUrl") === "/dashboard", "Reset restores default redirect URL");
 assert(state.get("activePage") === "login", "Reset restores default activePage");
 
 // -----------------------------------------------------------------------------
-// Group 3: Utility Functions
+// Group 3: Utility Functions & Centralized Redirect Service
 // -----------------------------------------------------------------------------
-console.log("\nTest Group 3: Utility Functions");
+console.log("\nTest Group 3: Utility Functions & Centralized Redirect Service");
 assert(Utils.isValidUrl("https://example.com/login"), "isValidUrl returns true for valid https URL");
 assert(Utils.isValidUrl("http://localhost:3000"), "isValidUrl returns true for http URL");
 assert(!Utils.isValidUrl("not-a-valid-url"), "isValidUrl returns false for invalid string");
 assert(Utils.escapeHtml('<script>alert("xss")</script>').includes("&lt;script&gt;"), "escapeHtml sanitizes HTML tags");
+
+const RedirectService = require("./js/services/redirectService.js");
+assert(RedirectService.validateUrl("/dashboard").valid === true, "RedirectService accepts relative path /dashboard");
+assert(RedirectService.validateUrl("/profile/settings").valid === true, "RedirectService accepts relative path /profile/settings");
+assert(RedirectService.validateUrl("https://example.com/dashboard").valid === true, "RedirectService accepts absolute https URL");
+assert(RedirectService.validateUrl("http://localhost:3000/dashboard").valid === true, "RedirectService accepts absolute http URL");
+
+assert(RedirectService.validateUrl("javascript:alert(1)").valid === false, "RedirectService rejects dangerous javascript: scheme");
+assert(RedirectService.validateUrl("data:text/html,<script>alert(1)</script>").valid === false, "RedirectService rejects dangerous data: scheme");
+assert(RedirectService.validateUrl("vbscript:msgbox(1)").valid === false, "RedirectService rejects dangerous vbscript: scheme");
+assert(RedirectService.validateUrl("file:///etc/passwd").valid === false, "RedirectService rejects dangerous file: scheme");
 
 // -----------------------------------------------------------------------------
 // Group 4: Template & HTML Generator (All 4 Pages + OTP Modes)
@@ -250,7 +264,7 @@ async function testZipCreation() {
   const configContent = await loadedZip.file("generated-auth-page/config.json").async("text");
   const parsed = JSON.parse(configContent);
   assert(parsed.landingPageUrl === "https://customerwebsite.com", "ZIP config.json stores landingPageUrl");
-  assert(parsed.redirectUrl === "https://customerwebsite.com/dashboard", "ZIP config.json stores redirectUrl");
+  assert(parsed.redirectUrl === "/dashboard", "ZIP config.json stores redirectUrl");
 }
 
 testZipCreation().then(() => {

@@ -6,9 +6,18 @@
 (function (root) {
   root.AUTH_CONFIG = root.AUTH_CONFIG || {
     apiBaseUrl: "http://localhost:8000/api",
+    redirect: {
+      enabled: true,
+      redirectUrl: "/dashboard",
+      redirectType: "url",
+      openInNewTab: false,
+      showSuccessMessage: true,
+      successMessage: "Authentication completed successfully.",
+      delay: 0
+    },
     urls: {
       landingPageUrl: "https://customerwebsite.com",
-      redirectUrl: "https://customerwebsite.com/dashboard"
+      redirectUrl: "/dashboard"
     },
     branding: {
       brandName: "Your Brand",

@@ -244,10 +244,10 @@ html, body {
 .auth-form-section {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 100vh;
+  min-height: 0;
   display: flex;
   overflow-y: auto;
-  padding: clamp(24px, 4vw, 64px);
+  padding: clamp(16px, 3vh, 48px);
   background-color: #f8fafc;
 }
 
@@ -263,7 +263,7 @@ html, body {
 .auth-card {
   width: 100%;
   max-width: var(--auth-card-width, 460px);
-  padding: var(--auth-card-padding, 40px);
+  padding: clamp(16px, 2.5vh, var(--auth-card-padding, 40px)) clamp(16px, 2.5vw, var(--auth-card-padding, 40px));
   border-radius: var(--auth-card-radius, 20px);
   background-color: var(--auth-card-background, #ffffff);
   opacity: var(--auth-card-opacity, 1);
@@ -689,7 +689,10 @@ ${config.customCSS || ""}
     forms.forEach(form => {
       form.addEventListener("submit", (e) => {
         e.preventDefault();
-        const redirectUrl = config.redirectUrl || config.urls?.redirectUrl || "https://customerwebsite.com/dashboard";
+        const baseRedirect = config.redirect || {};
+        const redirectConfig = Object.assign({}, baseRedirect, {
+          redirectUrl: baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || "/dashboard"
+        });
         
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
@@ -697,16 +700,21 @@ ${config.customCSS || ""}
           submitBtn.disabled = true;
         }
 
-        setTimeout(() => {
-          if (typeof window.onAuthRedirect === "function") {
-            window.onAuthRedirect(redirectUrl);
-          }
-          try {
-            window.location.assign(redirectUrl);
-          } catch (e) {
-            window.location.href = redirectUrl;
-          }
-        }, 300);
+        const service = window.RedirectService || window.redirectService;
+        if (service && typeof service.execute === "function") {
+          service.execute(redirectConfig);
+        } else {
+          setTimeout(() => {
+            if (typeof window.onAuthRedirect === "function") {
+              window.onAuthRedirect(redirectConfig.redirectUrl);
+            }
+            try {
+              window.location.assign(redirectConfig.redirectUrl);
+            } catch (e) {
+              window.location.href = redirectConfig.redirectUrl;
+            }
+          }, redirectConfig.delay || 300);
+        }
       });
     });
   }
@@ -871,6 +879,7 @@ ${config.customCSS || ""}
   </div>
 
   <script src="./js/config.js"></script>
+  <script src="./js/redirectService.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>`;
@@ -1370,10 +1379,20 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       const configJSON = {
         apiBaseUrl: exportConfig.urls?.authPageUrl || "http://localhost:8000/api",
         landingPageUrl: exportConfig.urls?.landingPageUrl || "",
-        redirectUrl: exportConfig.urls?.redirectUrl || "https://customerwebsite.com/dashboard",
+        redirectUrl: exportConfig.redirect?.redirectUrl || exportConfig.urls?.redirectUrl || "/dashboard",
         authPageUrl: exportConfig.urls?.authPageUrl || "",
         showBackToWebsite: exportConfig.urls?.showBackToWebsite !== false,
         backToWebsiteText: exportConfig.urls?.backToWebsiteText || "Back to Website",
+        redirect: exportConfig.redirect || {
+          enabled: true,
+          redirectUrl: "/dashboard",
+          redirectType: "url",
+          openInNewTab: false,
+          showSuccessMessage: true,
+          successMessage: "Authentication completed successfully.",
+          delay: 0
+        },
+        urls: exportConfig.urls || {},
         authentication: exportConfig.authentication || {},
         branding: exportConfig.branding || {},
         layout: exportConfig.layout || {},
@@ -1412,11 +1431,13 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       const configJsTpl = await loadExportTemplate("frontend/js/config.js") || `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`;
       const apiJsTpl = await loadExportTemplate("frontend/js/api.js") || "console.log('API Client initialized');";
       const valJsTpl = await loadExportTemplate("frontend/js/validation.js") || "console.log('Validation Engine initialized');";
+      const redirectServiceTpl = await loadExportTemplate("frontend/js/redirectService.js") || "";
       const appJsTpl = await loadExportTemplate("frontend/js/app.js") || generateStandaloneAppJS();
 
       frontendJsFolder.file("config.js", configJsTpl);
       frontendJsFolder.file("api.js", apiJsTpl);
       frontendJsFolder.file("validation.js", valJsTpl);
+      if (redirectServiceTpl) frontendJsFolder.file("redirectService.js", redirectServiceTpl);
       frontendJsFolder.file("app.js", appJsTpl);
 
       // Asset Bundling inside Frontend Assets
@@ -1490,6 +1511,7 @@ class DevelopmentOTPProvider(BaseOTPProvider):
 
       const legacyJs = genAuthFolder.folder("js");
       legacyJs.file("config.js", `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`);
+      if (redirectServiceTpl) legacyJs.file("redirectService.js", redirectServiceTpl);
       legacyJs.file("app.js", generateStandaloneAppJS());
       legacyJs.file("integration.js", generateIntegrationJS(exportConfig));
 

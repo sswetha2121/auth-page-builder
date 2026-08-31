@@ -81,15 +81,25 @@ function setupFormHandlers(config) {
     setTimeout(() => toast.remove(), 3500);
   };
 
-  const executeRedirect = (targetUrl, successMsg = "Authentication successful.") => {
+  const executeRedirect = (targetUrl, successMsg = "Authentication completed successfully.") => {
+    const service = window.RedirectService || window.redirectService;
+    const baseRedirect = config.redirect || {};
+    const redirectConfig = Object.assign({}, baseRedirect, {
+      redirectUrl: targetUrl || baseRedirect.redirectUrl || config.urls?.redirectUrl || "/dashboard",
+      successMessage: successMsg || baseRedirect.successMessage || "Authentication completed successfully."
+    });
+
+    if (service && typeof service.execute === "function") {
+      return service.execute(redirectConfig);
+    }
+
     if (redirectInProgress) return;
     redirectInProgress = true;
-
-    const url = targetUrl || config.urls?.redirectUrl || "https://customerwebsite.com/dashboard";
+    const url = redirectConfig.redirectUrl;
     showToast(successMsg, "success");
     setTimeout(() => {
-      window.location.href = url;
-    }, 600);
+      window.location.assign(url);
+    }, redirectConfig.delay || 300);
   };
 
   // Delivery Method Buttons (Email, SMS, WhatsApp)

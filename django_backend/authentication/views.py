@@ -52,7 +52,7 @@ class RegisterView(APIView):
                 return Response({"success": False, "message": err_msg, "errors": errors}, status=status_code)
 
             from django.utils import timezone
-            from authentication.services.redirect_service import get_redirect_url
+            from authentication.services.redirect_service import get_redirect_config, get_redirect_url
 
             user = serializer.save()
             user.last_login = timezone.now()
@@ -90,7 +90,8 @@ class RegisterView(APIView):
             token = generate_jwt_token(user)
             user_data = UserProfileSerializer(user).data
             config_id = request.data.get("configuration_id") or request.data.get("config_id")
-            redirect_url = get_redirect_url(config_id, user.id)
+            redirect_obj = get_redirect_config(config_id, user.id)
+            redirect_url = redirect_obj["redirectUrl"]
 
             return Response(
                 {
@@ -98,6 +99,7 @@ class RegisterView(APIView):
                     "message": "Registration successful.",
                     "user": user_data,
                     "token": token,
+                    "redirect": redirect_obj,
                     "redirect_url": redirect_url,
                 },
                 status=status.HTTP_201_CREATED,
@@ -132,7 +134,7 @@ class LoginView(APIView):
             return Response({"success": False, "message": str(err_msg)}, status=status.HTTP_401_UNAUTHORIZED)
 
         from django.utils import timezone
-        from authentication.services.redirect_service import get_redirect_url
+        from authentication.services.redirect_service import get_redirect_config, get_redirect_url
 
         user = serializer.validated_data["user"]
         user.last_login = timezone.now()
@@ -171,7 +173,8 @@ class LoginView(APIView):
         user_data = UserProfileSerializer(user).data
 
         config_id = request.data.get("configuration_id") or request.data.get("config_id")
-        redirect_url = get_redirect_url(config_id, user.id)
+        redirect_obj = get_redirect_config(config_id, user.id)
+        redirect_url = redirect_obj["redirectUrl"]
 
         return Response(
             {
@@ -179,6 +182,7 @@ class LoginView(APIView):
                 "message": "Login successful.",
                 "token": token,
                 "user": user_data,
+                "redirect": redirect_obj,
                 "redirect_url": redirect_url,
             },
             status=status.HTTP_200_OK,
@@ -314,7 +318,7 @@ class VerifyOTPView(APIView):
         # If login verification, issue JWT and retrieve redirect_url
         if purpose == "login" and user:
             from django.utils import timezone
-            from authentication.services.redirect_service import get_redirect_url
+            from authentication.services.redirect_service import get_redirect_config, get_redirect_url
 
             user.last_login = timezone.now()
             user.save(update_fields=["last_login"])
@@ -322,7 +326,8 @@ class VerifyOTPView(APIView):
             token = generate_jwt_token(user)
             user_data = UserProfileSerializer(user).data
             config_id = request.data.get("configuration_id") or request.data.get("config_id")
-            redirect_url = get_redirect_url(config_id, user.id)
+            redirect_obj = get_redirect_config(config_id, user.id)
+            redirect_url = redirect_obj["redirectUrl"]
 
             return Response(
                 {
@@ -330,6 +335,7 @@ class VerifyOTPView(APIView):
                     "message": "OTP verified successfully. Login successful.",
                     "token": token,
                     "user": user_data,
+                    "redirect": redirect_obj,
                     "redirect_url": redirect_url,
                 },
                 status=status.HTTP_200_OK,
@@ -474,10 +480,15 @@ class PasswordResetConfirmView(APIView):
         user.password_hash = password_hash
         user.save(update_fields=["password", "password_hash"])
 
+        from authentication.services.redirect_service import get_redirect_config
+        redirect_obj = get_redirect_config(config_id, user.id)
+
         return Response(
             {
                 "success": True,
                 "message": "Your password has been reset successfully. You can now log in with your new password.",
+                "redirect": redirect_obj,
+                "redirect_url": redirect_obj["redirectUrl"],
             },
             status=status.HTTP_200_OK,
         )

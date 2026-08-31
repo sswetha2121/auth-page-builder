@@ -91,8 +91,12 @@ def save_configuration(configuration_data, config_name=None, landing_url=None, r
                 existing.landing_url = landing_url
             if redirect_url is not None:
                 existing.redirect_url = redirect_url
-            if configuration_data:
-                existing.configuration_data = deep_merge_dicts(existing.configuration_data or {}, configuration_data)
+            if configuration_data is not None:
+                existing.configuration_data = configuration_data
+                if isinstance(configuration_data, dict):
+                    red_url = configuration_data.get("redirect", {}).get("redirectUrl") or configuration_data.get("urls", {}).get("redirectUrl")
+                    if red_url:
+                        existing.redirect_url = red_url
             if user and user.is_authenticated:
                 existing.user_id = user.id
             if builder_session_id and not existing.builder_session_id:

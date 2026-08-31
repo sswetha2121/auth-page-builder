@@ -31,13 +31,17 @@
         // Fallback for standalone static execution if backend is offline
         if (err.name === "TypeError" || err.message.includes("fetch") || err.message.includes("NetworkError")) {
           console.warn("[Auth API] Backend offline, performing client fallback simulation.");
+          const targetRed = (root.AUTH_CONFIG?.redirect?.redirectUrl) || (root.AUTH_CONFIG?.urls?.redirectUrl) || "/dashboard";
+          const redirectObj = Object.assign({ enabled: true, redirectUrl: targetRed }, root.AUTH_CONFIG?.redirect || {});
+          
           if (endpoint.includes("/otp/verify")) {
             const cleanOtp = String(data?.otp || "").trim();
             if (cleanOtp === "123456") {
               return {
                 success: true,
                 message: "OTP verified successfully.",
-                redirect_url: (root.AUTH_CONFIG?.urls?.redirectUrl) || "https://customerwebsite.com/dashboard"
+                redirect: redirectObj,
+                redirect_url: targetRed
               };
             } else {
               throw new Error("Invalid OTP. Please try again.");
@@ -46,7 +50,8 @@
           return {
             success: true,
             message: "Authentication successful.",
-            redirect_url: (root.AUTH_CONFIG?.urls?.redirectUrl) || "https://customerwebsite.com/dashboard"
+            redirect: redirectObj,
+            redirect_url: targetRed
           };
         }
         throw err;

@@ -77,6 +77,31 @@
       }
     }
 
+    // Canonical redirect normalization & legacy migration
+    if (!normalized.redirect || typeof normalized.redirect !== "object") {
+      normalized.redirect = deepClone(defaults.redirect || {
+        enabled: true,
+        redirectUrl: "/dashboard",
+        redirectType: "url",
+        openInNewTab: false,
+        showSuccessMessage: true,
+        successMessage: "Authentication completed successfully.",
+        delay: 0
+      });
+    }
+
+    const legacyRedirectUrl = state.redirect_url || state.redirectUrl || state.postAuthUrl || state.successRedirect || state.urls?.redirectUrl;
+    if (legacyRedirectUrl && (!state.redirect || !state.redirect.redirectUrl)) {
+      normalized.redirect.redirectUrl = legacyRedirectUrl;
+    }
+    if (state.urls?.openInNewTab !== undefined && (!state.redirect || state.redirect.openInNewTab === undefined)) {
+      normalized.redirect.openInNewTab = Boolean(state.urls.openInNewTab);
+    }
+
+    if (!normalized.urls) normalized.urls = {};
+    normalized.urls.redirectUrl = normalized.redirect.redirectUrl;
+    normalized.urls.openInNewTab = normalized.redirect.openInNewTab;
+
     return normalized;
   }
 
@@ -191,8 +216,19 @@
 
     set(path, value, options = { notify: true }) {
       const success = setByPath(this.state, path, value);
-      if (success && options.notify !== false) {
-        this.notify(path, value);
+      if (success) {
+        if (path === "redirect.redirectUrl") {
+          setByPath(this.state, "urls.redirectUrl", value);
+        } else if (path === "urls.redirectUrl") {
+          setByPath(this.state, "redirect.redirectUrl", value);
+        } else if (path === "redirect.openInNewTab") {
+          setByPath(this.state, "urls.openInNewTab", value);
+        } else if (path === "urls.openInNewTab") {
+          setByPath(this.state, "redirect.openInNewTab", value);
+        }
+        if (options.notify !== false) {
+          this.notify(path, value);
+        }
       }
       return success;
     }

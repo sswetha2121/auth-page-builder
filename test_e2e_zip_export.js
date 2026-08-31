@@ -70,6 +70,16 @@ async function runE2ETests() {
   testState.urls.authPageUrl = "https://apexsystems.io/auth";
   testState.urls.showBackToWebsite = true;
   testState.urls.backToWebsiteText = "Return to Apex Portal";
+
+  testState.redirect = {
+    enabled: true,
+    redirectUrl: "https://apexsystems.io/portal/dashboard",
+    redirectType: "url",
+    openInNewTab: false,
+    showSuccessMessage: true,
+    successMessage: "Authentication completed successfully.",
+    delay: 0
+  };
   
   testState.authentication.otp.defaultMethod = "whatsapp";
   testState.authentication.otp.whatsappEnabled = true;
@@ -162,6 +172,8 @@ async function runE2ETests() {
   console.log("\nTest Section 5: Standalone HTML & Runtime Verification in JSDOM");
   const unzippedHTML = await extracted.file("generated-auth-page/index.html").async("text");
   const unzippedConfigJS = await extracted.file("generated-auth-page/js/config.js").async("text");
+  const redirectServiceFile = extracted.file("generated-auth-page/js/redirectService.js") || extracted.file("frontend/js/redirectService.js");
+  const unzippedRedirectServiceJS = redirectServiceFile ? await redirectServiceFile.async("text") : null;
   const unzippedAppJS = await extracted.file("generated-auth-page/js/app.js").async("text");
   const unzippedCSS = await extracted.file("generated-auth-page/css/styles.css").async("text");
 
@@ -188,6 +200,9 @@ async function runE2ETests() {
   };
 
   dom.window.eval(unzippedConfigJS);
+  if (unzippedRedirectServiceJS) {
+    dom.window.eval(unzippedRedirectServiceJS);
+  }
   dom.window.eval(unzippedAppJS);
   dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
 

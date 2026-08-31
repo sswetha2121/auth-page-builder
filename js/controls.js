@@ -199,8 +199,19 @@
             value = input.value;
           }
 
-          // Live validation for URL fields
-          if (input.type === "url" && value) {
+          // Live validation for URL fields & redirect URL
+          if (path === "redirect.redirectUrl") {
+            const errEl = document.getElementById("redirectUrlError");
+            const service = window.RedirectService || window.redirectService;
+            const valRes = service ? service.validateUrl(value) : { valid: Boolean(value) };
+            input.classList.toggle("input-invalid", !valRes.valid);
+            if (errEl) {
+              errEl.style.display = valRes.valid ? "none" : "block";
+              if (!valRes.valid && valRes.error) {
+                errEl.textContent = valRes.error;
+              }
+            }
+          } else if (input.type === "url" && value) {
             const isValid = Utils.isValidUrl(value);
             input.classList.toggle("input-invalid", !isValid);
           } else if (input.type === "url") {

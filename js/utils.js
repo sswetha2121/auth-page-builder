@@ -156,11 +156,21 @@
     }, duration);
   }
 
-  function redirectAfterSuccess(targetUrl, delay = 600) {
+  function redirectAfterSuccess(targetUrl, delay = 600, isPreview = false) {
+    const service = (typeof window !== "undefined") ? (window.RedirectService || window.redirectService) : null;
+    if (service && typeof service.execute === "function") {
+      const stateObj = (typeof window !== "undefined" && window.state) ? window.state.getState() : {};
+      const redirectConfig = Object.assign({}, stateObj.redirect || {}, {
+        redirectUrl: targetUrl || stateObj.redirect?.redirectUrl || stateObj.urls?.redirectUrl || "/dashboard",
+        delay: delay
+      });
+      return service.execute(redirectConfig, { isPreview: isPreview });
+    }
+
     if (redirectInProgress) return;
     redirectInProgress = true;
 
-    const url = targetUrl || (typeof window !== "undefined" && window.state ? window.state.get("urls.redirectUrl") : null) || "https://customerwebsite.com/dashboard";
+    const url = targetUrl || (typeof window !== "undefined" && window.state ? window.state.get("redirect.redirectUrl") : null) || "/dashboard";
 
     try {
       if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {

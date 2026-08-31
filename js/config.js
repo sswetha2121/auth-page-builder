@@ -9,15 +9,28 @@ const defaultConfig = {
   fullscreenOpen: false,
 
   /* =======================================================
+     CANONICAL REDIRECT CONFIGURATION
+  ======================================================= */
+  redirect: {
+    enabled: true,
+    redirectUrl: "/dashboard",
+    redirectType: "url",
+    openInNewTab: false,
+    showSuccessMessage: true,
+    successMessage: "Authentication completed successfully.",
+    delay: 0
+  },
+
+  /* =======================================================
      URL CONFIGURATION (Customer Landing & Post-Auth Redirect)
   ======================================================= */
   urls: {
     landingPageUrl: "https://customerwebsite.com",
-    redirectUrl: "https://customerwebsite.com/dashboard",
+    redirectUrl: "/dashboard",
     authPageUrl: "https://customerwebsite.com/auth",
     showBackToWebsite: true,
     backToWebsiteText: "Back to Website",
-    openInNewTab: true
+    openInNewTab: false
   },
 
   /* =======================================================

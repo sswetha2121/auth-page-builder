@@ -1287,38 +1287,62 @@
                                     <span class="accordion-arrow">▾</span>
                                 </button>
                                 <div class="accordion-content">
-                                    <div class="control-group">
-                                        <label for="landingPageUrlInput">Customer Landing / Source URL</label>
-                                        <p class="control-help">Your main application entry point (e.g., https://customerwebsite.com).</p>
-                                        <input type="url" id="landingPageUrlInput" data-config-path="urls.landingPageUrl" placeholder="https://customerwebsite.com">
-                                    </div>
+                                     <div class="control-group">
+                                         <label for="landingPageUrlInput">Customer Landing / Source URL</label>
+                                         <p class="control-help">Your main application entry point (e.g., https://customerwebsite.com).</p>
+                                         <input type="url" id="landingPageUrlInput" data-config-path="urls.landingPageUrl" placeholder="https://customerwebsite.com">
+                                     </div>
 
-                                    <div class="control-group">
-                                        <label for="redirectUrlInput">Post-Authentication Redirect URL</label>
-                                        <p class="control-help">Where authenticated users will be redirected upon successful login.</p>
-                                        <input type="url" id="redirectUrlInput" data-config-path="urls.redirectUrl" placeholder="https://customerwebsite.com/dashboard">
-                                    </div>
+                                     <div class="control-row-2col">
+                                         <div class="switch-control">
+                                             <label>Enable Redirection</label>
+                                             <input type="checkbox" id="redirectEnabledInput" data-config-path="redirect.enabled" checked>
+                                         </div>
+                                         <div class="switch-control">
+                                             <label>Open in New Tab</label>
+                                             <input type="checkbox" id="redirectOpenInNewTabInput" data-config-path="redirect.openInNewTab">
+                                         </div>
+                                     </div>
 
-                                    <div class="control-group">
-                                        <label for="authPageUrlInput">Authentication Page Host URL (Optional)</label>
-                                        <p class="control-help">Where the generated authentication page is deployed/hosted.</p>
-                                        <input type="url" id="authPageUrlInput" data-config-path="urls.authPageUrl" placeholder="https://customerwebsite.com/auth">
-                                    </div>
+                                     <div class="control-group">
+                                         <label for="redirectUrlInput">Post-Authentication Redirect URL</label>
+                                         <p class="control-help">Canonical destination URL or relative path (applies to Login, Signup, OTP, and Password Reset success).</p>
+                                         <input type="text" id="redirectUrlInput" data-config-path="redirect.redirectUrl" placeholder="/dashboard or https://example.com/dashboard" value="/dashboard">
+                                         <p class="control-error-msg" id="redirectUrlError" style="display:none; color:#dc2626; font-size:12.5px; margin-top:4px; font-weight:600;">Please enter a valid HTTP(S) URL or relative path.</p>
+                                     </div>
 
-                                    <div class="control-row-2col">
-                                        <div class="switch-control">
-                                            <label>Show "Back to Website"</label>
-                                            <input type="checkbox" data-config-path="urls.showBackToWebsite" checked>
-                                        </div>
-                                        <div class="switch-control">
-                                            <label>Open in New Tab</label>
-                                            <input type="checkbox" data-config-path="urls.openInNewTab" checked>
-                                        </div>
-                                    </div>
+                                     <div class="control-row-2col">
+                                         <div class="switch-control">
+                                             <label>Show Success Message</label>
+                                             <input type="checkbox" id="redirectShowSuccessMessageInput" data-config-path="redirect.showSuccessMessage" checked>
+                                         </div>
+                                         <div class="control-group" style="margin-bottom:0;">
+                                             <label for="redirectDelayInput">Delay (ms)</label>
+                                             <input type="number" id="redirectDelayInput" data-config-path="redirect.delay" min="0" max="10000" step="100" value="0">
+                                         </div>
+                                     </div>
 
-                                    <div class="control-group">
-                                        <label for="backToWebsiteTextInput">"Back to Website" Text</label>
-                                        <input type="text" id="backToWebsiteTextInput" data-config-path="urls.backToWebsiteText" placeholder="Back to Website" value="Back to Website">
+                                     <div class="control-group" style="margin-top:12px;">
+                                         <label for="redirectSuccessMessageInput">Success Toast Message</label>
+                                         <input type="text" id="redirectSuccessMessageInput" data-config-path="redirect.successMessage" placeholder="Authentication completed successfully." value="Authentication completed successfully.">
+                                     </div>
+
+                                     <div class="control-group">
+                                         <label for="authPageUrlInput">Authentication Page Host URL (Optional)</label>
+                                         <p class="control-help">Where the generated authentication page is deployed/hosted.</p>
+                                         <input type="url" id="authPageUrlInput" data-config-path="urls.authPageUrl" placeholder="https://customerwebsite.com/auth">
+                                     </div>
+
+                                     <div class="control-row-2col">
+                                         <div class="switch-control">
+                                             <label>Show "Back to Website"</label>
+                                             <input type="checkbox" data-config-path="urls.showBackToWebsite" checked>
+                                         </div>
+                                     </div>
+
+                                     <div class="control-group">
+                                         <label for="backToWebsiteTextInput">"Back to Website" Text</label>
+                                         <input type="text" id="backToWebsiteTextInput" data-config-path="urls.backToWebsiteText" placeholder="Back to Website" value="Back to Website">
                                     </div>
 
                                     <div class="control-group">
@@ -1580,6 +1604,7 @@
     <script src="./js/config.js"></script>
     <script src="./js/state.js"></script>
     <script src="./js/utils.js"></script>
+    <script src="./js/services/redirectService.js"></script>
     <script src="./js/templates.js"></script>
     <script src="./js/renderer.js"></script>
     <script src="./js/controls.js"></script>

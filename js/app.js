@@ -574,7 +574,11 @@ window.handleAuthSubmit = async function (event, pageType) {
   window._isAuthSubmitting = true;
 
   const config = window.state ? window.state.getState() : (window.config || {});
-  let targetRedirectUrl = config.urls?.redirectUrl || "https://customerwebsite.com/dashboard";
+  const redirectConfig = Object.assign({}, config.redirect || {}, {
+    redirectUrl: config.redirect?.redirectUrl || config.urls?.redirectUrl || "/dashboard"
+  });
+
+  const redirectService = window.RedirectService || window.redirectService;
 
   const form = (event && event.target && event.target.tagName === "FORM") 
     ? event.target 
@@ -600,22 +604,19 @@ window.handleAuthSubmit = async function (event, pageType) {
           throw new Error("Please enter your password.");
         }
 
-        let result = null;
         const configId = window.ConfigurationsApi?.activeConfigId || config.id || null;
-        
-        result = await window.AuthController.loginUser({ identifier, password, configuration_id: configId });
+        const result = await window.AuthController.loginUser({ identifier, password, configuration_id: configId });
 
-        if (result && result.redirect_url) {
-          targetRedirectUrl = result.redirect_url;
+        if (result && result.redirect && result.redirect.redirectUrl) {
+          redirectConfig.redirectUrl = result.redirect.redirectUrl;
+        } else if (result && result.redirect_url) {
+          redirectConfig.redirectUrl = result.redirect_url;
         }
 
-        const successMsg = `${result?.message || "Login successful."} Redirect destination: ${targetRedirectUrl}`;
-        if (window.Utils && typeof window.Utils.showToast === "function") {
-          window.Utils.showToast(successMsg, "success", 3000);
-        }
-
-        if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
-          window.Utils.redirectAfterSuccess(targetRedirectUrl, 600);
+        if (redirectService && typeof redirectService.execute === "function") {
+          await redirectService.execute(redirectConfig, { isPreview: true, context: "login" });
+        } else if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
+          window.Utils.redirectAfterSuccess(redirectConfig.redirectUrl, redirectConfig.delay || 600, true);
         }
 
       } else if (pageType === "signup") {
@@ -657,17 +658,16 @@ window.handleAuthSubmit = async function (event, pageType) {
           configuration_id: configId
         });
 
-        if (result && result.redirect_url) {
-          targetRedirectUrl = result.redirect_url;
+        if (result && result.redirect && result.redirect.redirectUrl) {
+          redirectConfig.redirectUrl = result.redirect.redirectUrl;
+        } else if (result && result.redirect_url) {
+          redirectConfig.redirectUrl = result.redirect_url;
         }
 
-        const successMsg = `${result?.message || "Account created successfully."} Redirect destination: ${targetRedirectUrl}`;
-        if (window.Utils && typeof window.Utils.showToast === "function") {
-          window.Utils.showToast(successMsg, "success", 3000);
-        }
-
-        if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
-          window.Utils.redirectAfterSuccess(targetRedirectUrl, 600);
+        if (redirectService && typeof redirectService.execute === "function") {
+          await redirectService.execute(redirectConfig, { isPreview: true, context: "signup" });
+        } else if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
+          window.Utils.redirectAfterSuccess(redirectConfig.redirectUrl, redirectConfig.delay || 600, true);
         }
 
       } else if (pageType === "forgotPassword") {
@@ -686,6 +686,12 @@ window.handleAuthSubmit = async function (event, pageType) {
           submitBtn.disabled = false;
         }
 
+        if (redirectConfig.enabled) {
+          if (redirectService && typeof redirectService.execute === "function") {
+            await redirectService.execute(redirectConfig, { isPreview: true, context: "forgotPassword" });
+          }
+        }
+
       } else if (pageType === "otp") {
         let otpValue = "";
         const otpBoxes = form ? form.querySelectorAll(".otp-digit-box") : document.querySelectorAll(".otp-digit-box");
@@ -698,23 +704,22 @@ window.handleAuthSubmit = async function (event, pageType) {
 
         const result = await window.AuthController.verifyOtp(identifier, otpValue, "login", configId);
 
-        if (result && result.redirect_url) {
-          targetRedirectUrl = result.redirect_url;
+        if (result && result.redirect && result.redirect.redirectUrl) {
+          redirectConfig.redirectUrl = result.redirect.redirectUrl;
+        } else if (result && result.redirect_url) {
+          redirectConfig.redirectUrl = result.redirect_url;
         }
 
-        const successMsg = `OTP verified successfully. Redirect destination: ${targetRedirectUrl}`;
-        if (window.Utils && typeof window.Utils.showToast === "function") {
-          window.Utils.showToast(successMsg, "success", 3000);
-        }
-
-        if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
-          window.Utils.redirectAfterSuccess(targetRedirectUrl, 600);
+        if (redirectService && typeof redirectService.execute === "function") {
+          await redirectService.execute(redirectConfig, { isPreview: true, context: "otp" });
+        } else if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
+          window.Utils.redirectAfterSuccess(redirectConfig.redirectUrl, redirectConfig.delay || 600, true);
         }
       }
     }
   } catch (err) {
     if (window.Utils && typeof window.Utils.showToast === "function") {
-      window.Utils.showToast(err.message || "Invalid OTP. Please try again.", "error", 4000);
+      window.Utils.showToast(err.message || "Authentication failed. Please try again.", "error", 4000);
     }
     if (submitBtn) {
       submitBtn.disabled = false;

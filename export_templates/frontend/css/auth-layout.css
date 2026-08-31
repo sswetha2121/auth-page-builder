@@ -4,7 +4,7 @@
 ========================================================= */
 
 .auth-preview-root {
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -61,5 +61,5 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--auth-content-padding);
+  padding: clamp(16px, 3vh, var(--auth-content-padding, 40px));
 }

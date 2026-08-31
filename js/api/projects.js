@@ -43,9 +43,21 @@
         builder_session_id: sessionId,
         configuration_name: configName || (cleanState.branding?.brandName ? `${cleanState.branding.brandName} Auth` : "Auth Configuration"),
         landing_url: cleanState.urls?.landingPageUrl || null,
-        redirect_url: cleanState.urls?.redirectUrl || null,
+        redirect_url: cleanState.redirect?.redirectUrl || cleanState.urls?.redirectUrl || null,
         configuration_data: cleanState
       };
+    }
+
+    createProjectPayload(state) {
+      const cleanState = cleanBlobUrls(state || {});
+      return {
+        id: `proj_${Date.now()}`,
+        configuration: cleanState
+      };
+    }
+
+    async saveProject(state, id = null) {
+      return this.saveConfiguration(this.activeConfigName, state, id);
     }
 
     async saveConfiguration(configName, state, configId = null) {
