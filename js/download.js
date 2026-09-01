@@ -18,7 +18,10 @@
 })(typeof window !== "undefined" ? window : globalThis, function (Templates, Renderer, Utils, Constants) {
 
   function getCleanConfig() {
-    const state = window.state ? window.state.getState() : (window.config || {});
+    if (typeof window !== "undefined" && window.state && typeof window.state.serializeCurrentConfiguration === "function") {
+      return JSON.parse(JSON.stringify(window.state.serializeCurrentConfiguration()));
+    }
+    const state = (typeof window !== "undefined" && window.state) ? window.state.getState() : (window.config || {});
     return JSON.parse(JSON.stringify(state));
   }
 
@@ -1347,6 +1350,9 @@ class DevelopmentOTPProvider(BaseOTPProvider):
      MAIN DOWNLOAD FUNCTION (ZIP CREATION WITH ASSET PRESERVATION)
   ======================================================= */
   async function downloadPackage() {
+    console.log("[ZIP] Export started");
+    console.log("[ZIP] Reading current state");
+
     if (typeof JSZip === "undefined") {
       if (typeof alert !== "undefined") {
         alert("JSZip library is loading. Please try again in a moment.");
@@ -1359,12 +1365,25 @@ class DevelopmentOTPProvider(BaseOTPProvider):
     }
 
     try {
+      // 1. Single Source of Truth from window.state.serializeCurrentConfiguration()
       const config = getCleanConfig();
+      console.log("[ZIP] State serialized");
+      console.log("[ZIP] Configuration sections:", Object.keys(config).join(", "));
+      console.log("[ZIP] Layout:", config.layout?.type || config.layout);
+      console.log("[ZIP] Background type:", config.background?.type);
+      console.log("[ZIP] Background source:", config.background?.uploadedImage || config.background?.selected || config.background?.image || config.background?.color);
+      console.log("[ZIP] Logo:", config.branding?.uploadedLogo || config.branding?.logoAsset || config.branding?.logo);
+      console.log("[ZIP] Login configuration loaded:", Boolean(config.login || config.pages?.login));
+      console.log("[ZIP] Signup configuration loaded:", Boolean(config.signup || config.pages?.signup));
+
       const exportConfig = JSON.parse(JSON.stringify(config));
 
       // ----------------------------------------------------
-      // STAGE 1: PRE-GENERATION ASSET RESOLUTION & VALIDATION
+      // STAGE 1: ASSET RESOLUTION & ZIP-RELATIVE PATH MAPPING
       // ----------------------------------------------------
+      console.log("[ZIP] Collecting assets");
+
+      const zip = new JSZip();
       const now = new Date();
       const pad = (n) => String(n).padStart(2, "0");
       const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
@@ -1372,29 +1391,67 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       let resolvedBgData = null;
       let resolvedBgFileName = "background-1.svg";
 
-      const bgRef = config.background?.uploadedImage || config.background?.image || "";
-      if (bgRef.startsWith("data:")) {
-        const { ext } = detectMimeAndExt(bgRef, "png");
-        const base64Data = bgRef.split(",")[1];
-        if (!base64Data) {
-          throw new Error("Uploaded background image data URL is invalid or corrupt.");
+      const bgType = exportConfig.background?.type || "default";
+      const bgRef = exportConfig.background?.uploadedImage || exportConfig.background?.selected || exportConfig.background?.image || "";
+
+      if (bgType === "uploaded" || bgType === "upload" || bgType === "custom") {
+        if (bgRef.startsWith("data:")) {
+          const { ext } = detectMimeAndExt(bgRef, "png");
+          const base64Data = bgRef.split(",")[1];
+          if (!base64Data) {
+            throw new Error("Uploaded background image data URL is invalid or corrupt.");
+          }
+          resolvedBgData = base64Data;
+          resolvedBgFileName = `custom-background.${ext}`;
+          exportConfig.background.type = "uploaded";
+          exportConfig.background.image = `./assets/backgrounds/${resolvedBgFileName}`;
+          exportConfig.background.uploadedImage = `./assets/backgrounds/${resolvedBgFileName}`;
+          exportConfig.background.selected = "";
+          console.log(`[ZIP] Added background asset: ./assets/backgrounds/${resolvedBgFileName}`);
+        } else if (bgRef) {
+          const cleanBgPath = bgRef.replace(/^https?:\/\/[^\/]+/, "").replace(/^\.\//, "").replace(/^\//, "");
+          resolvedBgData = await fetchAsset(cleanBgPath);
+          resolvedBgFileName = cleanBgPath.split("/").pop() || "custom-background.png";
+          exportConfig.background.type = "uploaded";
+          exportConfig.background.image = `./assets/backgrounds/${resolvedBgFileName}`;
+          exportConfig.background.uploadedImage = `./assets/backgrounds/${resolvedBgFileName}`;
+          exportConfig.background.selected = "";
+          console.log(`[ZIP] Added background asset: ./assets/backgrounds/${resolvedBgFileName}`);
         }
-        resolvedBgData = base64Data;
-        resolvedBgFileName = `custom-background.${ext}`;
+      } else if (bgType === "default" || bgType === "image") {
+        const sel = bgRef || "assets/backgrounds/background-1.svg";
+        const cleanBgPath = sel.replace(/^https?:\/\/[^\/]+/, "").replace(/^\.\//, "").replace(/^\//, "");
+        resolvedBgData = await fetchAsset(cleanBgPath);
+        resolvedBgFileName = cleanBgPath.split("/").pop() || "background-1.svg";
+        exportConfig.background.type = "default";
+        exportConfig.background.selected = `./assets/backgrounds/${resolvedBgFileName}`;
         exportConfig.background.image = `./assets/backgrounds/${resolvedBgFileName}`;
         exportConfig.background.uploadedImage = "";
-      } else if (bgRef) {
-        const cleanBgPath = bgRef.replace(/^https?:\/\/[^\/]+/, "").replace(/^\.\//, "").replace(/^\//, "");
-        resolvedBgData = await fetchAsset(cleanBgPath);
-        resolvedBgFileName = cleanBgPath.split("/").pop() || "custom-background.jpg";
-        exportConfig.background.image = `./assets/backgrounds/${resolvedBgFileName}`;
+        console.log(`[ZIP] Added background asset: ./assets/backgrounds/${resolvedBgFileName}`);
+      } else if (bgType === "color") {
+        exportConfig.background.type = "color";
+        exportConfig.background.color = exportConfig.background.color || "#0f172a";
+        exportConfig.background.image = "";
+        exportConfig.background.selected = "";
+        exportConfig.background.uploadedImage = "";
+      } else if (bgType === "gradient") {
+        exportConfig.background.type = "gradient";
+        exportConfig.background.gradientEnabled = true;
+        exportConfig.background.image = "";
+        exportConfig.background.selected = "";
+        exportConfig.background.uploadedImage = "";
+      } else if (bgType === "none") {
+        exportConfig.background.type = "none";
+        exportConfig.background.image = "";
+        exportConfig.background.selected = "";
         exportConfig.background.uploadedImage = "";
       }
 
+      // Logo Processing
       let resolvedLogoData = null;
       let resolvedLogoFileName = "brand-shield.svg";
 
-      const logoRef = config.branding?.uploadedLogo || config.branding?.logoAsset || config.branding?.logo || "";
+      const logoRef = exportConfig.branding?.uploadedLogo || exportConfig.branding?.logoAsset || exportConfig.branding?.logo || "";
       if (logoRef.startsWith("data:")) {
         const { ext } = detectMimeAndExt(logoRef, "png");
         const base64Data = logoRef.split(",")[1];
@@ -1404,21 +1461,38 @@ class DevelopmentOTPProvider(BaseOTPProvider):
         resolvedLogoData = base64Data;
         resolvedLogoFileName = `custom-logo.${ext}`;
         exportConfig.branding.logo = `./assets/logos/${resolvedLogoFileName}`;
-        exportConfig.branding.uploadedLogo = "";
+        exportConfig.branding.uploadedLogo = `./assets/logos/${resolvedLogoFileName}`;
+        console.log(`[ZIP] Added logo asset: ./assets/logos/${resolvedLogoFileName}`);
       } else if (logoRef) {
         const cleanLogoPath = logoRef.replace(/^https?:\/\/[^\/]+/, "").replace(/^\.\//, "").replace(/^\//, "");
         resolvedLogoData = await fetchAsset(cleanLogoPath);
         resolvedLogoFileName = cleanLogoPath.split("/").pop() || "brand-shield.svg";
         exportConfig.branding.logo = `./assets/logos/${resolvedLogoFileName}`;
         exportConfig.branding.uploadedLogo = "";
+        console.log(`[ZIP] Added logo asset: ./assets/logos/${resolvedLogoFileName}`);
+      } else {
+        exportConfig.branding = exportConfig.branding || {};
+        exportConfig.branding.logo = `./assets/logos/brand-shield.svg`;
       }
 
       // ----------------------------------------------------
-      // STAGE 2: BUILD ZIP PACKAGE STRUCTURE
+      // STAGE 2: GENERATE FULL AUTH-CONFIG.JSON & ZIP FILES
       // ----------------------------------------------------
-      const zip = new JSZip();
+      console.log("[ZIP] Generating auth-config.json");
 
-      // Root Package Files
+      // Canonical auth-config.json payload containing full state
+      const configJSON = Object.assign({}, exportConfig, {
+        apiBaseUrl: exportConfig.urls?.authPageUrl || "http://localhost:8000/api",
+        landingPageUrl: exportConfig.urls?.landingPageUrl || "",
+        redirectUrl: exportConfig.redirect?.redirectUrl || exportConfig.urls?.redirectUrl || "/dashboard",
+        authPageUrl: exportConfig.urls?.authPageUrl || "",
+        showBackToWebsite: exportConfig.urls?.showBackToWebsite !== false,
+        backToWebsiteText: exportConfig.urls?.backToWebsiteText || "Back to Website"
+      });
+
+      const jsonStr = JSON.stringify(configJSON, null, 2);
+
+      // Root files & directories
       const readmeTpl = await loadExportTemplate("README.md") || generateReadme(exportConfig);
       const packageJsonTpl = await loadExportTemplate("package.json") || JSON.stringify({ name: "auth-page-package", version: "1.0.0" }, null, 2);
       const envExampleTpl = await loadExportTemplate(".env.example") || "SECRET_KEY=django-key\nOTP_MODE=development\nSTATIC_OTP=123456\n";
@@ -1427,204 +1501,145 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       zip.file("package.json", packageJsonTpl);
       zip.file(".env.example", envExampleTpl);
 
-      // 1. Single Source of Truth Config with Clean Canonical Background Schema
-      const resolvedBgExport = (typeof AuthPageRenderer !== "undefined" && AuthPageRenderer.resolveBackground) 
-        ? AuthPageRenderer.resolveBackground(exportConfig)
-        : { type: "default", source: exportConfig.background?.selected || exportConfig.background?.image || "assets/backgrounds/background-1.svg" };
-
-      const cleanBgObj = {
-        type: exportConfig.background?.type || (resolvedBgExport.type === "image" ? "default" : resolvedBgExport.type),
-        selected: exportConfig.background?.selected || exportConfig.background?.image || resolvedBgExport.source || "",
-        image: exportConfig.background?.image || exportConfig.background?.selected || resolvedBgExport.source || "",
-        color: exportConfig.background?.color || "#0f172a",
-        gradientEnabled: Boolean(exportConfig.background?.gradientEnabled),
-        gradientStart: exportConfig.background?.gradientStart || "#0f172a",
-        gradientEnd: exportConfig.background?.gradientEnd || "#1e293b",
-        position: exportConfig.background?.position || "center",
-        size: exportConfig.background?.size || "cover",
-        repeat: exportConfig.background?.repeat || "no-repeat",
-        overlayEnabled: exportConfig.background?.overlayEnabled !== false,
-        overlayColor: exportConfig.background?.overlayColor || "#000000",
-        overlayOpacity: exportConfig.background?.overlayOpacity !== undefined ? exportConfig.background.overlayOpacity : 35
-      };
-
-      const configJSON = {
-        apiBaseUrl: exportConfig.urls?.authPageUrl || "http://localhost:8000/api",
-        landingPageUrl: exportConfig.urls?.landingPageUrl || "",
-        redirectUrl: exportConfig.redirect?.redirectUrl || exportConfig.urls?.redirectUrl || "/dashboard",
-        authPageUrl: exportConfig.urls?.authPageUrl || "",
-        showBackToWebsite: exportConfig.urls?.showBackToWebsite !== false,
-        backToWebsiteText: exportConfig.urls?.backToWebsiteText || "Back to Website",
-        redirect: exportConfig.redirect || {
-          enabled: true,
-          redirectUrl: "/dashboard",
-          redirectType: "url",
-          openInNewTab: false,
-          showSuccessMessage: true,
-          successMessage: "Authentication completed successfully.",
-          delay: 0
-        },
-        urls: exportConfig.urls || {},
-        authentication: exportConfig.authentication || {},
-        branding: exportConfig.branding || {},
-        layout: exportConfig.layout || {},
-        background: cleanBgObj,
-        card: exportConfig.card || {},
-        typography: exportConfig.typography || {},
-        button: exportConfig.button || {},
-        social: exportConfig.social || {},
-        pages: exportConfig.pages || {},
-        passwordPolicy: exportConfig.passwordPolicy || {},
-        otp: exportConfig.otp || {}
-      };
-
+      // Add config/auth-config.json at root and config.json
       const configFolder = zip.folder("config");
-      configFolder.file("auth-config.json", JSON.stringify(configJSON, null, 2));
+      configFolder.file("auth-config.json", jsonStr);
+      zip.file("config.json", jsonStr);
 
-      // 2. Modular Frontend Folder
-      const frontendFolder = zip.folder("frontend");
-      const indexHtmlTpl = await loadExportTemplate("frontend/index.html") || generateStandaloneIndexHTML(exportConfig);
-      frontendFolder.file("index.html", indexHtmlTpl);
+      // Generate HTML, CSS, App JS
+      const standaloneHTML = generateStandaloneIndexHTML(exportConfig);
+      const standaloneCSS = generateStandaloneCSS(exportConfig);
+      const standaloneAppJS = generateStandaloneAppJS();
+      const integrationJS = generateIntegrationJS(exportConfig);
+      const snippetHTML = generateIntegrationSnippetHTML(exportConfig);
+      const redirectServiceJS = await loadExportTemplate("frontend/js/redirectService.js") || `
+(function(root) {
+  root.RedirectService = {
+    execute: function(config) {
+      var url = (config && config.redirectUrl) || "/dashboard";
+      if (typeof root.onAuthRedirect === "function") {
+        root.onAuthRedirect(url);
+      }
+      setTimeout(function() {
+        try { root.location.assign(url); } catch(e) { root.location.href = url; }
+      }, config && config.delay ? config.delay : 100);
+    }
+  };
+  root.redirectService = root.RedirectService;
+})(typeof window !== "undefined" ? window : globalThis);
+`;
 
-      const frontendCssFolder = frontendFolder.folder("css");
-      const varCssTpl = await loadExportTemplate("frontend/css/variables.css") || generateCSSVariablesOnly(exportConfig);
-      const globCssTpl = await loadExportTemplate("frontend/css/global.css") || generateCSSGlobalOnly();
-      const layoutCssTpl = await loadExportTemplate("frontend/css/auth-layout.css") || generateCSSLayoutOnly();
-      const compCssTpl = await loadExportTemplate("frontend/css/auth-components.css") || generateCSSComponentsOnly();
-      const respCssTpl = await loadExportTemplate("frontend/css/responsive.css") || generateCSSResponsiveOnly();
+      // Root executable files
+      zip.file("index.html", standaloneHTML);
+      zip.file("integration-snippet.html", snippetHTML);
 
-      frontendCssFolder.file("variables.css", varCssTpl);
-      frontendCssFolder.file("global.css", globCssTpl);
-      frontendCssFolder.file("auth-layout.css", layoutCssTpl);
-      frontendCssFolder.file("auth-components.css", compCssTpl);
-      frontendCssFolder.file("responsive.css", respCssTpl);
+      const cssFolder = zip.folder("css");
+      cssFolder.file("styles.css", standaloneCSS);
 
-      const frontendJsFolder = frontendFolder.folder("js");
-      const configJsTpl = await loadExportTemplate("frontend/js/config.js") || `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`;
-      const apiJsTpl = await loadExportTemplate("frontend/js/api.js") || "console.log('API Client initialized');";
-      const valJsTpl = await loadExportTemplate("frontend/js/validation.js") || "console.log('Validation Engine initialized');";
-      const redirectServiceTpl = await loadExportTemplate("frontend/js/redirectService.js") || "";
-      const appJsTpl = await loadExportTemplate("frontend/js/app.js") || generateStandaloneAppJS();
+      const jsFolder = zip.folder("js");
+      jsFolder.file("config.js", `window.AUTH_CONFIG = ${jsonStr};\n`);
+      jsFolder.file("redirectService.js", redirectServiceJS);
+      jsFolder.file("app.js", standaloneAppJS);
+      jsFolder.file("integration.js", integrationJS);
 
-      frontendJsFolder.file("config.js", configJsTpl);
-      frontendJsFolder.file("api.js", apiJsTpl);
-      frontendJsFolder.file("validation.js", valJsTpl);
-      if (redirectServiceTpl) frontendJsFolder.file("redirectService.js", redirectServiceTpl);
-      frontendJsFolder.file("app.js", appJsTpl);
-
-      // Asset Bundling inside Frontend Assets
-      const frontendAssets = frontendFolder.folder("assets");
-      const frontendBgDir = frontendAssets.folder("backgrounds");
-      const frontendLogoDir = frontendAssets.folder("logos");
+      const assetsFolder = zip.folder("assets");
+      const bgFolder = assetsFolder.folder("backgrounds");
+      const logoFolder = assetsFolder.folder("logos");
 
       if (typeof resolvedBgData === "string") {
-        frontendBgDir.file(resolvedBgFileName, resolvedBgData, { base64: true });
+        bgFolder.file(resolvedBgFileName, resolvedBgData, { base64: true });
       } else if (resolvedBgData) {
-        frontendBgDir.file(resolvedBgFileName, resolvedBgData);
+        bgFolder.file(resolvedBgFileName, resolvedBgData);
       }
 
       if (typeof resolvedLogoData === "string") {
-        frontendLogoDir.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
+        logoFolder.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
       } else if (resolvedLogoData) {
-        frontendLogoDir.file(resolvedLogoFileName, resolvedLogoData);
+        logoFolder.file(resolvedLogoFileName, resolvedLogoData);
       }
 
-      // Bundle Default Background & Logo Presets (All 12 background assets)
+      // Bundle default presets
       const defaultBgs = [
         "background-1.svg", "background-2.svg", "background-3.svg", "background-4.svg", "background-5.svg", "background-6.svg",
         "b1.webp", "b2.webp", "b3.webp", "b4.webp", "b5.jpg", "idea-6900632_1280.png"
       ];
       for (const bg of defaultBgs) {
         const bgBytes = await fetchAsset(`assets/backgrounds/${bg}`);
-        if (bgBytes) frontendBgDir.file(bg, bgBytes);
+        if (bgBytes) bgFolder.file(bg, bgBytes);
       }
 
       const defaultLogos = ["brand-shield.svg", "brand-prism.svg", "brand-nexus.svg", "brand-aurora.svg", "brand-apex.svg"];
       for (const lg of defaultLogos) {
         const lgBytes = await fetchAsset(`assets/logos/${lg}`);
-        if (lgBytes) frontendLogoDir.file(lg, lgBytes);
+        if (lgBytes) logoFolder.file(lg, lgBytes);
       }
 
-      // 3. Runnable Backend Folder
-      const backendFolder = zip.folder("backend");
-      const backendFiles = generateRunnableBackendFiles();
-      backendFolder.file("manage.py", await loadExportTemplate("backend/manage.py") || backendFiles.managePy);
-      backendFolder.file("requirements.txt", await loadExportTemplate("backend/requirements.txt") || backendFiles.requirementsTxt);
-      backendFolder.file(".env.example", await loadExportTemplate("backend/.env.example") || backendFiles.envExample);
+      // Also mirror in frontend/ and generated-auth-page/ for complete compatibility
+      const genFolder = zip.folder("generated-auth-page");
+      genFolder.file("index.html", standaloneHTML);
+      genFolder.file("config.json", jsonStr);
+      genFolder.file("integration-snippet.html", snippetHTML);
+      genFolder.file("README.md", readmeTpl);
 
-      const projFolder = backendFolder.folder("project");
-      projFolder.file("__init__.py", await loadExportTemplate("backend/project/__init__.py") || "");
-      projFolder.file("settings.py", await loadExportTemplate("backend/project/settings.py") || backendFiles.settingsPy);
-      projFolder.file("urls.py", await loadExportTemplate("backend/project/urls.py") || backendFiles.urlsPy);
-      projFolder.file("wsgi.py", await loadExportTemplate("backend/project/wsgi.py") || backendFiles.wsgiPy);
+      const genCss = genFolder.folder("css");
+      genCss.file("styles.css", standaloneCSS);
 
-      const authAppFolder = backendFolder.folder("authentication");
-      authAppFolder.file("__init__.py", await loadExportTemplate("backend/authentication/__init__.py") || "");
-      authAppFolder.file("models.py", await loadExportTemplate("backend/authentication/models.py") || backendFiles.authModelsPy);
-      authAppFolder.file("serializers.py", await loadExportTemplate("backend/authentication/serializers.py") || backendFiles.authSerializersPy);
-      authAppFolder.file("views.py", await loadExportTemplate("backend/authentication/views.py") || backendFiles.authViewsPy);
-      authAppFolder.file("urls.py", await loadExportTemplate("backend/authentication/urls.py") || backendFiles.authUrlsPy);
+      const genJs = genFolder.folder("js");
+      genJs.file("config.js", `window.AUTH_CONFIG = ${jsonStr};\n`);
+      genJs.file("redirectService.js", redirectServiceJS);
+      genJs.file("app.js", standaloneAppJS);
+      genJs.file("integration.js", integrationJS);
 
-      const servicesFolder = authAppFolder.folder("services");
-      servicesFolder.file("__init__.py", await loadExportTemplate("backend/authentication/services/__init__.py") || "");
-      servicesFolder.file("otp_service.py", await loadExportTemplate("backend/authentication/services/otp_service.py") || backendFiles.otpServicePy);
-
-      // ----------------------------------------------------
-      // LEGACY COMPATIBILITY MAPPING FOR TEST RUNNERS
-      // ----------------------------------------------------
-      const genAuthFolder = zip.folder("generated-auth-page");
-      genAuthFolder.file("index.html", generateStandaloneIndexHTML(exportConfig));
-      genAuthFolder.file("config.json", JSON.stringify(configJSON, null, 2));
-      genAuthFolder.file("integration-snippet.html", generateIntegrationSnippetHTML(exportConfig));
-      genAuthFolder.file("README.md", readmeTpl);
-
-      const legacyCss = genAuthFolder.folder("css");
-      legacyCss.file("styles.css", generateStandaloneCSS(exportConfig));
-
-      const legacyJs = genAuthFolder.folder("js");
-      legacyJs.file("config.js", `window.AUTH_CONFIG = ${JSON.stringify(configJSON, null, 2)};\n`);
-      if (redirectServiceTpl) legacyJs.file("redirectService.js", redirectServiceTpl);
-      legacyJs.file("app.js", generateStandaloneAppJS());
-      legacyJs.file("integration.js", generateIntegrationJS(exportConfig));
-
-      const legacyAssets = genAuthFolder.folder("assets");
-      const legacyBgDir = legacyAssets.folder("backgrounds");
-      const legacyLogoDir = legacyAssets.folder("logos");
+      const genAssets = genFolder.folder("assets");
+      const genBg = genAssets.folder("backgrounds");
+      const genLogo = genAssets.folder("logos");
 
       if (typeof resolvedBgData === "string") {
-        legacyBgDir.file(resolvedBgFileName, resolvedBgData, { base64: true });
+        genBg.file(resolvedBgFileName, resolvedBgData, { base64: true });
       } else if (resolvedBgData) {
-        legacyBgDir.file(resolvedBgFileName, resolvedBgData);
+        genBg.file(resolvedBgFileName, resolvedBgData);
       }
 
       if (typeof resolvedLogoData === "string") {
-        legacyLogoDir.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
+        genLogo.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
       } else if (resolvedLogoData) {
-        legacyLogoDir.file(resolvedLogoFileName, resolvedLogoData);
+        genLogo.file(resolvedLogoFileName, resolvedLogoData);
       }
 
       for (const bg of defaultBgs) {
         const bgBytes = await fetchAsset(`assets/backgrounds/${bg}`);
-        if (bgBytes) legacyBgDir.file(bg, bgBytes);
+        if (bgBytes) genBg.file(bg, bgBytes);
       }
 
       for (const lg of defaultLogos) {
         const lgBytes = await fetchAsset(`assets/logos/${lg}`);
-        if (lgBytes) legacyLogoDir.file(lg, lgBytes);
+        if (lgBytes) genLogo.file(lg, lgBytes);
       }
 
       // ----------------------------------------------------
-      // STAGE 3: POST-GENERATION ZIP ENTRY VALIDATION
+      // STAGE 3: VALIDATION & FORBIDDEN REFERENCE CHECK
       // ----------------------------------------------------
-      const bgImg = configJSON.background?.image || "";
-      const logoImg = configJSON.branding?.logo || "";
-      if (bgImg.includes("blob:") || bgImg.includes("data:") || bgImg.includes("file:") || logoImg.includes("blob:") || logoImg.includes("data:") || logoImg.includes("file:")) {
-        throw new Error("Post-generation validation failed: Unsanitized blob or absolute URL detected in asset paths.");
+      console.log("[ZIP] Validating package");
+      console.log("[ZIP] Checking localhost references");
+
+      const bgImgRef = exportConfig.background?.image || exportConfig.background?.selected || "";
+      const logoImgRef = exportConfig.branding?.logo || "";
+
+      const forbiddenReferences = ["blob:", "data:", "C:\\Users", "file://"];
+      for (const ref of forbiddenReferences) {
+        if (bgImgRef.includes(ref) || logoImgRef.includes(ref)) {
+          console.error(`[ZIP] Export failed: Unsanitized asset reference ${ref} in background (${bgImgRef}) or logo (${logoImgRef})`);
+          throw new Error("Export failed: standalone package contains an invalid local dependency.");
+        }
       }
 
-      if (!zip.file("config/auth-config.json") || !zip.file("frontend/index.html") || !zip.file("backend/manage.py")) {
-        throw new Error("Post-generation validation failed: Critical ZIP package entries are missing.");
+      console.log("[ZIP] Checking referenced assets");
+      if (!zip.file("config/auth-config.json") || !zip.file("index.html") || !zip.file("js/app.js") || !zip.file("css/styles.css")) {
+        console.error("[ZIP] Export failed: Critical ZIP package entries are missing");
+        throw new Error("Export failed: Critical ZIP package entries are missing.");
       }
+
+      console.log("[ZIP] Package validation successful");
 
       // ----------------------------------------------------
       // STAGE 4: GENERATE ZIP BLOB & TRIGGER DOWNLOAD
@@ -1647,12 +1662,14 @@ class DevelopmentOTPProvider(BaseOTPProvider):
         }, 1000);
       }
 
+      console.log("[ZIP] ZIP generated successfully");
+
       if (Utils.showToast) {
         Utils.showToast("Your authentication package has been downloaded!", "success");
       }
       return true;
     } catch (err) {
-      console.error("ZIP Generation error:", err);
+      console.error("[ZIP] Export failed:", err.message || err);
       if (Utils.showToast) {
         Utils.showToast(err.message || "Failed to generate ZIP package.", "error");
       }
