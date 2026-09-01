@@ -34,6 +34,10 @@
     whatsapp: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#25D366"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.275-.1-.476-.15-.676.15-.2.301-.776.979-.951 1.18-.175.201-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.493-.895-.798-1.5-1.784-1.675-2.085-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.201-.301.301-.502.1-.201.05-.376-.025-.526-.075-.15-.677-1.633-.927-2.235-.244-.587-.492-.507-.677-.517l-.577-.01c-.2 0-.526.075-.802.376-.275.301-1.052 1.028-1.052 2.508 0 1.48 1.077 2.909 1.228 3.11.15.2 2.12 3.238 5.136 4.542.717.31 1.277.496 1.713.635.72.229 1.375.197 1.893.12.577-.087 1.78-.727 2.03-1.43.25-.702.25-1.304.175-1.43-.075-.125-.275-.201-.576-.351zm-5.452 7.558h-.008a10.024 10.024 0 0 1-5.118-1.398l-.367-.218-3.805.998 1.016-3.71-.24-.381a10.015 10.015 0 0 1-1.536-5.292c0-5.535 4.504-10.04 10.045-10.04 2.684 0 5.207 1.046 7.104 2.945a10.007 10.007 0 0 1 2.942 7.098c0 5.538-4.505 10.042-10.033 10.042zm8.517-18.552A11.936 11.936 0 0 0 12.02 0C5.393 0 .02 5.373.02 12a11.96 11.96 0 0 0 1.83 6.388L0 24l5.772-1.815A11.97 11.97 0 0 0 12.02 24c6.626 0 12-5.373 12-12 0-3.206-1.248-6.22-3.515-8.612z"/></svg>`,
     email: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`,
     sms: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+    user: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+    mail: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`,
+    phone: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`,
+    lock: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
     eye: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
     eyeOff: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`,
     arrowLeft: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`
@@ -321,6 +325,7 @@
                      class="auth-input" 
                      placeholder="${idPlaceholder}" 
                      required />
+              ${ICONS.mail}
             </div>
           </div>
 
@@ -461,112 +466,109 @@
     const privacyUrl = escapeHtml(pageConfig.privacyUrl || "https://customerwebsite.com/privacy");
 
     return `
-      <div class="auth-page-form-wrapper auth-page-signup-wrapper" data-page="signup">
-        
-        <div class="auth-signup-branding-side">
-          <div class="auth-signup-hero-block">
-            <h1 class="auth-heading">${title}</h1>
-            ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
-          </div>
-          <div class="auth-signup-illustration">
-            <div class="auth-3d-shield-badge">
-              <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <circle cx="12" cy="11" r="3"></circle>
-                <path d="M12 14v3"></path>
-              </svg>
-            </div>
-          </div>
+      <div class="auth-page-form-wrapper" data-page="signup">
+        <div class="auth-form-header">
+          <h1 class="auth-heading">${title}</h1>
+          ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
         </div>
 
-        <div class="auth-signup-form-side">
-          <form class="auth-main-form" id="authSignupForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'signup') : null;">
-            
-            ${fields.fullName ? `
-            <div class="auth-field-group">
-              <label class="auth-label" for="signupName">${escapeHtml(labels.fullName || "Full Name")}</label>
+        <form class="auth-main-form" id="authSignupForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'signup') : null;">
+          
+          ${fields.fullName ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupName">${escapeHtml(labels.fullName || "Full Name")}</label>
+            <div class="auth-input-wrapper">
               <input type="text" id="signupName" name="fullName" class="auth-input" placeholder="${escapeHtml(placeholders.fullName || "Alex Morgan")}" required />
+              ${ICONS.user}
             </div>
-            ` : ""}
+          </div>
+          ` : ""}
 
-            ${fields.username ? `
-            <div class="auth-field-group">
-              <label class="auth-label" for="signupUsername">${escapeHtml(labels.username || "Username")}</label>
+          ${fields.username ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupUsername">${escapeHtml(labels.username || "Username")}</label>
+            <div class="auth-input-wrapper">
               <input type="text" id="signupUsername" name="username" class="auth-input" placeholder="${escapeHtml(placeholders.username || "alexmorgan")}" required />
+              ${ICONS.user}
             </div>
-            ` : ""}
+          </div>
+          ` : ""}
 
-            ${fields.email ? `
-            <div class="auth-field-group">
-              <label class="auth-label" for="signupEmail">${escapeHtml(labels.email || "Email Address")}</label>
+          ${fields.email ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupEmail">${escapeHtml(labels.email || "Email Address")}</label>
+            <div class="auth-input-wrapper">
               <input type="email" id="signupEmail" name="email" class="auth-input" placeholder="${escapeHtml(placeholders.email || "alex@company.com")}" required />
+              ${ICONS.mail}
             </div>
-            ` : ""}
+          </div>
+          ` : ""}
 
-            ${fields.mobile ? `
-            <div class="auth-field-group">
-              <label class="auth-label" for="signupMobile">${escapeHtml(labels.mobile || "Mobile Number")}</label>
+          ${fields.mobile ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupMobile">${escapeHtml(labels.mobile || "Mobile Number")}</label>
+            <div class="auth-input-wrapper">
               <input type="tel" id="signupMobile" name="mobile" class="auth-input" placeholder="${escapeHtml(placeholders.mobile || "+1 (555) 234-5678")}" />
+              ${ICONS.phone}
             </div>
-            ` : ""}
+          </div>
+          ` : ""}
 
-            ${fields.password ? `
-            <div class="auth-field-group">
-              <label class="auth-label" for="signupPassword">${escapeHtml(labels.password || "Password")}</label>
-              <div class="auth-input-wrapper auth-input-password-wrapper">
-                <input type="password" id="signupPassword" name="password" class="auth-input" placeholder="${escapeHtml(placeholders.password || "Minimum 8 characters")}" required />
-                <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
-                  ${ICONS.eye}
-                </button>
-              </div>
-              ${generatePasswordStrengthMeterHTML(config)}
-              ${generatePasswordRequirementsHTML(config)}
-            </div>
-            ` : ""}
-
-            ${fields.confirmPassword ? `
-            <div class="auth-field-group">
-              <label class="auth-label" for="signupConfirmPassword">${escapeHtml(labels.confirmPassword || "Confirm Password")}</label>
-              <div class="auth-input-wrapper auth-input-password-wrapper">
-                <input type="password" id="signupConfirmPassword" name="confirmPassword" class="auth-input" placeholder="${escapeHtml(placeholders.confirmPassword || "Repeat your password")}" required />
-                <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
-                  ${ICONS.eye}
-                </button>
-              </div>
-            </div>
-            ` : ""}
-
-            ${termsEnabled ? `
-            <div class="auth-checkbox-group auth-terms-group">
-              <label class="auth-checkbox-label">
-                <input type="checkbox" id="signupTerms" name="terms" class="auth-checkbox" required />
-                <span>${termsText}</span>
-              </label>
-              ${termsUrl ? `<a href="${termsUrl}" target="_blank" rel="noopener noreferrer" class="auth-legal-link">Terms</a>` : ""}
-            </div>
-            ` : ""}
-
-            ${privacyEnabled && !termsEnabled ? `
-            <div class="auth-checkbox-group auth-privacy-group">
-              ${privacyUrl ? `<a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" class="auth-legal-link">${privacyText}</a>` : ""}
-            </div>
-            ` : ""}
-
-            <div class="auth-button-group">
-              <button type="submit" class="auth-primary-btn" id="signupSubmitBtn">
-                <span>${buttonText}</span>
+          ${fields.password ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupPassword">${escapeHtml(labels.password || "Password")}</label>
+            <div class="auth-input-wrapper auth-input-password-wrapper">
+              <input type="password" id="signupPassword" name="password" class="auth-input" placeholder="${escapeHtml(placeholders.password || "Minimum 8 characters")}" required />
+              <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
+                ${ICONS.eye}
               </button>
             </div>
+            ${generatePasswordStrengthMeterHTML(config)}
+            ${generatePasswordRequirementsHTML(config)}
+          </div>
+          ` : ""}
 
-            ${generateSocialLogin(config)}
-
-            <div class="auth-footer-nav">
-              <span>${signinPrompt}</span>
-              <a href="#login" class="auth-link auth-link-action" data-auth-nav="login">${signinLinkText}</a>
+          ${fields.confirmPassword ? `
+          <div class="auth-field-group">
+            <label class="auth-label" for="signupConfirmPassword">${escapeHtml(labels.confirmPassword || "Confirm Password")}</label>
+            <div class="auth-input-wrapper auth-input-password-wrapper">
+              <input type="password" id="signupConfirmPassword" name="confirmPassword" class="auth-input" placeholder="${escapeHtml(placeholders.confirmPassword || "Repeat your password")}" required />
+              <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
+                ${ICONS.eye}
+              </button>
             </div>
-          </form>
-        </div>
+          </div>
+          ` : ""}
 
+          ${termsEnabled ? `
+          <div class="auth-checkbox-group auth-terms-group">
+            <label class="auth-checkbox-label">
+              <input type="checkbox" id="signupTerms" name="terms" class="auth-checkbox" required />
+              <span>${termsText}</span>
+            </label>
+            ${termsUrl ? `<a href="${termsUrl}" target="_blank" rel="noopener noreferrer" class="auth-legal-link">Terms</a>` : ""}
+          </div>
+          ` : ""}
+
+          ${privacyEnabled && !termsEnabled ? `
+          <div class="auth-checkbox-group auth-privacy-group">
+            ${privacyUrl ? `<a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" class="auth-legal-link">${privacyText}</a>` : ""}
+          </div>
+          ` : ""}
+
+          <div class="auth-button-group">
+            <button type="submit" class="auth-primary-btn" id="signupSubmitBtn">
+              <span>${buttonText}</span>
+            </button>
+          </div>
+
+          ${generateSocialLogin(config)}
+
+          <div class="auth-footer-nav">
+            <span>${signinPrompt}</span>
+            <a href="#login" class="auth-link auth-link-action" data-auth-nav="login">${signinLinkText}</a>
+          </div>
+        </form>
       </div>
     `;
   }
