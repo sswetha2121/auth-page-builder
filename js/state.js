@@ -55,18 +55,36 @@
 
     // Normalizations for background
     if (!normalized.background) normalized.background = deepClone(defaults.background);
-    if (normalized.background.uploadedImage) {
+    const bgType = normalized.background.type || "default";
+
+    if (bgType === "default" || bgType === "image") {
+      normalized.background.type = "default";
+      const sel = normalized.background.selected || normalized.background.image || "assets/backgrounds/background-1.svg";
+      normalized.background.selected = sel;
+      normalized.background.image = sel;
+      normalized.background.uploadedImage = "";
+    } else if (bgType === "uploaded" || bgType === "upload" || bgType === "custom") {
       normalized.background.type = "uploaded";
-      normalized.background.image = normalized.background.uploadedImage;
-    } else if (normalized.background.selected && normalized.background.selected !== "none") {
-      normalized.background.type = "default";
-      normalized.background.image = normalized.background.selected;
-    } else if (normalized.background.image && normalized.background.image !== "none") {
-      normalized.background.type = "default";
-      normalized.background.selected = normalized.background.image;
-    } else {
+      const upImg = normalized.background.uploadedImage || normalized.background.image || "";
+      normalized.background.uploadedImage = upImg;
+      normalized.background.image = upImg;
+      normalized.background.selected = "";
+    } else if (bgType === "color") {
       normalized.background.type = "color";
       normalized.background.image = "";
+      normalized.background.uploadedImage = "";
+      normalized.background.selected = "";
+    } else if (bgType === "gradient") {
+      normalized.background.type = "gradient";
+      normalized.background.gradientEnabled = true;
+      normalized.background.image = "";
+      normalized.background.uploadedImage = "";
+      normalized.background.selected = "";
+    } else if (bgType === "none") {
+      normalized.background.type = "none";
+      normalized.background.image = "";
+      normalized.background.uploadedImage = "";
+      normalized.background.selected = "";
     }
 
     // Ensure OTP length is valid (4, 6, 8)

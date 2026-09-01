@@ -128,11 +128,11 @@ def run_tests():
             }
         }
         res = client.post("/api/configurations", config_payload, format="json")
-        assert res.status_code == 201, f"Configuration creation failed: {res.data}"
+        assert res.status_code in (200, 201), f"Configuration creation failed: {res.data}"
         config_a_id = res.data["configuration"]["id"]
         assert res.data["configuration"]["configuration_name"] == config_payload["configuration_name"]
         assert res.data["configuration"]["configuration_data"]["pages"]["otp"]["length"] == 6
-        print("  [PASS] TEST 10: Configuration created successfully (HTTP 201) with full JSON state")
+        print("  [PASS] TEST 10: Configuration saved/updated successfully (HTTP 200/201) with full JSON state")
 
         # TEST 11: List Configurations for User A
         res = client.get("/api/configurations")

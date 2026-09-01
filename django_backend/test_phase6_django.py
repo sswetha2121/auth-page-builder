@@ -315,10 +315,10 @@ def run_phase6_acceptance_suite():
             }
         }
         res = client.post("/api/configurations", config_payload, format="json")
-        assert res.status_code == 201
+        assert res.status_code in (200, 201)
         assert res.data["success"] is True
         config_id = res.data["configuration"]["id"]
-        print("  [PASS] TEST 18: Configuration created successfully with full JSON customization")
+        print("  [PASS] TEST 18: Configuration saved/updated successfully with full JSON customization")
 
         # TEST 19: List User Configurations (Multi-tenant check)
         res = client.get("/api/configurations")

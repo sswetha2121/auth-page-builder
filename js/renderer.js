@@ -19,6 +19,82 @@
   let otpInlineCountdownInterval = null;
 
   /* =======================================================
+     CANONICAL BACKGROUND RESOLVER
+  ======================================================= */
+  function resolveBackground(config) {
+    const background = (config && config.background) ? config.background : {};
+    const type = background.type || "default";
+
+    let resolvedType = "image";
+    let source = null;
+    let color = null;
+
+    switch (type) {
+      case "uploaded":
+      case "upload":
+      case "custom": {
+        resolvedType = "image";
+        source = background.uploadedImage || background.image || "";
+        break;
+      }
+      case "default":
+      case "image": {
+        resolvedType = "image";
+        source = background.selected || background.image || background.uploadedImage || "assets/backgrounds/background-1.svg";
+        break;
+      }
+      case "color": {
+        resolvedType = "color";
+        color = background.color || "#0f172a";
+        break;
+      }
+      case "gradient": {
+        resolvedType = "gradient";
+        const gStart = background.gradientStart || background.color || "#0f172a";
+        const gEnd = background.gradientEnd || "#1e293b";
+        color = `linear-gradient(135deg, ${gStart}, ${gEnd})`;
+        break;
+      }
+      case "none": {
+        resolvedType = "none";
+        color = "transparent";
+        break;
+      }
+      default: {
+        if (background.uploadedImage) {
+          resolvedType = "image";
+          source = background.uploadedImage;
+        } else if (background.selected && background.selected !== "none") {
+          resolvedType = "image";
+          source = background.selected;
+        } else if (background.image && background.image !== "none") {
+          resolvedType = "image";
+          source = background.image;
+        } else {
+          resolvedType = "color";
+          color = background.color || "#0f172a";
+        }
+        break;
+      }
+    }
+
+    const overlayOpacity = background.overlayEnabled !== false 
+      ? ((Number(background.overlayOpacity) || 0) / 100)
+      : 0;
+
+    return {
+      type: resolvedType,
+      source: source,
+      color: color,
+      position: background.position || `${background.horizontalPosition || "center"} ${background.verticalPosition || "center"}`,
+      size: background.size || "cover",
+      repeat: background.repeat || "no-repeat",
+      overlayColor: background.overlayColor || "#000000",
+      overlayOpacity: overlayOpacity
+    };
+  }
+
+  /* =======================================================
      COMPUTE DYNAMIC CSS VARIABLES
   ======================================================= */
   function computeStyleVariables(config) {
@@ -33,23 +109,24 @@
 
     const imageWidth = Number(layout.imageWidth) || 50;
 
-    // Background image calculation
+    // Canonical Background Calculation via resolveBackground
+    const resolvedBg = resolveBackground(config);
+
     let bgImg = "none";
-    const selectedBgUrl = background.uploadedImage || background.image || background.selected;
-    if (selectedBgUrl && selectedBgUrl !== "none" && selectedBgUrl !== "") {
-      bgImg = `url("${selectedBgUrl}")`;
+    if (resolvedBg.type === "image" && resolvedBg.source && resolvedBg.source !== "none") {
+      bgImg = `url("${resolvedBg.source}")`;
     }
 
-    let bgColor = background.color || "#0f172a";
-    if (background.gradientEnabled) {
+    let bgColor = resolvedBg.color || background.color || "#0f172a";
+    if (resolvedBg.type === "gradient") {
+      bgColor = resolvedBg.color;
+    } else if (background.gradientEnabled) {
       const gStart = background.gradientStart || bgColor;
       const gEnd = background.gradientEnd || "#1e293b";
       bgColor = `linear-gradient(135deg, ${gStart}, ${gEnd})`;
     }
 
-    const overlayOpacity = background.overlayEnabled !== false 
-      ? ((Number(background.overlayOpacity) || 0) / 100)
-      : 0;
+    const overlayOpacity = resolvedBg.overlayOpacity;
 
     // Button Background
     let buttonBg = button.backgroundColor || "#2563eb";
@@ -98,10 +175,10 @@
         /* Background */
         --auth-background-image: ${bgImg};
         --auth-background-color: ${bgColor};
-        --auth-background-position: ${background.position || `${background.horizontalPosition || "center"} ${background.verticalPosition || "center"}`};
-        --auth-background-size: ${background.size || "cover"};
-        --auth-background-repeat: ${background.repeat || "no-repeat"};
-        --auth-overlay-color: ${background.overlayColor || "#000000"};
+        --auth-background-position: ${resolvedBg.position};
+        --auth-background-size: ${resolvedBg.size};
+        --auth-background-repeat: ${resolvedBg.repeat};
+        --auth-overlay-color: ${resolvedBg.overlayColor};
         --auth-overlay-opacity: ${overlayOpacity};
 
         /* Branding & Logo */
@@ -507,29 +584,45 @@
     // Attach interactive behaviors
     attachInteractiveBehaviors(root, config);
 
-    // Apply direct element background styles and output required diagnostics
-    const bgConfig = config.background || {};
-    const selectedBackground = bgConfig.uploadedImage || bgConfig.image || bgConfig.selected || "";
-    
-    const previewElement = root.querySelector(".auth-image-section") || root;
-    if (previewElement) {
-      if (selectedBackground && selectedBackground !== "none" && selectedBackground !== "") {
-        previewElement.style.backgroundImage = `url("${selectedBackground}")`;
-        previewElement.style.backgroundSize = bgConfig.size || "cover";
-        previewElement.style.backgroundPosition = bgConfig.position || "center";
-        previewElement.style.backgroundRepeat = bgConfig.repeat || "no-repeat";
-      } else {
-        previewElement.style.backgroundImage = "none";
-      }
+    // Apply direct element background styles using canonical resolveBackground
+    const resolvedBg = resolveBackground(config);
+    const fullBgEl = root.querySelector(".auth-full-background");
+    const imageSectionEl = root.querySelector(".auth-image-section");
 
-      console.log("Selected background:", selectedBackground);
-      console.log("State background:", bgConfig);
-      console.log("Applied backgroundImage:", previewElement.style.backgroundImage);
-      console.log(
-        "Computed backgroundImage:",
-        typeof getComputedStyle !== "undefined" ? getComputedStyle(previewElement).backgroundImage : previewElement.style.backgroundImage
-      );
+    if (layoutType === "full-background") {
+      const targetBgEl = fullBgEl || root;
+      if (resolvedBg.type === "image" && resolvedBg.source) {
+        targetBgEl.style.backgroundImage = `url("${resolvedBg.source}")`;
+        targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+      } else if (resolvedBg.type === "color" || resolvedBg.type === "gradient") {
+        targetBgEl.style.backgroundImage = resolvedBg.type === "gradient" ? resolvedBg.color : "none";
+        targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+      } else {
+        targetBgEl.style.backgroundImage = "none";
+        targetBgEl.style.backgroundColor = "transparent";
+      }
+      targetBgEl.style.backgroundSize = resolvedBg.size;
+      targetBgEl.style.backgroundPosition = resolvedBg.position;
+      targetBgEl.style.backgroundRepeat = resolvedBg.repeat;
+    } else {
+      if (imageSectionEl) {
+        if (resolvedBg.type === "image" && resolvedBg.source) {
+          imageSectionEl.style.backgroundImage = `url("${resolvedBg.source}")`;
+          imageSectionEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+        } else if (resolvedBg.type === "color" || resolvedBg.type === "gradient") {
+          imageSectionEl.style.backgroundImage = resolvedBg.type === "gradient" ? resolvedBg.color : "none";
+          imageSectionEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+        } else {
+          imageSectionEl.style.backgroundImage = "none";
+          imageSectionEl.style.backgroundColor = "transparent";
+        }
+        imageSectionEl.style.backgroundSize = resolvedBg.size;
+        imageSectionEl.style.backgroundPosition = resolvedBg.position;
+        imageSectionEl.style.backgroundRepeat = resolvedBg.repeat;
+      }
     }
+
+    console.log("Resolved background:", resolvedBg);
 
     // Trigger completion event
     if (typeof document !== "undefined" && document.dispatchEvent) {
@@ -542,6 +635,7 @@
   }
 
   return {
+    resolveBackground,
     computeStyleVariables,
     injectStyles,
     renderPreview,

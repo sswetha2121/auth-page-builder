@@ -51,7 +51,7 @@
     const brandName = escapeHtml(branding.brandName || "Your Brand");
     const shape = branding.logoShape || "circle";
     const position = branding.logoPosition || "center";
-    const logoSrc = branding.uploadedLogo || branding.logo || branding.selectedLogo || "";
+    const logoSrc = branding.uploadedLogo || branding.logo || branding.selectedLogo || "assets/logos/auth_logo_1.svg";
 
     const initials = brandName
       .split(" ")
@@ -421,7 +421,7 @@
   function generateSignupPage(config) {
     const pageConfig = config.pages?.signup || {};
     const title = escapeHtml(pageConfig.title || "Create account");
-    const subtitle = escapeHtml(pageConfig.subtitle || "Enter your details to create an account");
+    const subtitle = escapeHtml(pageConfig.subtitle || "Join us today! Please fill in the details to get started.");
     const buttonText = escapeHtml(pageConfig.buttonText || "Create Account");
     const signinPrompt = escapeHtml(pageConfig.signinPrompt || "Already have an account?");
     const signinLinkText = escapeHtml(pageConfig.signinLinkText || "Sign in");
@@ -461,93 +461,112 @@
     const privacyUrl = escapeHtml(pageConfig.privacyUrl || "https://customerwebsite.com/privacy");
 
     return `
-      <div class="auth-page-form-wrapper" data-page="signup">
-        <div class="auth-form-header">
-          <h1 class="auth-heading">${title}</h1>
-          ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
+      <div class="auth-page-form-wrapper auth-page-signup-wrapper" data-page="signup">
+        
+        <div class="auth-signup-branding-side">
+          <div class="auth-signup-hero-block">
+            <h1 class="auth-heading">${title}</h1>
+            ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ""}
+          </div>
+          <div class="auth-signup-illustration">
+            <div class="auth-3d-shield-badge">
+              <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <circle cx="12" cy="11" r="3"></circle>
+                <path d="M12 14v3"></path>
+              </svg>
+            </div>
+          </div>
         </div>
 
-        <form class="auth-main-form" id="authSignupForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'signup') : null;">
-          
-          ${fields.fullName ? `
-          <div class="auth-field-group">
-            <label class="auth-label" for="signupName">${escapeHtml(labels.fullName || "Full Name")}</label>
-            <input type="text" id="signupName" name="fullName" class="auth-input" placeholder="${escapeHtml(placeholders.fullName || "Alex Morgan")}" required />
-          </div>
-          ` : ""}
+        <div class="auth-signup-form-side">
+          <form class="auth-main-form" id="authSignupForm" onsubmit="event.preventDefault(); window.handleAuthSubmit ? window.handleAuthSubmit(event, 'signup') : null;">
+            
+            ${fields.fullName ? `
+            <div class="auth-field-group">
+              <label class="auth-label" for="signupName">${escapeHtml(labels.fullName || "Full Name")}</label>
+              <input type="text" id="signupName" name="fullName" class="auth-input" placeholder="${escapeHtml(placeholders.fullName || "Alex Morgan")}" required />
+            </div>
+            ` : ""}
 
-          ${fields.username ? `
-          <div class="auth-field-group">
-            <label class="auth-label" for="signupUsername">${escapeHtml(labels.username || "Username")}</label>
-            <input type="text" id="signupUsername" name="username" class="auth-input" placeholder="${escapeHtml(placeholders.username || "alexmorgan")}" required />
-          </div>
-          ` : ""}
+            ${fields.username ? `
+            <div class="auth-field-group">
+              <label class="auth-label" for="signupUsername">${escapeHtml(labels.username || "Username")}</label>
+              <input type="text" id="signupUsername" name="username" class="auth-input" placeholder="${escapeHtml(placeholders.username || "alexmorgan")}" required />
+            </div>
+            ` : ""}
 
-          ${fields.email ? `
-          <div class="auth-field-group">
-            <label class="auth-label" for="signupEmail">${escapeHtml(labels.email || "Email Address")}</label>
-            <input type="email" id="signupEmail" name="email" class="auth-input" placeholder="${escapeHtml(placeholders.email || "alex@company.com")}" required />
-          </div>
-          ` : ""}
+            ${fields.email ? `
+            <div class="auth-field-group">
+              <label class="auth-label" for="signupEmail">${escapeHtml(labels.email || "Email Address")}</label>
+              <input type="email" id="signupEmail" name="email" class="auth-input" placeholder="${escapeHtml(placeholders.email || "alex@company.com")}" required />
+            </div>
+            ` : ""}
 
-          ${fields.mobile ? `
-          <div class="auth-field-group">
-            <label class="auth-label" for="signupMobile">${escapeHtml(labels.mobile || "Mobile Number")}</label>
-            <input type="tel" id="signupMobile" name="mobile" class="auth-input" placeholder="${escapeHtml(placeholders.mobile || "+1 (555) 234-5678")}" />
-          </div>
-          ` : ""}
+            ${fields.mobile ? `
+            <div class="auth-field-group">
+              <label class="auth-label" for="signupMobile">${escapeHtml(labels.mobile || "Mobile Number")}</label>
+              <input type="tel" id="signupMobile" name="mobile" class="auth-input" placeholder="${escapeHtml(placeholders.mobile || "+1 (555) 234-5678")}" />
+            </div>
+            ` : ""}
 
-          ${fields.password ? `
-          <div class="auth-field-group">
-            <label class="auth-label" for="signupPassword">${escapeHtml(labels.password || "Password")}</label>
-            <div class="auth-input-wrapper auth-input-password-wrapper">
-              <input type="password" id="signupPassword" name="password" class="auth-input" placeholder="${escapeHtml(placeholders.password || "Minimum 8 characters")}" required />
-              <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
-                ${ICONS.eye}
+            ${fields.password ? `
+            <div class="auth-field-group">
+              <label class="auth-label" for="signupPassword">${escapeHtml(labels.password || "Password")}</label>
+              <div class="auth-input-wrapper auth-input-password-wrapper">
+                <input type="password" id="signupPassword" name="password" class="auth-input" placeholder="${escapeHtml(placeholders.password || "Minimum 8 characters")}" required />
+                <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
+                  ${ICONS.eye}
+                </button>
+              </div>
+              ${generatePasswordStrengthMeterHTML(config)}
+              ${generatePasswordRequirementsHTML(config)}
+            </div>
+            ` : ""}
+
+            ${fields.confirmPassword ? `
+            <div class="auth-field-group">
+              <label class="auth-label" for="signupConfirmPassword">${escapeHtml(labels.confirmPassword || "Confirm Password")}</label>
+              <div class="auth-input-wrapper auth-input-password-wrapper">
+                <input type="password" id="signupConfirmPassword" name="confirmPassword" class="auth-input" placeholder="${escapeHtml(placeholders.confirmPassword || "Repeat your password")}" required />
+                <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
+                  ${ICONS.eye}
+                </button>
+              </div>
+            </div>
+            ` : ""}
+
+            ${termsEnabled ? `
+            <div class="auth-checkbox-group auth-terms-group">
+              <label class="auth-checkbox-label">
+                <input type="checkbox" id="signupTerms" name="terms" class="auth-checkbox" required />
+                <span>${termsText}</span>
+              </label>
+              ${termsUrl ? `<a href="${termsUrl}" target="_blank" rel="noopener noreferrer" class="auth-legal-link">Terms</a>` : ""}
+            </div>
+            ` : ""}
+
+            ${privacyEnabled && !termsEnabled ? `
+            <div class="auth-checkbox-group auth-privacy-group">
+              ${privacyUrl ? `<a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" class="auth-legal-link">${privacyText}</a>` : ""}
+            </div>
+            ` : ""}
+
+            <div class="auth-button-group">
+              <button type="submit" class="auth-primary-btn" id="signupSubmitBtn">
+                <span>${buttonText}</span>
               </button>
             </div>
-            ${generatePasswordStrengthMeterHTML(config)}
-            ${generatePasswordRequirementsHTML(config)}
-          </div>
-          ` : ""}
 
-          ${fields.confirmPassword ? `
-          <div class="auth-field-group">
-            <label class="auth-label" for="signupConfirmPassword">${escapeHtml(labels.confirmPassword || "Confirm Password")}</label>
-            <div class="auth-input-wrapper auth-input-password-wrapper">
-              <input type="password" id="signupConfirmPassword" name="confirmPassword" class="auth-input" placeholder="${escapeHtml(placeholders.confirmPassword || "Repeat your password")}" required />
-              <button type="button" class="auth-password-toggle" data-toggle-password aria-label="Toggle password visibility">
-                ${ICONS.eye}
-              </button>
+            ${generateSocialLogin(config)}
+
+            <div class="auth-footer-nav">
+              <span>${signinPrompt}</span>
+              <a href="#login" class="auth-link auth-link-action" data-auth-nav="login">${signinLinkText}</a>
             </div>
-          </div>
-          ` : ""}
+          </form>
+        </div>
 
-          ${termsEnabled ? `
-          <div class="auth-checkbox-group auth-terms-group">
-            <label class="auth-checkbox-label">
-              <input type="checkbox" id="signupTerms" name="terms" class="auth-checkbox" required />
-              <span>
-                <a href="${termsUrl}" target="_blank" rel="noopener noreferrer" class="auth-inline-link">${termsText}</a>
-                ${privacyEnabled ? ` and <a href="${privacyUrl}" target="_blank" rel="noopener noreferrer" class="auth-inline-link">${privacyText}</a>` : ""}
-              </span>
-            </label>
-          </div>
-          ` : ""}
-
-          <div class="auth-button-group">
-            <button type="submit" class="auth-primary-btn" id="signupSubmitBtn">
-              <span>${buttonText}</span>
-            </button>
-          </div>
-
-          ${generateSocialLogin(config)}
-
-          <div class="auth-footer-nav">
-            <span>${signinPrompt}</span>
-            <a href="#login" class="auth-link auth-link-action" data-auth-nav="login">${signinLinkText}</a>
-          </div>
-        </form>
       </div>
     `;
   }
@@ -673,6 +692,9 @@
         break;
     }
 
+    const layout = config.layout || {};
+    const layoutType = layout.type || "split-left-image";
+
     const imageSection = config.imageSection || {};
     const showBackgroundText = imageSection.showText !== false;
     const bgHeading = escapeHtml(imageSection.text || "Experience the next generation of authentication.");
@@ -684,8 +706,35 @@
     const backToWebText = escapeHtml(config.urls?.backToWebsiteText || "Back to Website");
     const openNewTab = config.urls?.openInNewTab !== false;
 
+    if (layoutType === "full-background") {
+      return `
+        <div class="auth-preview-shell layout-full-background">
+          <div class="auth-full-background"></div>
+          <div class="auth-full-background-overlay"></div>
+          <div class="auth-form-section">
+            <div class="auth-card">
+              ${showBackToWeb ? `
+                <div class="auth-landing-link-bar">
+                  <a href="${escapeHtml(landingUrl)}" target="${openNewTab ? '_blank' : '_self'}" rel="noopener noreferrer" class="auth-landing-link">
+                    ${ICONS.arrowLeft}
+                    <span>${backToWebText}</span>
+                  </a>
+                </div>
+              ` : ""}
+              
+              ${generateLogo(config)}
+
+              <div class="auth-page-container">
+                ${pageHTML}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return `
-      <div class="auth-preview-shell">
+      <div class="auth-preview-shell layout-${escapeHtml(layoutType)}">
         
         <!-- Background / Visual Section -->
         <div class="auth-image-section">

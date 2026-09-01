@@ -52,11 +52,23 @@
     padding: 0 24px;
     position: relative;
     z-index: 100;
-    border-bottom: 1px solid var(--border, #e2e8f0);
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+}
+
+.studio-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    background: #f3e8ff;
+    color: #7c3aed;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    margin-left: 6px;
+    vertical-align: middle;
 }
 
 /* =========================================================

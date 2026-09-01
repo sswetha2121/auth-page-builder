@@ -134,7 +134,6 @@ function triggerDebouncedAutosave(state) {
   if (autosaveTimeout) {
     clearTimeout(autosaveTimeout);
   }
-  console.log("[Autosave] Debounce scheduled");
 
   const indicator = document.querySelector("[data-unsaved-indicator]");
   const indicatorText = indicator?.querySelector(".indicator-text");
@@ -157,11 +156,12 @@ function triggerDebouncedAutosave(state) {
       const currentState = window.state ? window.state.serializeCurrentConfiguration() : state;
       const activeId = window.ConfigurationsApi.activeConfigId;
       const currentUser = window.AuthController ? window.AuthController.currentUser : null;
-      const userId = currentUser ? currentUser.id : "11 (Session/Auth)";
+      const sessionId = window.ApiClient ? window.ApiClient.getBuilderSessionId() : "session";
+      const userId = currentUser ? currentUser.id : `Anonymous (${sessionId})`;
 
+      console.log(`[Autosave] User ID: ${userId}`);
       if (activeId) {
         console.log(`[Autosave] Configuration ID: ${activeId}`);
-        console.log(`[Autosave] User ID: ${userId}`);
         await window.ConfigurationsApi.saveConfiguration(
           window.ConfigurationsApi.activeConfigName || "Default Auth Experience",
           currentState,
@@ -169,7 +169,6 @@ function triggerDebouncedAutosave(state) {
         );
         console.log("[Autosave] Save successful");
       } else {
-        console.log(`[Autosave] User ID: ${userId}`);
         const result = await window.ConfigurationsApi.saveConfiguration(
           "Default Auth Experience",
           currentState,
@@ -189,8 +188,6 @@ function triggerDebouncedAutosave(state) {
       }
     } catch (err) {
       console.warn("[Autosave] Save failed");
-      console.warn(`[Autosave] HTTP status: ${err.status || "Network/Offline"}`);
-      console.warn(`[Autosave] Error: ${err.message || err}`);
       if (indicatorText) {
         indicatorText.textContent = "Live Sync Active";
       }

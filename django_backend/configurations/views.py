@@ -66,24 +66,64 @@ def create_configuration_snapshot(config, user=None, change_source="manual_save"
         logger.warning(f"Failed to create history snapshot for config {config.id}: {ex}")
 
 
+class OwnershipError(PermissionError):
+    pass
+
+
 def save_configuration(configuration_data, config_name=None, landing_url=None, redirect_url=None, builder_session_id=None, user=None, config_id=None, is_manual=False):
     """
-    Authoritative helper function for upserting configurations with safe deep merge.
+    Authoritative helper function for upserting configurations with safe deep merge and strict ownership verification.
     """
-    existing = None
-
-    if config_id:
-        existing = AuthConfiguration.objects.filter(id=config_id, is_active=True).first()
-
-    if not existing and user and user.is_authenticated:
-        existing = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).first()
-        if not existing and builder_session_id:
-            existing = AuthConfiguration.objects.filter(builder_session_id=builder_session_id, is_active=True).first()
-
-    if not existing and builder_session_id:
-        existing = AuthConfiguration.objects.filter(builder_session_id=builder_session_id, is_active=True).first()
+    user_str = user.id if (user and user.is_authenticated) else f"Anonymous ({builder_session_id})"
+    logger.info(f"[Configuration] Authenticated user: {user_str}")
+    logger.info(f"[Configuration] Saving configuration")
 
     with transaction.atomic():
+        existing = None
+
+        if user and user.is_authenticated:
+            # 1. If config_id passed, verify ownership
+            if config_id:
+                target = AuthConfiguration.objects.filter(id=config_id, is_active=True).first()
+                if target:
+                    if target.user_id and int(target.user_id) != int(user.id):
+                        logger.warning(f"[Configuration] Ownership violation")
+                        raise OwnershipError("Access denied. You do not own this configuration.")
+                    existing = target
+
+            # 2. If no config_id or target wasn't found, find active config owned by user
+            if not existing:
+                existing = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).first()
+
+            # 3. If user has no active config, check for anonymous config to claim
+            if not existing and builder_session_id:
+                anon_config = AuthConfiguration.objects.filter(
+                    builder_session_id=builder_session_id,
+                    user_id__isnull=True,
+                    is_active=True
+                ).first()
+                if anon_config:
+                    existing = anon_config
+                    existing.user_id = user.id
+                    existing.builder_session_id = None
+
+        else:
+            # Anonymous session user
+            if config_id:
+                target = AuthConfiguration.objects.filter(id=config_id, is_active=True).first()
+                if target:
+                    if target.user_id is not None or (builder_session_id and target.builder_session_id != builder_session_id):
+                        logger.warning(f"[Configuration] Ownership violation")
+                        raise OwnershipError("Access denied. Session mismatch or owned configuration.")
+                    existing = target
+
+            if not existing and builder_session_id:
+                existing = AuthConfiguration.objects.filter(
+                    builder_session_id=builder_session_id,
+                    user_id__isnull=True,
+                    is_active=True
+                ).first()
+
         if existing:
             if config_name:
                 existing.configuration_name = config_name
@@ -99,8 +139,7 @@ def save_configuration(configuration_data, config_name=None, landing_url=None, r
                         existing.redirect_url = red_url
             if user and user.is_authenticated:
                 existing.user_id = user.id
-            if builder_session_id and not existing.builder_session_id:
-                existing.builder_session_id = builder_session_id
+                existing.builder_session_id = None
 
             existing.updated_at = timezone.now()
             existing.save()
@@ -108,11 +147,13 @@ def save_configuration(configuration_data, config_name=None, landing_url=None, r
             if is_manual:
                 create_configuration_snapshot(existing, user=user, change_source="manual_save")
 
+            logger.info(f"[Configuration] Active configuration: {existing.id}")
+            logger.info(f"[Configuration] Save successful")
             return existing, False  # created=False
         else:
             new_config = AuthConfiguration.objects.create(
                 user_id=user.id if (user and user.is_authenticated) else None,
-                builder_session_id=builder_session_id,
+                builder_session_id=builder_session_id if (not user or not user.is_authenticated) else None,
                 configuration_name=config_name or "My Auth Page Experience",
                 landing_url=landing_url,
                 redirect_url=redirect_url,
@@ -120,6 +161,8 @@ def save_configuration(configuration_data, config_name=None, landing_url=None, r
                 is_active=True
             )
             create_configuration_snapshot(new_config, user=user, change_source="initial_creation")
+            logger.info(f"[Configuration] Active configuration: {new_config.id}")
+            logger.info(f"[Configuration] Save successful")
             return new_config, True  # created=True
 
 
@@ -135,7 +178,10 @@ class ConfigurationListCreateView(APIView):
         try:
             session_id = get_builder_session_id(request)
             if request.user and request.user.is_authenticated:
+                logger.info(f"[Configuration] Authenticated user: {request.user.id}")
                 configs = AuthConfiguration.objects.filter(user_id=request.user.id, is_active=True).order_by("-updated_at")
+                if configs.exists():
+                    logger.info(f"[Configuration] Active configuration: {configs.first().id}")
             elif session_id:
                 configs = AuthConfiguration.objects.filter(builder_session_id=session_id, is_active=True).order_by("-updated_at")
             else:
@@ -188,8 +234,11 @@ class ConfigurationListCreateView(APIView):
                 },
                 status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
             )
+        except OwnershipError as oe:
+            logger.warning("[Configuration] Ownership violation")
+            return Response({"success": False, "message": str(oe)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
-            logger.error(f"[ConfigurationListCreateView POST] Error saving configuration: {str(e)}", exc_info=True)
+            logger.error(f"[Configuration] Save failed: {str(e)}", exc_info=True)
             return Response({"success": False, "message": "Failed to save configuration."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -202,6 +251,54 @@ class ConfigurationSaveView(APIView):
 
     def post(self, request):
         return ConfigurationListCreateView().post(request)
+
+
+class ConfigurationCurrentView(APIView):
+    """
+    Get or update the current active configuration for anonymous session or authenticated user.
+    GET /api/configurations/current
+    PUT /api/configurations/current
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        session_id = get_builder_session_id(request)
+        if request.user and request.user.is_authenticated:
+            logger.info(f"[Configuration] Authenticated user: {request.user.id}")
+            config = AuthConfiguration.objects.filter(user_id=request.user.id, is_active=True).order_by("-updated_at").first()
+        elif session_id:
+            config = AuthConfiguration.objects.filter(builder_session_id=session_id, is_active=True).order_by("-updated_at").first()
+        else:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not config:
+            logger.warning("[Configuration] Configuration not found")
+            return Response({"success": False, "message": "Configuration not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        logger.info(f"[Configuration] Active configuration: {config.id}")
+        return Response({"success": True, "configuration": ConfigurationSerializer(config).data}, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        session_id = get_builder_session_id(request)
+        user = request.user if (hasattr(request, "user") and request.user and request.user.is_authenticated) else None
+        data = request.data.get("configuration_data") or request.data
+
+        try:
+            config, created = save_configuration(
+                configuration_data=data,
+                config_name=request.data.get("configuration_name"),
+                landing_url=request.data.get("landing_url"),
+                redirect_url=request.data.get("redirect_url"),
+                builder_session_id=session_id,
+                user=user
+            )
+            return Response({"success": True, "configuration": ConfigurationSerializer(config).data}, status=status.HTTP_200_OK)
+        except OwnershipError as oe:
+            logger.warning("[Configuration] Ownership violation")
+            return Response({"success": False, "message": str(oe)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            logger.error(f"[Configuration] Save failed: {str(e)}", exc_info=True)
+            return Response({"success": False, "message": "Failed to save configuration."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ConfigurationCurrentView(APIView):
@@ -241,12 +338,17 @@ class ConfigurationDetailView(APIView):
         try:
             config = AuthConfiguration.objects.get(id=config_id, is_active=True)
         except AuthConfiguration.DoesNotExist:
+            logger.warning("[Configuration] Configuration not found")
             return None, Response({"success": False, "message": "Configuration not found."}, status=status.HTTP_404_NOT_FOUND)
 
         if request.user and request.user.is_authenticated:
+            logger.info(f"[Configuration] Authenticated user: {request.user.id}")
             if config.user_id and int(config.user_id) != int(request.user.id):
+                logger.warning("[Configuration] Ownership violation")
                 return None, Response({"success": False, "message": "Access denied. You do not own this configuration."}, status=status.HTTP_403_FORBIDDEN)
+            logger.info(f"[Configuration] Active configuration: {config.id}")
         elif session_id and config.builder_session_id and config.builder_session_id != session_id:
+            logger.warning("[Configuration] Ownership violation")
             return None, Response({"success": False, "message": "Access denied. Session mismatch."}, status=status.HTTP_403_FORBIDDEN)
 
         return config, None

@@ -37,13 +37,29 @@
           this.client.setAuthToken(response.token);
           this.currentUser = response.user;
           const configApi = typeof window !== "undefined" ? window.ConfigurationsApi : globalThis.ConfigurationsApi;
-          if (configApi && typeof configApi.getCurrentConfiguration === "function") {
-            configApi.getCurrentConfiguration().then(res => {
-              if (res && res.configuration) {
-                configApi.activeConfigId = res.configuration.id;
-                configApi.activeConfigName = res.configuration.configuration_name;
+          if (configApi) {
+            const configObj = response.configuration || (response.configuration_id ? { id: response.configuration_id } : null);
+            if (configObj) {
+              configApi.activeConfigId = configObj.id;
+              configApi.activeConfigName = configObj.configuration_name || "Default Auth Experience";
+              if (configObj.configuration_data && window.state && typeof window.state.loadState === "function") {
+                window.state.loadState(configObj.configuration_data);
+                if (window.controlsInstance) window.controlsInstance.syncControls(window.state.getState());
+                if (window.previewInstance) window.previewInstance.render();
               }
-            }).catch(() => {});
+            } else if (typeof configApi.getCurrentConfiguration === "function") {
+              configApi.getCurrentConfiguration().then(res => {
+                if (res && res.configuration) {
+                  configApi.activeConfigId = res.configuration.id;
+                  configApi.activeConfigName = res.configuration.configuration_name;
+                  if (res.configuration.configuration_data && window.state && typeof window.state.loadState === "function") {
+                    window.state.loadState(res.configuration.configuration_data);
+                    if (window.controlsInstance) window.controlsInstance.syncControls(window.state.getState());
+                    if (window.previewInstance) window.previewInstance.render();
+                  }
+                }
+              }).catch(() => {});
+            }
           }
         }
         return response;
@@ -76,13 +92,29 @@
           this.client.setAuthToken(response.token);
           this.currentUser = response.user;
           const configApi = typeof window !== "undefined" ? window.ConfigurationsApi : globalThis.ConfigurationsApi;
-          if (configApi && typeof configApi.getCurrentConfiguration === "function") {
-            configApi.getCurrentConfiguration().then(res => {
-              if (res && res.configuration) {
-                configApi.activeConfigId = res.configuration.id;
-                configApi.activeConfigName = res.configuration.configuration_name;
+          if (configApi) {
+            const configObj = response.configuration || (response.configuration_id ? { id: response.configuration_id } : null);
+            if (configObj) {
+              configApi.activeConfigId = configObj.id;
+              configApi.activeConfigName = configObj.configuration_name || "Default Auth Experience";
+              if (configObj.configuration_data && window.state && typeof window.state.loadState === "function") {
+                window.state.loadState(configObj.configuration_data);
+                if (window.controlsInstance) window.controlsInstance.syncControls(window.state.getState());
+                if (window.previewInstance) window.previewInstance.render();
               }
-            }).catch(() => {});
+            } else if (typeof configApi.getCurrentConfiguration === "function") {
+              configApi.getCurrentConfiguration().then(res => {
+                if (res && res.configuration) {
+                  configApi.activeConfigId = res.configuration.id;
+                  configApi.activeConfigName = res.configuration.configuration_name;
+                  if (res.configuration.configuration_data && window.state && typeof window.state.loadState === "function") {
+                    window.state.loadState(res.configuration.configuration_data);
+                    if (window.controlsInstance) window.controlsInstance.syncControls(window.state.getState());
+                    if (window.previewInstance) window.previewInstance.render();
+                  }
+                }
+              }).catch(() => {});
+            }
           }
         }
         return response;
@@ -103,25 +135,35 @@
       }
     }
 
-    async getCurrentUser() {
-      if (!this.client.getAuthToken()) return null;
-      try {
-        const response = await this.client.get("/auth/me");
+    getCurrentUser() {
+      if (!this.client.getAuthToken()) return Promise.resolve(null);
+      return this.client.get("/auth/me").then(response => {
         if (response && response.user) {
           this.currentUser = response.user;
           return response.user;
         }
-      } catch (err) {
+        return null;
+      }).catch(err => {
         console.warn("[Auth] Session check failed:", err.message);
         this.logout();
-      }
-      return null;
+        return null;
+      });
     }
 
     logout() {
       this.currentUser = null;
       if (this.client) {
         this.client.setAuthToken(null);
+      }
+      const configApi = typeof window !== "undefined" ? window.ConfigurationsApi : globalThis.ConfigurationsApi;
+      if (configApi) {
+        configApi.activeConfigId = null;
+        configApi.activeConfigName = "Default Auth Experience";
+      }
+      if (typeof window !== "undefined" && window.state && typeof window.state.reset === "function") {
+        window.state.reset();
+        if (window.controlsInstance) window.controlsInstance.syncControls(window.state.getState());
+        if (window.previewInstance) window.previewInstance.render();
       }
     }
 

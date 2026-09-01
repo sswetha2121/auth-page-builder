@@ -97,13 +97,33 @@
 /* 4. Full Background */
 .preview-root.layout-full-background,
 .fullscreen-preview-root.layout-full-background,
-.auth-preview-root.layout-full-background {
+.auth-preview-root.layout-full-background,
+.auth-preview-shell.layout-full-background,
+.layout-full-background {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
     background: var(--auth-background-color, #0f172a);
     background-image: var(--auth-background-image, none);
     background-size: var(--auth-background-size, cover);
     background-position: var(--auth-background-position, center);
     background-repeat: var(--auth-background-repeat, no-repeat);
 }
+
+.layout-full-background .auth-full-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: var(--auth-background-color, #0f172a);
+    background-image: var(--auth-background-image, none);
+    background-size: var(--auth-background-size, cover);
+    background-position: var(--auth-background-position, center);
+    background-repeat: var(--auth-background-repeat, no-repeat);
+}
+
+.layout-full-background .auth-full-background-overlay,
 .preview-root.layout-full-background::before,
 .fullscreen-preview-root.layout-full-background::before,
 .auth-preview-root.layout-full-background::before {
@@ -115,17 +135,25 @@
     opacity: var(--auth-overlay-opacity, 0.35);
     pointer-events: none;
 }
+
 .preview-root.layout-full-background .auth-image-section,
 .fullscreen-preview-root.layout-full-background .auth-image-section,
 .auth-preview-root.layout-full-background .auth-image-section {
     display: none !important;
 }
+
 .preview-root.layout-full-background .auth-form-section,
 .fullscreen-preview-root.layout-full-background .auth-form-section,
-.auth-preview-root.layout-full-background .auth-form-section {
+.auth-preview-root.layout-full-background .auth-form-section,
+.layout-full-background .auth-form-section {
+    position: relative;
     width: 100%;
+    min-height: 100vh;
     z-index: 2;
-    background: transparent;
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 5. Minimal Layout */
@@ -386,6 +414,60 @@
     color: #2563eb;
 }
 
+/* 2-Column Signup Layout matching SaaS Studio Reference */
+@media (min-width: 768px) {
+    .auth-card:has(.auth-page-signup-wrapper) {
+        max-width: 820px !important;
+        padding: 28px 32px !important;
+    }
+
+    .auth-page-signup-wrapper {
+        display: grid !important;
+        grid-template-columns: 260px minmax(0, 1fr) !important;
+        gap: 32px !important;
+        align-items: flex-start !important;
+    }
+
+    .auth-signup-branding-side {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        height: 100% !important;
+        padding-right: 20px !important;
+        border-right: 1px solid #f1f5f9 !important;
+    }
+
+    .auth-signup-illustration {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-top: 40px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .auth-3d-shield-badge {
+        width: 110px !important;
+        height: 110px !important;
+        border-radius: 28px !important;
+        background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%) !important;
+        box-shadow: 0 12px 30px -5px rgba(99, 102, 241, 0.22), 0 4px 10px rgba(0, 0, 0, 0.03) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1px solid #e0e7ff !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .auth-signup-branding-side {
+        margin-bottom: 16px !important;
+    }
+    .auth-signup-illustration {
+        display: none !important;
+    }
+}
+
 /* =========================================================
    BRANDING & LOGO (VISUAL SHAPES)
 ========================================================= */
@@ -458,44 +540,55 @@
    DEVICE PREVIEW FRAMES (AUTHORITATIVE SYSTEM)
 ========================================================= */
 .preview-workspace {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    background: #0f172a;
-    position: relative;
-    overflow: hidden;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: calc(100vh - 64px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #0f172a !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.preview-toolbar {
+    flex-shrink: 0 !important;
+    height: 56px !important;
+    z-index: 30 !important;
 }
 
 .preview-canvas {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: auto;
-    background: #0f172a;
-    padding: 0;
-    transition: all 0.2s ease;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    position: relative !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: #0f172a !important;
+    padding: 0 !important;
+    transition: all 0.2s ease !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #475569 #0f172a !important;
 }
 
 /* Desktop */
 .preview-canvas.device-desktop {
-    padding: 0;
-    background: transparent;
+    padding: 0 !important;
+    background: transparent !important;
 }
 .preview-canvas.device-desktop .preview-root {
-    width: 100%;
-    height: 100%;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    margin: 0;
+    width: 100% !important;
+    min-height: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
 }
 
 /* Tablet Frame */

@@ -62,6 +62,7 @@ async function runE2ETests() {
   testState.branding.logoSize = 80;
   testState.branding.uploadedLogo = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==";
   
+  testState.background.type = "uploaded";
   testState.background.color = "#0b1120";
   testState.background.uploadedImage = "data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==";
   

@@ -116,12 +116,31 @@ html, body {
 .auth-preview-root.layout-centered .auth-image-section { display: none !important; }
 .auth-preview-root.layout-centered .auth-form-section { width: 100%; background: transparent; }
 
-.auth-preview-root.layout-full-background {
+.auth-preview-root.layout-full-background,
+.layout-full-background {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  background-color: var(--auth-background-color, #0f172a);
   background-image: var(--auth-background-image, none);
   background-size: var(--auth-background-size, cover);
   background-position: var(--auth-background-position, center);
   background-repeat: var(--auth-background-repeat, no-repeat);
 }
+
+.layout-full-background .auth-full-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: var(--auth-background-color, #0f172a);
+  background-image: var(--auth-background-image, none);
+  background-size: var(--auth-background-size, cover);
+  background-position: var(--auth-background-position, center);
+  background-repeat: var(--auth-background-repeat, no-repeat);
+}
+
+.layout-full-background .auth-full-background-overlay,
 .auth-preview-root.layout-full-background::before {
   content: "";
   position: absolute;
@@ -132,7 +151,8 @@ html, body {
   pointer-events: none;
 }
 .auth-preview-root.layout-full-background .auth-image-section { display: none !important; }
-.auth-preview-root.layout-full-background .auth-form-section { width: 100%; z-index: 2; background: transparent; }
+.auth-preview-root.layout-full-background .auth-form-section,
+.layout-full-background .auth-form-section { width: 100%; z-index: 2; background: transparent !important; }
 
 .auth-preview-root.layout-minimal { background-color: #ffffff; }
 .auth-preview-root.layout-minimal .auth-image-section { display: none !important; }
@@ -831,6 +851,38 @@ ${config.customCSS || ""}
   <div class="auth-preview-root layout-${layoutType} form-horizontal-${formHPos} form-vertical-${formVPos}">
     <div class="auth-preview-shell">
       
+      ${layoutType === 'full-background' ? `
+      <div class="auth-full-background"></div>
+      <div class="auth-full-background-overlay"></div>
+      <div class="auth-form-section">
+        <div class="auth-card">
+          ${showBackToWeb ? `
+            <div class="auth-landing-link-bar">
+              <a href="${Utils.escapeHtml(landingUrl)}" class="auth-landing-link">
+                ${backToWebText}
+              </a>
+            </div>
+          ` : ""}
+
+          ${Templates.generateLogo(config)}
+
+          <div class="auth-page-container">
+            <div class="auth-page-tab-content" style="display: ${activePage === 'login' ? 'block' : 'none'};">
+              ${loginHTML}
+            </div>
+            <div class="auth-page-tab-content" style="display: ${activePage === 'signup' ? 'block' : 'none'};">
+              ${signupHTML}
+            </div>
+            <div class="auth-page-tab-content" style="display: ${activePage === 'forgotPassword' ? 'block' : 'none'};">
+              ${forgotHTML}
+            </div>
+            <div class="auth-page-tab-content" style="display: ${activePage === 'otp' ? 'block' : 'none'};">
+              ${otpHTML}
+            </div>
+          </div>
+        </div>
+      </div>
+      ` : `
       <!-- Visual Image / Background Section -->
       <div class="auth-image-section">
         <div class="auth-image-overlay"></div>
@@ -871,9 +923,9 @@ ${config.customCSS || ""}
               ${otpHTML}
             </div>
           </div>
-
         </div>
       </div>
+      `}
 
     </div>
   </div>
@@ -1375,7 +1427,27 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       zip.file("package.json", packageJsonTpl);
       zip.file(".env.example", envExampleTpl);
 
-      // 1. Single Source of Truth Config
+      // 1. Single Source of Truth Config with Clean Canonical Background Schema
+      const resolvedBgExport = (typeof AuthPageRenderer !== "undefined" && AuthPageRenderer.resolveBackground) 
+        ? AuthPageRenderer.resolveBackground(exportConfig)
+        : { type: "default", source: exportConfig.background?.selected || exportConfig.background?.image || "assets/backgrounds/background-1.svg" };
+
+      const cleanBgObj = {
+        type: exportConfig.background?.type || (resolvedBgExport.type === "image" ? "default" : resolvedBgExport.type),
+        selected: exportConfig.background?.selected || exportConfig.background?.image || resolvedBgExport.source || "",
+        image: exportConfig.background?.image || exportConfig.background?.selected || resolvedBgExport.source || "",
+        color: exportConfig.background?.color || "#0f172a",
+        gradientEnabled: Boolean(exportConfig.background?.gradientEnabled),
+        gradientStart: exportConfig.background?.gradientStart || "#0f172a",
+        gradientEnd: exportConfig.background?.gradientEnd || "#1e293b",
+        position: exportConfig.background?.position || "center",
+        size: exportConfig.background?.size || "cover",
+        repeat: exportConfig.background?.repeat || "no-repeat",
+        overlayEnabled: exportConfig.background?.overlayEnabled !== false,
+        overlayColor: exportConfig.background?.overlayColor || "#000000",
+        overlayOpacity: exportConfig.background?.overlayOpacity !== undefined ? exportConfig.background.overlayOpacity : 35
+      };
+
       const configJSON = {
         apiBaseUrl: exportConfig.urls?.authPageUrl || "http://localhost:8000/api",
         landingPageUrl: exportConfig.urls?.landingPageUrl || "",
@@ -1396,7 +1468,7 @@ class DevelopmentOTPProvider(BaseOTPProvider):
         authentication: exportConfig.authentication || {},
         branding: exportConfig.branding || {},
         layout: exportConfig.layout || {},
-        background: exportConfig.background || {},
+        background: cleanBgObj,
         card: exportConfig.card || {},
         typography: exportConfig.typography || {},
         button: exportConfig.button || {},

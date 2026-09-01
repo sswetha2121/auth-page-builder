@@ -23,6 +23,72 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def resolve_user_active_configuration(user, session_id=None):
+    """
+    Guarantees user has exactly one active configuration inside a transaction.atomic block.
+    Claims anonymous session configuration if present; creates default configuration if missing.
+    Returns the active AuthConfiguration instance.
+    """
+    from django.db import transaction
+    from django.utils import timezone
+    from configurations.models import AuthConfiguration
+
+    with transaction.atomic():
+        user_configs = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).order_by("-updated_at")
+        user_config = user_configs.first()
+
+        # Handle anonymous session transfer if session_id is present
+        if session_id:
+            anon_configs = AuthConfiguration.objects.filter(builder_session_id=session_id, user_id__isnull=True, is_active=True)
+            if anon_configs.exists():
+                primary_anon = anon_configs.order_by("-updated_at").first()
+                if not user_config:
+                    primary_anon.user_id = user.id
+                    primary_anon.builder_session_id = None
+                    primary_anon.updated_at = timezone.now()
+                    primary_anon.save(update_fields=["user_id", "builder_session_id", "updated_at"])
+                    user_config = primary_anon
+                    anon_configs.exclude(id=primary_anon.id).update(is_active=False)
+                else:
+                    if primary_anon.configuration_data:
+                        user_config.configuration_data = primary_anon.configuration_data
+                        user_config.updated_at = timezone.now()
+                        user_config.save()
+                    anon_configs.update(is_active=False)
+
+        # If user still has no active configuration, create a default active configuration
+        if not user_config:
+            default_data = {
+                "activePage": "login",
+                "previewMode": "desktop",
+                "redirect": {"enabled": True, "redirectUrl": "/dashboard", "redirectType": "url", "openInNewTab": False, "showSuccessMessage": True, "successMessage": "Authentication completed successfully.", "delay": 0},
+                "urls": {"landingPageUrl": "https://customerwebsite.com", "redirectUrl": "/dashboard", "showBackToWebsite": True, "backToWebsiteText": "Back to Website", "openInNewTab": False},
+                "layout": {"type": "split-left-image", "imageWidth": 50, "formHorizontalAlignment": "center", "formVerticalAlignment": "center", "formWidth": 460, "contentPadding": 48},
+                "background": {"type": "default", "selected": "assets/backgrounds/background-1.svg", "image": "assets/backgrounds/background-1.svg", "uploadedImage": "", "color": "#0f172a", "gradientEnabled": False, "gradientStart": "#0f172a", "gradientEnd": "#1e293b", "position": "center", "size": "cover", "repeat": "no-repeat", "overlayEnabled": True, "overlayColor": "#000000", "overlayOpacity": 35},
+                "branding": {"showLogo": True, "selectedLogo": "assets/logos/brand-shield.svg", "logo": "assets/logos/brand-shield.svg", "uploadedLogo": "", "logoSize": 64, "logoShape": "circle", "logoPosition": "center", "brandName": "Your Brand"},
+                "card": {"enabled": True, "backgroundColor": "#ffffff", "opacity": 100, "width": 460, "borderRadius": 20, "borderWidth": 1, "borderColor": "#e2e8f0", "shadowEnabled": True, "blurEnabled": False, "padding": 40},
+                "typography": {"fontFamily": "Inter, sans-serif", "titleColor": "#0f172a", "subtitleColor": "#64748b", "bodyColor": "#334155", "labelColor": "#475569", "titleSize": 32, "subtitleSize": 15, "titleWeight": "700"},
+                "button": {"backgroundType": "solid", "backgroundColor": "#2563eb", "gradientStart": "#2563eb", "gradientEnd": "#4f46e5", "textColor": "#ffffff", "borderRadius": 10, "height": 48, "shadow": True},
+                "social": {"enabled": True, "dividerText": "or continue with", "providers": {"google": True, "apple": True, "github": True}, "layout": "horizontal"},
+                "pages": {"login": {"title": "Welcome back", "subtitle": "Sign in to continue to your account", "buttonText": "Sign In", "emailEnabled": True, "passwordEnabled": True}}
+            }
+            user_config = AuthConfiguration.objects.create(
+                user=user,
+                configuration_name=f"{user.username}'s Auth Experience",
+                landing_url="https://customerwebsite.com",
+                redirect_url="/dashboard",
+                configuration_data=default_data,
+                is_active=True
+            )
+
+        # Deactivate any duplicate active configurations for this user
+        extra = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).exclude(id=user_config.id)
+        if extra.exists():
+            extra.update(is_active=False)
+
+        return user_config
+
+
 class RegisterView(APIView):
     """
     Register a new user account.
@@ -52,44 +118,25 @@ class RegisterView(APIView):
                 return Response({"success": False, "message": err_msg, "errors": errors}, status=status_code)
 
             from django.utils import timezone
+            from django.db import transaction
             from authentication.services.redirect_service import get_redirect_config, get_redirect_url
+            from configurations.serializers import ConfigurationSerializer
 
-            user = serializer.save()
-            user.last_login = timezone.now()
-            user.save(update_fields=["last_login"])
+            with transaction.atomic():
+                user = serializer.save()
+                user.last_login = timezone.now()
+                user.save(update_fields=["last_login"])
 
-            # Account linking inside transaction.atomic() (Rules 4, 7, 8)
-            session_id = (
-                (request.data.get("builder_session_id") if isinstance(request.data, dict) else None)
-                or request.META.get("HTTP_X_BUILDER_SESSION_ID")
-                or request.META.get("x-builder-session-id")
-            )
-            if session_id:
-                try:
-                    from django.db import transaction
-                    with transaction.atomic():
-                        from configurations.models import AuthConfiguration
-                        anon_configs = AuthConfiguration.objects.filter(builder_session_id=session_id, user_id__isnull=True, is_active=True)
-                        user_config = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).first()
-                        if anon_configs.exists():
-                            if not user_config:
-                                primary_anon = anon_configs.order_by("-updated_at").first()
-                                primary_anon.user_id = user.id
-                                primary_anon.save(update_fields=["user_id", "updated_at"])
-                                anon_configs.exclude(id=primary_anon.id).update(is_active=False)
-                            else:
-                                primary_anon = anon_configs.order_by("-updated_at").first()
-                                if primary_anon.configuration_data:
-                                    user_config.configuration_data = primary_anon.configuration_data
-                                    user_config.updated_at = timezone.now()
-                                    user_config.save()
-                                anon_configs.update(is_active=False)
-                except Exception as ex:
-                    logger.warning(f"[RegisterView] Ownership transfer warning: {str(ex)}")
+                session_id = (
+                    (request.data.get("builder_session_id") if isinstance(request.data, dict) else None)
+                    or request.META.get("HTTP_X_BUILDER_SESSION_ID")
+                    or request.META.get("x-builder-session-id")
+                )
+                user_config = resolve_user_active_configuration(user, session_id)
 
             token = generate_jwt_token(user)
             user_data = UserProfileSerializer(user).data
-            config_id = request.data.get("configuration_id") or request.data.get("config_id")
+            config_id = request.data.get("configuration_id") or request.data.get("config_id") or user_config.id
             redirect_obj = get_redirect_config(config_id, user.id)
             redirect_url = redirect_obj["redirectUrl"]
 
@@ -98,6 +145,9 @@ class RegisterView(APIView):
                     "success": True,
                     "message": "Registration successful.",
                     "user": user_data,
+                    "user_id": user.id,
+                    "configuration_id": user_config.id,
+                    "configuration": ConfigurationSerializer(user_config).data,
                     "token": token,
                     "redirect": redirect_obj,
                     "redirect_url": redirect_url,
@@ -134,45 +184,27 @@ class LoginView(APIView):
             return Response({"success": False, "message": str(err_msg)}, status=status.HTTP_401_UNAUTHORIZED)
 
         from django.utils import timezone
+        from django.db import transaction
         from authentication.services.redirect_service import get_redirect_config, get_redirect_url
+        from configurations.serializers import ConfigurationSerializer
 
         user = serializer.validated_data["user"]
-        user.last_login = timezone.now()
-        user.save(update_fields=["last_login"])
+        
+        with transaction.atomic():
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
 
-        # Account linking inside transaction.atomic() (Rules 4, 7, 8)
-        session_id = (
-            (request.data.get("builder_session_id") if isinstance(request.data, dict) else None)
-            or request.META.get("HTTP_X_BUILDER_SESSION_ID")
-            or request.META.get("x-builder-session-id")
-        )
-        if session_id:
-            try:
-                from django.db import transaction
-                with transaction.atomic():
-                    from configurations.models import AuthConfiguration
-                    anon_configs = AuthConfiguration.objects.filter(builder_session_id=session_id, user_id__isnull=True, is_active=True)
-                    user_config = AuthConfiguration.objects.filter(user_id=user.id, is_active=True).first()
-                    if anon_configs.exists():
-                        if not user_config:
-                            primary_anon = anon_configs.order_by("-updated_at").first()
-                            primary_anon.user_id = user.id
-                            primary_anon.save(update_fields=["user_id", "updated_at"])
-                            anon_configs.exclude(id=primary_anon.id).update(is_active=False)
-                        else:
-                            primary_anon = anon_configs.order_by("-updated_at").first()
-                            if primary_anon.configuration_data:
-                                user_config.configuration_data = primary_anon.configuration_data
-                                user_config.updated_at = timezone.now()
-                                user_config.save()
-                            anon_configs.update(is_active=False)
-            except Exception as ex:
-                logger.warning(f"[LoginView] Ownership transfer warning: {str(ex)}")
+            session_id = (
+                (request.data.get("builder_session_id") if isinstance(request.data, dict) else None)
+                or request.META.get("HTTP_X_BUILDER_SESSION_ID")
+                or request.META.get("x-builder-session-id")
+            )
+            user_config = resolve_user_active_configuration(user, session_id)
 
         token = generate_jwt_token(user)
         user_data = UserProfileSerializer(user).data
 
-        config_id = request.data.get("configuration_id") or request.data.get("config_id")
+        config_id = request.data.get("configuration_id") or request.data.get("config_id") or user_config.id
         redirect_obj = get_redirect_config(config_id, user.id)
         redirect_url = redirect_obj["redirectUrl"]
 
@@ -182,6 +214,9 @@ class LoginView(APIView):
                 "message": "Login successful.",
                 "token": token,
                 "user": user_data,
+                "user_id": user.id,
+                "configuration_id": user_config.id,
+                "configuration": ConfigurationSerializer(user_config).data,
                 "redirect": redirect_obj,
                 "redirect_url": redirect_url,
             },

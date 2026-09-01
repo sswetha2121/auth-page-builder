@@ -30,6 +30,13 @@ class AuthConfiguration(models.Model):
         db_table = "auth_configurations"
         managed = False
         ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(is_active=True, user__isnull=False),
+                name="one_active_configuration_per_user"
+            )
+        ]
 
     def __str__(self):
         owner = f"User: {self.user_id}" if self.user_id else f"Session: {self.builder_session_id}"

@@ -124,6 +124,7 @@ async function runDomTests() {
   // -------------------------------------------------------------
   // TEST 5: Upload Custom Background
   // -------------------------------------------------------------
+  window.state.set("background.type", "uploaded");
   window.state.set("background.uploadedImage", "data:image/png;base64,mockCustomBgData");
   window.state.set("background.image", "data:image/png;base64,mockCustomBgData");
   assert(5, getDynamicStyles().includes("mockCustomBgData"), "Custom background dataURL injected into dynamic CSS");
