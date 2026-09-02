@@ -729,7 +729,16 @@
     const showBackgroundText = imageSection.showText !== false;
     const bgHeading = escapeHtml(imageSection.text || "Experience the next generation of authentication.");
     const bgSubtext = escapeHtml(imageSection.subtext || "Fast, secure, and beautifully customized for your brand.");
-    const bgPosClass = `position-${imageSection.textPosition || 'center'}`;
+    let bgPosClass = "position-center";
+    if (imageSection.textPosition) {
+      bgPosClass = `position-${imageSection.textPosition}`;
+    } else if (imageSection.verticalPosition || imageSection.horizontalPosition) {
+      const v = imageSection.verticalPosition || "center";
+      const h = imageSection.horizontalPosition || "center";
+      if (v === "center" && h === "center") bgPosClass = "position-center";
+      else if (v === "center") bgPosClass = `position-${h}`;
+      else bgPosClass = `position-${v}-${h}`;
+    }
     const bgTextColor = imageSection.textColor || "#ffffff";
 
     const landingUrl = config.urls?.landingPageUrl || "";

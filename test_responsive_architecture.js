@@ -222,6 +222,31 @@ function runResponsiveTests() {
 
   console.log("  [PASS] Split Left layout Signup page image section stretches to match form section height (zero cutoff).");
 
+  // Test 10: Promotional Text Positioning Controls
+  renderer.renderPreview(previewRoot, {
+    config: {
+      activePage: "login",
+      previewMode: "desktop",
+      layout: { type: "split-left-image" },
+      imageSection: {
+        showText: true,
+        text: "Experience the next generation of authentication.",
+        verticalPosition: "top",
+        horizontalPosition: "left"
+      }
+    },
+    page: "login",
+    device: "desktop"
+  });
+
+  const promoContent = previewRoot.querySelector('.auth-image-content');
+  if (!promoContent || !promoContent.classList.contains('position-top-left')) {
+    console.error("  [FAIL] Promotional text positioning class 'position-top-left' not applied to image section content.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Promotional text positioning correctly resolves 'position-top-left' on image section.");
+
   console.log("==================================================");
   console.log("RESPONSIVE PREVIEW ARCHITECTURE: ALL PASSED");
   console.log("==================================================");
