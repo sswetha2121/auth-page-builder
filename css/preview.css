@@ -1371,7 +1371,7 @@
 .device-tablet .layout-split-left-image .auth-preview-shell,
 .device-tablet .layout-split-right-image .auth-preview-shell {
     display: grid !important;
-    grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1.1fr);
+    grid-template-columns: 42% 58% !important;
 }
 
 .preview-device-tablet.is-narrow .auth-preview-shell,
@@ -1384,10 +1384,21 @@
 .device-tablet .auth-card {
     padding: 28px 22px !important;
     max-width: 440px;
+    width: calc(100% - 24px) !important;
+    margin: 0 auto !important;
 }
 
-.preview-device-tablet .auth-image-text {
-    font-size: 24px !important;
+.preview-device-tablet .auth-image-text-block,
+.device-tablet .auth-image-text-block {
+    max-width: 90% !important;
+}
+
+.preview-device-tablet .auth-image-text,
+.device-tablet .auth-image-text {
+    font-size: clamp(20px, 3.2vw, 28px) !important;
+    line-height: 1.25 !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
 }
 
 /* ---------------------------------------------------------
