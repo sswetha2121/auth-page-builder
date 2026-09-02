@@ -172,6 +172,26 @@ function runResponsiveTests() {
 
   console.log("  [PASS] Fullscreen Desktop preview correctly applies 'device-desktop' wide unconstrained layout.");
 
+  // Test 8: Signup Page Full Background Scroll Height Coverage
+  renderer.renderPreview(previewRoot, {
+    config: {
+      activePage: "signup",
+      previewMode: "desktop",
+      layout: { type: "full-background" },
+      background: { type: "image", image: "assets/backgrounds/background-1.svg" }
+    },
+    page: "signup",
+    device: "desktop"
+  });
+
+  const signupShell = previewRoot.querySelector('.auth-preview-shell');
+  if (!signupShell || !signupShell.style.backgroundImage || signupShell.style.backgroundImage === "none") {
+    console.error("  [FAIL] Background image not applied directly to auth-preview-shell scroll container.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Signup page full background applied directly to '.auth-preview-shell' (spans 100% of scroll height).");
+
   console.log("==================================================");
   console.log("RESPONSIVE PREVIEW ARCHITECTURE: ALL PASSED");
   console.log("==================================================");

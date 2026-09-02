@@ -630,22 +630,25 @@
     const resolvedBg = resolveBackground(config);
     const fullBgEl = root.querySelector(".auth-full-background");
     const imageSectionEl = root.querySelector(".auth-image-section");
+    const shellEl = root.querySelector(".auth-preview-shell");
 
     if (layoutType === "full-background") {
-      const targetBgEl = fullBgEl || root;
-      if (resolvedBg.type === "image" && resolvedBg.source) {
-        targetBgEl.style.backgroundImage = `url("${resolvedBg.source}")`;
-        targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
-      } else if (resolvedBg.type === "color" || resolvedBg.type === "gradient") {
-        targetBgEl.style.backgroundImage = resolvedBg.type === "gradient" ? resolvedBg.color : "none";
-        targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
-      } else {
-        targetBgEl.style.backgroundImage = "none";
-        targetBgEl.style.backgroundColor = "transparent";
-      }
-      targetBgEl.style.backgroundSize = resolvedBg.size;
-      targetBgEl.style.backgroundPosition = resolvedBg.position;
-      targetBgEl.style.backgroundRepeat = resolvedBg.repeat;
+      const bgTargets = [fullBgEl, root, shellEl].filter(Boolean);
+      bgTargets.forEach(targetBgEl => {
+        if (resolvedBg.type === "image" && resolvedBg.source) {
+          targetBgEl.style.backgroundImage = `url("${resolvedBg.source}")`;
+          targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+        } else if (resolvedBg.type === "color" || resolvedBg.type === "gradient") {
+          targetBgEl.style.backgroundImage = resolvedBg.type === "gradient" ? resolvedBg.color : "none";
+          targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+        } else {
+          targetBgEl.style.backgroundImage = "none";
+          targetBgEl.style.backgroundColor = "transparent";
+        }
+        targetBgEl.style.backgroundSize = resolvedBg.size;
+        targetBgEl.style.backgroundPosition = resolvedBg.position;
+        targetBgEl.style.backgroundRepeat = resolvedBg.repeat;
+      });
     } else {
       if (imageSectionEl) {
         if (resolvedBg.type === "image" && resolvedBg.source) {
