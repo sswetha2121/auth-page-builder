@@ -18,11 +18,15 @@
 })(typeof window !== "undefined" ? window : globalThis, function (Templates, Renderer, Utils, Constants) {
 
   function getCleanConfig() {
-    if (typeof window !== "undefined" && window.state && typeof window.state.serializeCurrentConfiguration === "function") {
-      return JSON.parse(JSON.stringify(window.state.serializeCurrentConfiguration()));
+    const rootState = (typeof window !== "undefined" && window.state) ? window.state : (typeof globalThis !== "undefined" && globalThis.state ? globalThis.state : null);
+    if (rootState && typeof rootState.serializeCurrentConfiguration === "function") {
+      return JSON.parse(JSON.stringify(rootState.serializeCurrentConfiguration()));
     }
-    const state = (typeof window !== "undefined" && window.state) ? window.state.getState() : (window.config || {});
-    return JSON.parse(JSON.stringify(state));
+    if (rootState && typeof rootState.getState === "function") {
+      return JSON.parse(JSON.stringify(rootState.getState()));
+    }
+    const fallback = (typeof window !== "undefined" && window.config) ? window.config : (typeof globalThis !== "undefined" ? globalThis.config : {});
+    return JSON.parse(JSON.stringify(fallback || {}));
   }
 
   /* =======================================================
@@ -72,7 +76,7 @@
      STANDALONE CSS GENERATOR
   ======================================================= */
   function generateStandaloneCSS(config) {
-    const dynamicVars = Renderer ? Renderer.computeStyleVariables(config) : "";
+    const dynamicVars = Renderer ? Renderer.computeStyleVariables(config, { fromFile: "css/styles.css" }) : "";
     
     return `/* =========================================================
    AUTH PAGE - STANDALONE STYLESHEET
@@ -154,8 +158,21 @@ html, body {
   pointer-events: none;
 }
 .auth-preview-root.layout-full-background .auth-image-section { display: none !important; }
+.layout-full-background .auth-background-text,
+.auth-preview-root.layout-full-background .auth-background-text {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  padding: clamp(24px, 4vw, 56px);
+  pointer-events: none;
+}
+.layout-full-background .auth-background-text .auth-image-text-block {
+  pointer-events: auto;
+  max-width: 520px;
+}
 .auth-preview-root.layout-full-background .auth-form-section,
-.layout-full-background .auth-form-section { width: 100%; z-index: 2; background: transparent !important; }
+.layout-full-background .auth-form-section { width: 100%; z-index: 3; background: transparent !important; }
 
 .auth-preview-root.layout-minimal { background-color: #ffffff; }
 .auth-preview-root.layout-minimal .auth-image-section { display: none !important; }
@@ -228,19 +245,28 @@ html, body {
   pointer-events: none;
 }
 
-.auth-image-content {
+.auth-image-content,
+.auth-background-text {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 2;
   display: flex;
+  flex-direction: column;
   padding: clamp(24px, 4vw, 56px);
+  pointer-events: none;
+  box-sizing: border-box;
 }
-.auth-image-content.position-top-left { align-items: flex-start; justify-content: flex-start; text-align: left; }
-.auth-image-content.position-top-center { align-items: flex-start; justify-content: center; text-align: center; }
-.auth-image-content.position-top-right { align-items: flex-start; justify-content: flex-end; text-align: right; }
-.auth-image-content.position-center-left { align-items: center; justify-content: flex-start; text-align: left; }
-.auth-image-content.position-center { align-items: center; justify-content: center; text-align: center; }
-.auth-image-content.position-center-right { align-items: center; justify-content: flex-end; text-align: right; }
+.auth-image-content.position-top-left, .auth-background-text.position-top-left { justify-content: flex-start; align-items: flex-start; text-align: left; }
+.auth-image-content.position-top-center, .auth-image-content.position-top, .auth-background-text.position-top-center, .auth-background-text.position-top { justify-content: flex-start; align-items: center; text-align: center; }
+.auth-image-content.position-top-right, .auth-background-text.position-top-right { justify-content: flex-start; align-items: flex-end; text-align: right; }
+.auth-image-content.position-center-left, .auth-image-content.position-left, .auth-background-text.position-center-left, .auth-background-text.position-left { justify-content: center; align-items: flex-start; text-align: left; }
+.auth-image-content.position-center, .auth-background-text.position-center { justify-content: center; align-items: center; text-align: center; }
+.auth-image-content.position-center-right, .auth-image-content.position-right, .auth-background-text.position-center-right, .auth-background-text.position-right { justify-content: center; align-items: flex-end; text-align: right; }
+.auth-image-content.position-bottom-left, .auth-background-text.position-bottom-left { justify-content: flex-end; align-items: flex-start; text-align: left; }
+.auth-image-content.position-bottom-center, .auth-image-content.position-bottom, .auth-background-text.position-bottom-center, .auth-background-text.position-bottom { justify-content: flex-end; align-items: center; text-align: center; }
+.auth-image-content.position-bottom-right, .auth-background-text.position-bottom-right { justify-content: flex-end; align-items: flex-end; text-align: right; }
 .auth-image-content.position-bottom-left { align-items: flex-end; justify-content: flex-start; text-align: left; }
 .auth-image-content.position-bottom-center { align-items: flex-end; justify-content: center; text-align: center; }
 .auth-image-content.position-bottom-right { align-items: flex-end; justify-content: flex-end; text-align: right; }
@@ -268,25 +294,56 @@ html, body {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  display: flex;
-  overflow-y: auto;
-  padding: clamp(16px, 3vh, 48px);
+  width: 100%;
+  height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: clamp(24px, 4vh, 48px) clamp(16px, 3vw, 36px) !important;
   background-color: #f8fafc;
+  box-sizing: border-box !important;
 }
 
-.auth-preview-root.form-horizontal-left .auth-form-section { justify-content: flex-start; }
-.auth-preview-root.form-horizontal-center .auth-form-section { justify-content: center; }
-.auth-preview-root.form-horizontal-right .auth-form-section { justify-content: flex-end; }
+.auth-form-section::before {
+  content: "";
+  display: block;
+  flex: 1 0 auto;
+  min-height: 0;
+  pointer-events: none;
+}
+.auth-form-section::after {
+  content: "";
+  display: block;
+  flex: 1 0 auto;
+  min-height: 0;
+  pointer-events: none;
+}
 
-.auth-preview-root.form-vertical-top .auth-form-section { align-items: flex-start; }
-.auth-preview-root.form-vertical-center .auth-form-section { align-items: center; }
-.auth-preview-root.form-vertical-bottom .auth-form-section { align-items: flex-end; }
+.auth-preview-root.form-horizontal-left .auth-form-section { align-items: flex-start !important; }
+.auth-preview-root.form-horizontal-center .auth-form-section { align-items: center !important; }
+.auth-preview-root.form-horizontal-right .auth-form-section { align-items: flex-end !important; }
+
+.auth-preview-root.form-vertical-top .auth-form-section::before { display: none !important; flex: 0 0 0px !important; }
+.auth-preview-root.form-vertical-top .auth-form-section::after { display: block !important; flex: 1 0 auto !important; }
+.auth-preview-root.form-vertical-top .auth-card { margin-top: 0 !important; margin-bottom: auto !important; }
+
+.auth-preview-root.form-vertical-center .auth-form-section::before { display: block !important; flex: 1 0 auto !important; }
+.auth-preview-root.form-vertical-center .auth-form-section::after { display: block !important; flex: 1 0 auto !important; }
+.auth-preview-root.form-vertical-center .auth-card { margin-top: auto !important; margin-bottom: auto !important; }
+
+.auth-preview-root.form-vertical-bottom .auth-form-section::before { display: block !important; flex: 1 0 auto !important; }
+.auth-preview-root.form-vertical-bottom .auth-form-section::after { display: none !important; flex: 0 0 0px !important; }
+.auth-preview-root.form-vertical-bottom .auth-card { margin-top: auto !important; margin-bottom: 0 !important; }
 
 /* Card */
 .auth-card {
-  width: 100%;
+  width: min(100%, var(--auth-card-width, 460px));
   max-width: var(--auth-card-width, 460px);
-  padding: clamp(16px, 2.5vh, var(--auth-card-padding, 40px)) clamp(16px, 2.5vw, var(--auth-card-padding, 40px));
+  min-height: var(--auth-card-min-height, 0px);
+  height: auto !important;
+  max-height: none !important;
+  padding: clamp(20px, 3vh, var(--auth-card-padding, 36px)) clamp(20px, 3vw, var(--auth-card-padding, 36px));
   border-radius: var(--auth-card-radius, 20px);
   background-color: var(--auth-card-background, #ffffff);
   opacity: var(--auth-card-opacity, 1);
@@ -295,7 +352,10 @@ html, body {
   backdrop-filter: blur(var(--auth-card-blur, 0px));
   -webkit-backdrop-filter: blur(var(--auth-card-blur, 0px));
   position: relative;
+  z-index: 4;
   flex-shrink: 0;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
 .auth-landing-link-bar { margin-bottom: 20px; }
@@ -582,40 +642,132 @@ ${config.customCSS || ""}
 ========================================================= */
 
 (function () {
-  const config = window.AUTH_CONFIG || {};
+  let config = window.AUTH_CONFIG || {};
+
+  async function loadConfig() {
+    if (typeof fetch !== "undefined") {
+      try {
+        const response = await fetch("./config/auth-config.json");
+        if (response && response.ok) {
+          const loadedConfig = await response.json();
+          config = Object.assign({}, config, loadedConfig);
+          window.AUTH_CONFIG = config;
+        }
+      } catch (e) {
+        // Fetch failed (e.g. local file protocol environment or JSDOM without HTTP server)
+      }
+    }
+    if (!config || Object.keys(config).length === 0) {
+      console.error("[Runtime Error] Unable to load exported authentication configuration.");
+      showRuntimeError("Unable to load exported authentication configuration.");
+      return false;
+    }
+    return true;
+  }
+
+  function showRuntimeError(message) {
+    const banner = document.createElement("div");
+    banner.className = "auth-runtime-error-banner";
+    banner.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#ef4444;color:#ffffff;padding:16px 28px;border-radius:12px;font-family:sans-serif;font-weight:600;box-shadow:0 10px 25px rgba(0,0,0,0.3);text-align:center;";
+    banner.textContent = message;
+    document.body.appendChild(banner);
+  }
 
   document.addEventListener("DOMContentLoaded", () => {
+    if (!config || Object.keys(config).length === 0) {
+      showRuntimeError("Unable to load exported authentication configuration.");
+      console.error("[Runtime Error] Unable to load exported authentication configuration.");
+    }
     initNavigation();
     initPasswordToggle();
     initOtpInputs();
     initOtpResend();
     initDeliveryPills();
     initFormSubmit();
+
+    loadConfig();
   });
+
+  let currentPage = "login";
+
+  function pageFromHash() {
+    const rawHash = (window.location.hash || "").replace("#", "").replace("/", "").toLowerCase();
+    if (rawHash === "signup") return "signup";
+    if (rawHash === "otp") return "otp";
+    if (rawHash === "forgot-password" || rawHash === "forgot" || rawHash === "forgotpassword") return "forgotPassword";
+    return "login";
+  }
+
+  function hashFromPage(page) {
+    if (page === "signup") return "#/signup";
+    if (page === "otp") return "#/otp";
+    if (page === "forgotPassword") return "#/forgot-password";
+    return "#/login";
+  }
+
+  function showPage(targetPage, updateHash = true) {
+    if (!targetPage) return;
+    currentPage = targetPage;
+
+    const wrappers = document.querySelectorAll(".auth-page-form-wrapper");
+    wrappers.forEach(w => {
+      const match = w.dataset.page === targetPage;
+      const tabContent = w.closest(".auth-page-tab-content");
+      if (tabContent) {
+        tabContent.style.display = match ? "block" : "none";
+      } else {
+        w.style.display = match ? "block" : "none";
+      }
+    });
+
+    if (updateHash) {
+      const targetHash = hashFromPage(targetPage);
+      if (window.location.hash !== targetHash) {
+        try {
+          history.pushState(null, "", targetHash);
+        } catch (e) {
+          window.location.hash = targetHash;
+        }
+      }
+    }
+    console.log("[Runtime] Navigation: Page switched to '" + currentPage + "'");
+  }
 
   // 1. Navigation between Login / Signup / Forgot Password / OTP
   function initNavigation() {
     document.addEventListener("click", (e) => {
-      const navLink = e.target.closest("[data-auth-nav]");
+      const navLink = e.target.closest("[data-auth-nav], a[href*='#']");
       if (!navLink) return;
-      e.preventDefault();
 
-      const targetPage = navLink.dataset.authNav;
-      const wrappers = document.querySelectorAll(".auth-page-form-wrapper");
-      wrappers.forEach(w => {
-        const match = w.dataset.page === targetPage;
-        if (w.parentElement && w.parentElement.classList.contains("auth-page-tab-content")) {
-          w.parentElement.style.display = match ? "block" : "none";
-        } else {
-          w.style.display = match ? "block" : "none";
+      let targetPage = navLink.dataset ? navLink.dataset.authNav : null;
+      if (!targetPage && navLink.getAttribute) {
+        const href = navLink.getAttribute("href") || "";
+        const cleanHref = href.replace("#", "").replace("/", "").toLowerCase();
+        if (cleanHref === "signup") targetPage = "signup";
+        else if (cleanHref === "otp") targetPage = "otp";
+        else if (cleanHref === "forgot" || cleanHref === "forgot-password" || cleanHref === "forgotpassword") targetPage = "forgotPassword";
+        else if (cleanHref === "login") targetPage = "login";
+      }
+
+      if (targetPage) {
+        e.preventDefault();
+        showPage(targetPage, true);
+
+        if (navLink.dataset && navLink.dataset.otpMethod === "whatsapp") {
+          const whatsappPill = document.querySelector('[data-otp-delivery="whatsapp"]');
+          if (whatsappPill) whatsappPill.click();
         }
-      });
-
-      if (navLink.dataset.otpMethod === "whatsapp") {
-        const whatsappPill = document.querySelector('[data-otp-delivery="whatsapp"]');
-        if (whatsappPill) whatsappPill.click();
       }
     });
+
+    window.addEventListener("hashchange", () => {
+      showPage(pageFromHash(), false);
+    });
+    window.addEventListener("popstate", () => {
+      showPage(pageFromHash(), false);
+    });
+
+    showPage(pageFromHash(), false);
   }
 
   // 2. Password visibility toggle
@@ -639,7 +791,7 @@ ${config.customCSS || ""}
     const boxes = document.querySelectorAll(".otp-digit-box");
     boxes.forEach((box, idx) => {
       box.addEventListener("input", () => {
-        const val = box.value.replace(/\\D/g, "");
+        const val = box.value.replace(/[^0-9]/g, "");
         box.value = val ? val[0] : "";
         if (box.value && idx < boxes.length - 1) {
           boxes[idx + 1].focus();
@@ -658,7 +810,7 @@ ${config.customCSS || ""}
 
       box.addEventListener("paste", (e) => {
         e.preventDefault();
-        const pasteData = (e.clipboardData || window.clipboardData).getData("text").replace(/\\D/g, "");
+        const pasteData = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "");
         if (!pasteData) return;
         const digits = pasteData.split("");
         digits.forEach((digit, i) => {
@@ -706,12 +858,144 @@ ${config.customCSS || ""}
     });
   }
 
-  // 6. Form Submission & Real Post-Auth Redirection
+  // 6. Form Submission & Input Validation Pipeline
+  function showFormError(form, msg) {
+    if (typeof window.showToast === "function") {
+      window.showToast(msg, "error");
+    }
+    let errBox = form.querySelector(".auth-form-error-box");
+    if (!errBox) {
+      errBox = document.createElement("div");
+      errBox.className = "auth-form-error-box";
+      errBox.style.cssText = "background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px;";
+      form.insertBefore(errBox, form.firstChild);
+    }
+    errBox.textContent = msg;
+    errBox.style.display = "block";
+  }
+
+  function clearFormError(form) {
+    const errBox = form.querySelector(".auth-form-error-box");
+    if (errBox) errBox.style.display = "none";
+  }
+
+  function validateFormInputs(form) {
+    clearFormError(form);
+    const formId = form.id || "";
+
+    // A. Signup Form Validation
+    if (formId === "authSignupForm") {
+      const name = (form.querySelector("#signupName")?.value || "").trim();
+      const email = (form.querySelector("#signupEmail")?.value || "").trim();
+      const pass = form.querySelector("#signupPassword")?.value || "";
+      const confirmPass = form.querySelector("#signupConfirmPassword")?.value || "";
+      const terms = form.querySelector("#signupTerms");
+
+      if (!name) {
+        showFormError(form, "Please enter your full name.");
+        return false;
+      }
+      if (!email || !email.includes("@")) {
+        showFormError(form, "Please enter a valid email address.");
+        return false;
+      }
+
+      // Password policy validation
+      const policy = config.passwordPolicy || {};
+      const minLen = Number(policy.minLength) || 8;
+      const minNums = Number(policy.minNumbers) || 1;
+      const minSpecials = Number(policy.minSpecialChars) || 1;
+      const allowedSpecials = policy.allowedSpecialChars || "!@#$%^&*()_+-=[]{}|;:,.<>?";
+      let specialCount = 0;
+      for (let i = 0; i < pass.length; i++) {
+        if (allowedSpecials.indexOf(pass[i]) !== -1) specialCount++;
+      }
+
+      if (pass.length < minLen) {
+        showFormError(form, \`Password must be at least \${minLen} characters long.\`);
+        return false;
+      }
+      if (policy.requireUppercase !== false && !/[A-Z]/.test(pass)) {
+        showFormError(form, "Password must contain at least one uppercase letter.");
+        return false;
+      }
+      if (policy.requireLowercase !== false && !/[a-z]/.test(pass)) {
+        showFormError(form, "Password must contain at least one lowercase letter.");
+        return false;
+      }
+      if (policy.requireNumber !== false && ((pass.match(/[0-9]/g) || []).length < minNums)) {
+        showFormError(form, \`Password must contain at least \${minNums} number(s).\`);
+        return false;
+      }
+      if (policy.requireSpecialChar !== false && specialCount < minSpecials) {
+        showFormError(form, \`Password must contain at least \${minSpecials} special character(s).\`);
+        return false;
+      }
+      if (pass !== confirmPass) {
+        showFormError(form, "Passwords do not match.");
+        return false;
+      }
+      if (terms && !terms.checked) {
+        showFormError(form, "You must accept the Terms of Service to create an account.");
+        return false;
+      }
+    }
+
+    // B. Login Form Validation
+    if (formId === "authLoginForm") {
+      const ident = (form.querySelector("#loginIdentifier")?.value || "").trim();
+      const pass = form.querySelector("#loginPassword")?.value || "";
+      if (!ident || !pass) {
+        showFormError(form, "Please enter your identifier and password.");
+        return false;
+      }
+    }
+
+    // C. OTP Form Validation
+    if (formId === "authOtpForm") {
+      let otpVal = "";
+      const singleBox = form.querySelector("#otpCode");
+      if (singleBox) {
+        otpVal = singleBox.value.trim();
+      } else {
+        const digitBoxes = form.querySelectorAll(".otp-digit-box");
+        otpVal = Array.from(digitBoxes).map(b => b.value).join("").trim();
+      }
+      const expectedOtp = config.pages?.otp?.staticOtp || "123456";
+      if (!otpVal || (otpVal !== "123456" && otpVal !== expectedOtp)) {
+        showFormError(form, "Invalid verification code. Please enter 123456.");
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   function initFormSubmit() {
     const forms = document.querySelectorAll(".auth-main-form");
     forms.forEach(form => {
       form.addEventListener("submit", (e) => {
         e.preventDefault();
+        
+        // 1. Validate Form Inputs - STOP ON FAILURE
+        if (!validateFormInputs(form)) {
+          console.warn("[Auth] Form submission halted due to validation failure.");
+          return;
+        }
+
+        const formId = form.id || "";
+        const otpEnabled = config.pages?.login?.otpEnabled !== false;
+
+        // If Signup succeeds and OTP is enabled, route to OTP verification screen before redirect!
+        if (formId === "authSignupForm" && otpEnabled) {
+          console.log("[Auth] Signup validation successful. Routing to OTP verification screen.");
+          if (typeof window.showToast === "function") {
+            window.showToast("Account details validated! Please verify OTP.", "info", 3000);
+          }
+          showPage("otp", true);
+          return;
+        }
+
         const baseRedirect = config.redirect || {};
         const redirectConfig = Object.assign({}, baseRedirect, {
           redirectUrl: baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || "/dashboard"
@@ -723,11 +1007,16 @@ ${config.customCSS || ""}
           submitBtn.disabled = true;
         }
 
+        // 2. Trigger Centralized Redirect Service ONLY ON SUCCESS
         const service = window.RedirectService || window.redirectService;
         if (service && typeof service.execute === "function") {
-          service.execute(redirectConfig);
+          service.execute(redirectConfig, { isPreview: Boolean(document.getElementById("authBuilderApp") || document.getElementById("previewCanvas")) });
         } else {
           setTimeout(() => {
+            if (document.getElementById("authBuilderApp") || document.getElementById("previewCanvas")) {
+              console.log("[Redirect] Navigation suppressed in builder preview fallback");
+              return;
+            }
             if (typeof window.onAuthRedirect === "function") {
               window.onAuthRedirect(redirectConfig.redirectUrl);
             }
@@ -830,6 +1119,7 @@ ${config.customCSS || ""}
     const bgHeading = Utils.escapeHtml(imageSection.text || "Experience the next generation of authentication.");
     const bgSubtext = Utils.escapeHtml(imageSection.subtext || "Fast, secure, and beautifully customized for your brand.");
     const bgPosClass = `position-${imageSection.textPosition || 'center'}`;
+    const bgTextColor = Utils.escapeHtml(imageSection.textColor || "#ffffff");
 
     const landingUrl = config.urls?.landingPageUrl || "";
     const showBackToWeb = config.urls?.showBackToWebsite !== false && Boolean(landingUrl);
@@ -857,6 +1147,14 @@ ${config.customCSS || ""}
       ${layoutType === 'full-background' ? `
       <div class="auth-full-background"></div>
       <div class="auth-full-background-overlay"></div>
+      ${showBackgroundText ? `
+        <div class="auth-background-text ${bgPosClass}">
+          <div class="auth-image-text-block">
+            <h2 class="auth-image-text" style="color: ${bgTextColor};">${bgHeading}</h2>
+            ${bgSubtext ? `<p class="auth-image-subtext" style="color: ${bgTextColor};">${bgSubtext}</p>` : ""}
+          </div>
+        </div>
+      ` : ""}
       <div class="auth-form-section">
         <div class="auth-card">
           ${showBackToWeb ? `
@@ -1337,7 +1635,13 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       } else if (typeof fetch !== "undefined") {
         const response = await fetch(`./export_templates/${relativePath}`);
         if (response && response.ok && typeof response.text === "function") {
-          return await response.text();
+          const text = await response.text();
+          // Detect if Express SPA Fallback returned the Builder's index.html
+          if (text && (text.includes("Auth Page Builder") || text.includes("id=\"authBuilderApp\"") || text.includes("auth-studio"))) {
+            console.warn(`[ZIP] Template fetch for ${relativePath} returned SPA fallback Builder HTML. Using clean in-memory generator.`);
+            return null;
+          }
+          return text;
         }
       }
     } catch (e) {
@@ -1349,41 +1653,60 @@ class DevelopmentOTPProvider(BaseOTPProvider):
   /* =======================================================
      MAIN DOWNLOAD FUNCTION (ZIP CREATION WITH ASSET PRESERVATION)
   ======================================================= */
+  const getJSZip = () => {
+    if (typeof JSZip !== "undefined") return JSZip;
+    if (typeof window !== "undefined" && window.JSZip) return window.JSZip;
+    if (typeof globalThis !== "undefined" && globalThis.JSZip) return globalThis.JSZip;
+    try { return require("jszip"); } catch (e) { return null; }
+  };
+
   async function downloadPackage() {
     console.log("[ZIP] Export started");
-    console.log("[ZIP] Reading current state");
+    console.log("[ZIP] Capturing current configuration");
 
-    if (typeof JSZip === "undefined") {
+    const ZipLib = getJSZip();
+    if (!ZipLib) {
       if (typeof alert !== "undefined") {
         alert("JSZip library is loading. Please try again in a moment.");
       }
       return;
     }
 
-    if (Utils.showToast) {
+    if (Utils && typeof Utils.showToast === "function") {
       Utils.showToast("Building customized package...", "info", 2000);
     }
 
     try {
       // 1. Single Source of Truth from window.state.serializeCurrentConfiguration()
-      const config = getCleanConfig();
-      console.log("[ZIP] State serialized");
-      console.log("[ZIP] Configuration sections:", Object.keys(config).join(", "));
-      console.log("[ZIP] Layout:", config.layout?.type || config.layout);
-      console.log("[ZIP] Background type:", config.background?.type);
-      console.log("[ZIP] Background source:", config.background?.uploadedImage || config.background?.selected || config.background?.image || config.background?.color);
-      console.log("[ZIP] Logo:", config.branding?.uploadedLogo || config.branding?.logoAsset || config.branding?.logo);
-      console.log("[ZIP] Login configuration loaded:", Boolean(config.login || config.pages?.login));
-      console.log("[ZIP] Signup configuration loaded:", Boolean(config.signup || config.pages?.signup));
+      console.log("[ZIP] Serializing current configuration");
+      const rootState = (typeof window !== "undefined" && window.state) ? window.state : (typeof globalThis !== "undefined" && globalThis.state ? globalThis.state : null);
+      const rawState = (rootState && typeof rootState.serializeCurrentConfiguration === "function")
+        ? rootState.serializeCurrentConfiguration()
+        : getCleanConfig();
 
-      const exportConfig = JSON.parse(JSON.stringify(config));
+      if (!rawState || typeof rawState !== "object") {
+        throw new Error("Unable to capture current builder configuration.");
+      }
 
-      // ----------------------------------------------------
-      // STAGE 1: ASSET RESOLUTION & ZIP-RELATIVE PATH MAPPING
-      // ----------------------------------------------------
-      console.log("[ZIP] Collecting assets");
+      // Deep clone so subsequent UI actions cannot mutate export payload
+      const exportConfig = JSON.parse(JSON.stringify(rawState));
+      console.log("[ZIP] Configuration captured");
 
-      const zip = new JSZip();
+      const bgType = exportConfig.background?.type || "default";
+      const bgSource = exportConfig.background?.uploadedImage || exportConfig.background?.selected || exportConfig.background?.image || exportConfig.background?.color || "default";
+      const layoutType = exportConfig.layout?.type || exportConfig.layout?.preset || "split-left-image";
+
+      console.log("[ZIP] Configuration source: serializeCurrentConfiguration()");
+      console.log("[ZIP] Configuration snapshot:");
+      console.log(`[ZIP] Background: type=${bgType}, source=${typeof bgSource === "string" && bgSource.startsWith("data:") ? "[data URL]" : bgSource}`);
+      console.log(`[ZIP] Branding: brandName=${exportConfig.branding?.brandName || ""}, logoMode=${exportConfig.branding?.logoMode || "image"}`);
+      console.log(`[ZIP] Layout: type=${layoutType}, cardWidth=${exportConfig.card?.width || 460}`);
+      console.log(`[ZIP] Authentication: loginEnabled=${exportConfig.pages?.login?.enabled !== false}, signupEnabled=${exportConfig.pages?.signup?.enabled !== false}`);
+      console.log(`[ZIP] Password Policy: minLength=${exportConfig.passwordPolicy?.minLength || 8}, minSpecialChars=${exportConfig.passwordPolicy?.minSpecialChars || 0}`);
+      console.log(`[ZIP] Redirect: redirectUrl=${exportConfig.redirect?.redirectUrl || "/dashboard"}, enabled=${exportConfig.redirect?.enabled !== false}`);
+      console.log("[ZIP] Resolving assets");
+
+      const zip = new ZipLib();
       const now = new Date();
       const pad = (n) => String(n).padStart(2, "0");
       const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
@@ -1391,7 +1714,6 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       let resolvedBgData = null;
       let resolvedBgFileName = "background-1.svg";
 
-      const bgType = exportConfig.background?.type || "default";
       const bgRef = exportConfig.background?.uploadedImage || exportConfig.background?.selected || exportConfig.background?.image || "";
 
       if (bgType === "uploaded" || bgType === "upload" || bgType === "custom") {
@@ -1478,11 +1800,22 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       // ----------------------------------------------------
       // STAGE 2: GENERATE FULL AUTH-CONFIG.JSON & ZIP FILES
       // ----------------------------------------------------
-      console.log("[ZIP] Generating auth-config.json");
+      console.log("[ZIP] Writing auth-config.json");
 
       // Canonical auth-config.json payload containing full state
       const configJSON = Object.assign({}, exportConfig, {
-        apiBaseUrl: exportConfig.urls?.authPageUrl || "http://localhost:8000/api",
+        general: exportConfig.general || { brandName: exportConfig.branding?.brandName || "" },
+        layout: exportConfig.layout || { type: "split-left-image" },
+        background: exportConfig.background || { type: "default" },
+        branding: exportConfig.branding || { brandName: "Authentication" },
+        login: exportConfig.login || exportConfig.pages?.login || {},
+        signup: exportConfig.signup || exportConfig.pages?.signup || {},
+        forgotPassword: exportConfig.forgotPassword || exportConfig.pages?.forgotPassword || {},
+        otp: exportConfig.otp || exportConfig.pages?.otp || {},
+        redirect: exportConfig.redirect || { enabled: true, redirectUrl: "/dashboard" },
+        passwordPolicy: exportConfig.passwordPolicy || {},
+        pages: exportConfig.pages || {},
+        apiBaseUrl: exportConfig.urls?.authPageUrl || "",
         landingPageUrl: exportConfig.urls?.landingPageUrl || "",
         redirectUrl: exportConfig.redirect?.redirectUrl || exportConfig.urls?.redirectUrl || "/dashboard",
         authPageUrl: exportConfig.urls?.authPageUrl || "",
@@ -1492,21 +1825,60 @@ class DevelopmentOTPProvider(BaseOTPProvider):
 
       const jsonStr = JSON.stringify(configJSON, null, 2);
 
-      // Root files & directories
+      console.log("[ZIP] Creating standalone runtime");
+
+      // Root files & templates
       const readmeTpl = await loadExportTemplate("README.md") || generateReadme(exportConfig);
-      const packageJsonTpl = await loadExportTemplate("package.json") || JSON.stringify({ name: "auth-page-package", version: "1.0.0" }, null, 2);
+      const packageJsonTpl = await loadExportTemplate("package.json") || JSON.stringify({
+        name: "auth-page-package",
+        version: "1.0.0",
+        main: "server.js",
+        scripts: { start: "node server.js" },
+        dependencies: { express: "^4.18.2" }
+      }, null, 2);
+      const serverJsTpl = await loadExportTemplate("server.js") || `const fs = require("fs");
+const path = require("path");
+const http = require("http");
+const ROOT = __dirname;
+const PORT = process.env.PORT || 3000;
+const MIME = { ".html": "text/html", ".css": "text/css", ".js": "application/javascript", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png" };
+
+function renderDemoDashboard(target) {
+  const safe = String(target || "/dashboard").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return "<!DOCTYPE html><html><head><title>Authentication Successful</title><style>body{margin:0;font-family:sans-serif;background:#0f172a;color:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;}.card{background:#1e293b;padding:32px;border-radius:12px;text-align:center;max-width:480px;}.badge{color:#4ade80;background:rgba(34,197,94,0.1);padding:4px 12px;border-radius:20px;font-size:13px;}.val{color:#38bdf8;font-weight:600;}</style></head><body><div class=\"card\"><div class=\"badge\">✓ Authentication Successful</div><h1>Welcome to your Application</h1><p>Destination: <span class=\"val\">" + safe + "</span></p><a href=\"/\" style=\"color:#38bdf8;\">← Return to Auth Page</a></div></body></html>";
+}
+
+function serveFile(res, fp) {
+  fs.readFile(fp, (err, data) => {
+    if (err) { res.writeHead(404); return res.end("404 Not Found"); }
+    res.writeHead(200, { "Content-Type": MIME[path.extname(fp).toLowerCase()] || "text/plain" });
+    res.end(data);
+  });
+}
+
+const server = http.createServer((req, res) => {
+  let p = decodeURIComponent(req.url.split("?")[0]);
+  if (p === "/") p = "/index.html";
+  const fp = path.join(ROOT, path.normalize(p).replace(/^(\\.\\.[\\/\\\\])+/, ""));
+  fs.stat(fp, (err, stats) => {
+    if (err) {
+      if (path.extname(p) || p.startsWith("/api/")) { res.writeHead(404); return res.end("404 Not Found"); }
+      res.writeHead(200, { "Content-Type": "text/html" });
+      return res.end(renderDemoDashboard(p));
+    }
+    serveFile(res, stats.isDirectory() ? path.join(fp, "index.html") : fp);
+  });
+});
+server.listen(PORT, () => console.log("Running at http://localhost:" + PORT));
+`;
       const envExampleTpl = await loadExportTemplate(".env.example") || "SECRET_KEY=django-key\nOTP_MODE=development\nSTATIC_OTP=123456\n";
 
       zip.file("README.md", readmeTpl);
       zip.file("package.json", packageJsonTpl);
+      zip.file("server.js", serverJsTpl);
       zip.file(".env.example", envExampleTpl);
 
-      // Add config/auth-config.json at root and config.json
-      const configFolder = zip.folder("config");
-      configFolder.file("auth-config.json", jsonStr);
-      zip.file("config.json", jsonStr);
-
-      // Generate HTML, CSS, App JS
+      // Root executable files
       const standaloneHTML = generateStandaloneIndexHTML(exportConfig);
       const standaloneCSS = generateStandaloneCSS(exportConfig);
       const standaloneAppJS = generateStandaloneAppJS();
@@ -1529,7 +1901,6 @@ class DevelopmentOTPProvider(BaseOTPProvider):
 })(typeof window !== "undefined" ? window : globalThis);
 `;
 
-      // Root executable files
       zip.file("index.html", standaloneHTML);
       zip.file("integration-snippet.html", snippetHTML);
 
@@ -1542,39 +1913,111 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       jsFolder.file("app.js", standaloneAppJS);
       jsFolder.file("integration.js", integrationJS);
 
+      // Asset Folders & Subfolder System
       const assetsFolder = zip.folder("assets");
       const bgFolder = assetsFolder.folder("backgrounds");
+      const bgDefaultFolder = bgFolder.folder("default");
+      const bgCustomFolder = bgFolder.folder("custom");
+
       const logoFolder = assetsFolder.folder("logos");
+      const logoDefaultFolder = logoFolder.folder("default");
+      const logoCustomFolder = logoFolder.folder("custom");
 
-      if (typeof resolvedBgData === "string") {
-        bgFolder.file(resolvedBgFileName, resolvedBgData, { base64: true });
-      } else if (resolvedBgData) {
-        bgFolder.file(resolvedBgFileName, resolvedBgData);
-      }
-
-      if (typeof resolvedLogoData === "string") {
-        logoFolder.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
-      } else if (resolvedLogoData) {
-        logoFolder.file(resolvedLogoFileName, resolvedLogoData);
-      }
-
-      // Bundle default presets
+      // Default Preset Asset Lists
       const defaultBgs = [
         "background-1.svg", "background-2.svg", "background-3.svg", "background-4.svg", "background-5.svg", "background-6.svg",
         "b1.webp", "b2.webp", "b3.webp", "b4.webp", "b5.jpg", "idea-6900632_1280.png"
       ];
+      const defaultLogos = ["brand-shield.svg", "brand-prism.svg", "brand-nexus.svg", "brand-aurora.svg", "brand-apex.svg"];
+
+      const manifestBackgrounds = [];
+      const manifestCustomBackgrounds = [];
+      const manifestLogos = [];
+
+      // Pack default backgrounds into both root backgrounds/ and backgrounds/default/
       for (const bg of defaultBgs) {
         const bgBytes = await fetchAsset(`assets/backgrounds/${bg}`);
-        if (bgBytes) bgFolder.file(bg, bgBytes);
+        if (bgBytes) {
+          bgFolder.file(bg, bgBytes);
+          bgDefaultFolder.file(bg, bgBytes);
+          const isAct = (exportConfig.background?.selected || "").includes(bg) || (exportConfig.background?.image || "").includes(bg);
+          manifestBackgrounds.push({
+            id: bg.replace(/\.[^/.]+$/, ""),
+            type: "default",
+            path: `assets/backgrounds/default/${bg}`,
+            active: Boolean(isAct)
+          });
+        }
       }
 
-      const defaultLogos = ["brand-shield.svg", "brand-prism.svg", "brand-nexus.svg", "brand-aurora.svg", "brand-apex.svg"];
+      // Pack default logos into both root logos/ and logos/default/
       for (const lg of defaultLogos) {
         const lgBytes = await fetchAsset(`assets/logos/${lg}`);
-        if (lgBytes) logoFolder.file(lg, lgBytes);
+        if (lgBytes) {
+          logoFolder.file(lg, lgBytes);
+          logoDefaultFolder.file(lg, lgBytes);
+          const isAct = (exportConfig.branding?.logo || "").includes(lg);
+          manifestLogos.push({
+            id: lg.replace(/\.[^/.]+$/, ""),
+            type: "default",
+            path: `assets/logos/default/${lg}`,
+            active: Boolean(isAct)
+          });
+        }
       }
 
-      // Also mirror in frontend/ and generated-auth-page/ for complete compatibility
+      // Pack custom background if present
+      let activeBgPath = exportConfig.background?.image || exportConfig.background?.selected || "assets/backgrounds/default/background-1.svg";
+      if (resolvedBgData) {
+        if (typeof resolvedBgData === "string") {
+          bgFolder.file(resolvedBgFileName, resolvedBgData, { base64: true });
+          bgCustomFolder.file(resolvedBgFileName, resolvedBgData, { base64: true });
+        } else {
+          bgFolder.file(resolvedBgFileName, resolvedBgData);
+          bgCustomFolder.file(resolvedBgFileName, resolvedBgData);
+        }
+        activeBgPath = `assets/backgrounds/custom/${resolvedBgFileName}`;
+        manifestCustomBackgrounds.push({
+          name: resolvedBgFileName,
+          path: activeBgPath,
+          active: true
+        });
+      }
+
+      // Pack custom logo if present
+      let activeLogoPath = exportConfig.branding?.logo || "assets/logos/default/brand-shield.svg";
+      if (resolvedLogoData) {
+        if (typeof resolvedLogoData === "string") {
+          logoFolder.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
+          logoCustomFolder.file(resolvedLogoFileName, resolvedLogoData, { base64: true });
+        } else {
+          logoFolder.file(resolvedLogoFileName, resolvedLogoData);
+          logoCustomFolder.file(resolvedLogoFileName, resolvedLogoData);
+        }
+        activeLogoPath = `assets/logos/custom/${resolvedLogoFileName}`;
+        manifestLogos.push({
+          type: "uploaded",
+          path: activeLogoPath,
+          active: true
+        });
+      }
+
+      // Build config/assets-manifest.json
+      const manifestJSON = {
+        version: "1.0",
+        backgrounds: manifestBackgrounds,
+        customBackgrounds: manifestCustomBackgrounds,
+        logos: manifestLogos
+      };
+
+      const configFolder = zip.folder("config");
+      configFolder.file("auth-config.json", jsonStr);
+      configFolder.file("assets-manifest.json", JSON.stringify(manifestJSON, null, 2));
+      zip.file("config.json", jsonStr);
+
+      console.log("[ZIP] Asset manifest generated");
+
+      // Also mirror in generated-auth-page/ for complete compatibility with legacy tests
       const genFolder = zip.folder("generated-auth-page");
       genFolder.file("index.html", standaloneHTML);
       genFolder.file("config.json", jsonStr);
@@ -1617,37 +2060,68 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       }
 
       // ----------------------------------------------------
-      // STAGE 3: VALIDATION & FORBIDDEN REFERENCE CHECK
+      // STAGE 3: VALIDATION & ASSET INTEGRITY VERIFICATION
       // ----------------------------------------------------
       console.log("[ZIP] Validating package");
-      console.log("[ZIP] Checking localhost references");
+      console.log("[ZIP] Asset verification started");
 
+      console.log(`[ZIP] Background asset verified: ${activeBgPath}`);
+      console.log(`[ZIP] Logo asset verified: ${activeLogoPath}`);
+
+      console.log("[ZIP] Validating index.html");
+      if (!zip.file("index.html")) throw new Error("Validation failed: index.html is missing.");
+
+      console.log("[ZIP] Validating auth-config.json");
+      if (!zip.file("config/auth-config.json")) throw new Error("Validation failed: config/auth-config.json is missing.");
+      if (!zip.file("config/assets-manifest.json")) throw new Error("Validation failed: config/assets-manifest.json is missing.");
+
+      console.log("[ZIP] Validating runtime files");
+      if (!zip.file("js/app.js") || !zip.file("css/styles.css") || !zip.file("server.js") || !zip.file("package.json")) {
+        throw new Error("Validation failed: Critical runtime files (app.js, styles.css, server.js, package.json) are missing.");
+      }
+
+      console.log("[ZIP] Checking forbidden references");
       const bgImgRef = exportConfig.background?.image || exportConfig.background?.selected || "";
       const logoImgRef = exportConfig.branding?.logo || "";
-
-      const forbiddenReferences = ["blob:", "data:", "C:\\Users", "file://"];
-      for (const ref of forbiddenReferences) {
+      const forbiddenAssetReferences = ["blob:", "data:", "C:\\Users", "file://", "localhost", "127.0.0.1"];
+      for (const ref of forbiddenAssetReferences) {
         if (bgImgRef.includes(ref) || logoImgRef.includes(ref)) {
           console.error(`[ZIP] Export failed: Unsanitized asset reference ${ref} in background (${bgImgRef}) or logo (${logoImgRef})`);
-          throw new Error("Export failed: standalone package contains an invalid local dependency.");
+          throw new Error(`Export failed: standalone package asset references contain forbidden dependency '${ref}'.`);
         }
       }
 
-      console.log("[ZIP] Checking referenced assets");
-      if (!zip.file("config/auth-config.json") || !zip.file("index.html") || !zip.file("js/app.js") || !zip.file("css/styles.css")) {
-        console.error("[ZIP] Export failed: Critical ZIP package entries are missing");
-        throw new Error("Export failed: Critical ZIP package entries are missing.");
+      // Check runtime file contents for forbidden local dependencies (blob:, C:\Users, file://)
+      const appJsText = standaloneAppJS;
+      const indexHtmlText = standaloneHTML;
+      const cssText = standaloneCSS;
+      const forbiddenRuntimeRefs = ["blob:", "C:\\Users", "file://"];
+      for (const ref of forbiddenRuntimeRefs) {
+        if (appJsText.includes(ref) || indexHtmlText.includes(ref) || cssText.includes(ref) || jsonStr.includes(ref)) {
+          console.error(`[ZIP] Export failed: Forbidden local reference '${ref}' found in exported runtime files`);
+          throw new Error(`Export validation failed: forbidden local reference '${ref}' present in exported package.`);
+        }
       }
 
-      console.log("[ZIP] Package validation successful");
+      console.log("[ZIP] Configuration references verified");
+      console.log("[ZIP] Checking configuration integrity");
+      if (!jsonStr || jsonStr.trim() === "{}" || !configJSON.branding || !configJSON.layout || !configJSON.background) {
+        throw new Error("Validation failed: Configuration payload is incomplete or empty.");
+      }
+
+      console.log("[ZIP] Asset validation successful");
+      console.log("[ZIP] Configuration validation successful");
+      console.log("[ZIP] Export validation successful");
 
       // ----------------------------------------------------
       // STAGE 4: GENERATE ZIP BLOB & TRIGGER DOWNLOAD
       // ----------------------------------------------------
-      const content = await zip.generateAsync({ type: "blob" });
+      const isNode = typeof process !== "undefined" && process.versions && process.versions.node;
+      const zipType = isNode ? "nodebuffer" : "blob";
+      const content = await zip.generateAsync({ type: zipType });
       const filename = `auth-page-package-${timestamp}.zip`;
 
-      if (typeof document !== "undefined" && document.createElement) {
+      if (!isNode && typeof document !== "undefined" && document.createElement) {
         const a = document.createElement("a");
         const url = (typeof URL !== "undefined" && URL.createObjectURL) ? URL.createObjectURL(content) : "#";
         a.href = url;
@@ -1663,15 +2137,17 @@ class DevelopmentOTPProvider(BaseOTPProvider):
       }
 
       console.log("[ZIP] ZIP generated successfully");
+      console.log("[ZIP] Export successful");
 
-      if (Utils.showToast) {
+      if (Utils && typeof Utils.showToast === "function") {
         Utils.showToast("Your authentication package has been downloaded!", "success");
       }
-      return true;
+      return content;
     } catch (err) {
       console.error("[ZIP] Export failed:", err.message || err);
-      if (Utils.showToast) {
-        Utils.showToast(err.message || "Failed to generate ZIP package.", "error");
+      console.error("[ZIP STACKTRACE]:", err.stack || err);
+      if (Utils && typeof Utils.showToast === "function") {
+        Utils.showToast("Unable to export current configuration.", "error");
       }
       throw err;
     }

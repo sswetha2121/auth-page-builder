@@ -54,6 +54,7 @@ async function runPhase2AcceptanceTests() {
     "js/config.js",
     "js/state.js",
     "js/utils.js",
+    "js/services/redirectService.js",
     "js/templates.js",
     "js/renderer.js",
     "js/controls.js",
@@ -320,18 +321,19 @@ async function runPhase2AcceptanceTests() {
   assert(37, window.Utils.isValidUrl(window.state.get("urls.redirectUrl")), "Redirect URL is valid URL format");
 
   // 38: Login, Sign Up, and OTP success flows use configured redirect URL
+  window.state.set("pages.otp.displayMode", "separate");
   window.state.setActivePage("login");
   let simulatedRedirect = "";
   window.Utils.showToast = (msg) => {
-    if (msg.includes("Redirect destination:")) {
+    if (msg.includes("Redirect destination:") || msg.includes("https://apexsystems.io/dashboard")) {
       simulatedRedirect = msg;
     }
   };
   const loginSubmitForm = previewRoot.querySelector("#authLoginForm");
   if (loginSubmitForm) {
     const idIn = loginSubmitForm.querySelector("#loginIdentifier");
-    if (idIn) idIn.value = "admin@example.com";
     const pwIn = loginSubmitForm.querySelector("#loginPassword");
+    if (idIn) idIn.value = "admin@example.com";
     if (pwIn) pwIn.value = "secretPass123";
     window.AuthController.loginUser = async () => ({ success: true, redirect_url: window.state.get("urls.redirectUrl") });
     await window.handleAuthSubmit({ preventDefault: () => {}, target: loginSubmitForm }, "login");

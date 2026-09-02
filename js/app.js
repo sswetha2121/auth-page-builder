@@ -645,6 +645,8 @@ window.handleAuthSubmit = async function (event, pageType) {
         }
 
       } else if (pageType === "signup") {
+        console.log("[Signup] Submit started");
+
         const fullName = form?.querySelector("#signupName")?.value?.trim() || "User";
         const email = form?.querySelector("#signupEmail")?.value?.trim() || "";
         const password = form?.querySelector("#signupPassword")?.value || "";
@@ -652,47 +654,67 @@ window.handleAuthSubmit = async function (event, pageType) {
         const mobile = form?.querySelector("#signupMobile")?.value?.trim() || "";
 
         if (config.pages?.signup?.fields?.fullName && !fullName) {
+          console.log("[Signup] Validation failed");
           throw new Error("Please enter your full name.");
         }
         if (config.pages?.signup?.fields?.email && (!email || (window.AuthController.validateEmail && !window.AuthController.validateEmail(email)))) {
+          console.log("[Signup] Validation failed");
           throw new Error("Please enter a valid email address.");
         }
         if (config.pages?.signup?.fields?.password) {
           if (window.AuthController && typeof window.AuthController.validatePasswordPolicy === "function") {
             const valRes = window.AuthController.validatePasswordPolicy(password, config.passwordPolicy || {}, { username: email ? email.split("@")[0] : "", email });
             if (!valRes.valid) {
+              console.log("[Signup] Validation failed");
               throw new Error(valRes.message);
             }
           } else if (!password || password.length < 6) {
+            console.log("[Signup] Validation failed");
             throw new Error("Password must be at least 6 characters.");
           }
         }
         if (config.pages?.signup?.fields?.confirmPassword && password !== confirmPassword) {
+          console.log("[Signup] Validation failed");
           throw new Error("Passwords do not match.");
         }
+
+        console.log("[Signup] Validation successful");
 
         const username = email ? email.split("@")[0] : `user_${Date.now()}`;
         const configId = window.ConfigurationsApi?.activeConfigId || config.id || null;
         
-        const result = await window.AuthController.registerUser({
-          full_name: fullName,
-          username,
-          email,
-          password,
-          mobile,
-          configuration_id: configId
-        });
-
-        if (result && result.redirect && result.redirect.redirectUrl) {
-          redirectConfig.redirectUrl = result.redirect.redirectUrl;
-        } else if (result && result.redirect_url) {
-          redirectConfig.redirectUrl = result.redirect_url;
+        let result;
+        try {
+          result = await window.AuthController.registerUser({
+            full_name: fullName,
+            username,
+            email,
+            password,
+            mobile,
+            configuration_id: configId
+          });
+        } catch (regErr) {
+          console.log("[Signup] Validation failed");
+          throw regErr;
         }
 
+        const currentCanonicalState = window.state ? window.state.serializeCurrentConfiguration() : config;
+        const targetDestination = (result && (result.redirect_url || result.redirect?.redirectUrl))
+          || currentCanonicalState.redirect?.redirectUrl
+          || currentCanonicalState.urls?.redirectUrl
+          || "/dashboard";
+
+        console.log(`[Signup] Success destination: ${targetDestination}`);
+        console.log("[Signup] Redirecting");
+
+        const targetRedirectObj = Object.assign({}, currentCanonicalState.redirect || {}, {
+          redirectUrl: targetDestination
+        });
+
         if (redirectService && typeof redirectService.execute === "function") {
-          await redirectService.execute(redirectConfig, { isPreview: true, context: "signup" });
+          await redirectService.execute(targetRedirectObj, { isPreview: true, context: "signup" });
         } else if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
-          window.Utils.redirectAfterSuccess(redirectConfig.redirectUrl, redirectConfig.delay || 600, true);
+          window.Utils.redirectAfterSuccess(targetDestination, targetRedirectObj.delay || 600, true);
         }
 
       } else if (pageType === "forgotPassword") {
@@ -718,31 +740,50 @@ window.handleAuthSubmit = async function (event, pageType) {
         }
 
       } else if (pageType === "otp") {
+        console.log("[OTP] Submit started");
+
         let otpValue = "";
         const otpBoxes = form ? form.querySelectorAll(".otp-digit-box") : document.querySelectorAll(".otp-digit-box");
         if (otpBoxes && otpBoxes.length > 0) {
           otpValue = Array.from(otpBoxes).map(b => b.value || "").join("");
         }
 
-        console.log("[OTP] Verification started");
-        console.log(`[OTP] Entered code: ${otpValue ? otpValue.replace(/./g, "*") : "none"}`);
+        const expectedLength = Number(config.pages?.otp?.length) || 6;
+        if (!otpValue || otpValue.length < expectedLength) {
+          console.log("[OTP] Validation failed");
+          throw new Error(`Please enter all ${expectedLength} digits of your verification code.`);
+        }
 
         const identifier = (window.state && window.state.get("auth")?.identifier) || "user";
         const configId = window.ConfigurationsApi?.activeConfigId || config.id || null;
 
-        const result = await window.AuthController.verifyOtp(identifier, otpValue, "login", configId);
-        console.log("[OTP] Verification successful");
+        let result;
+        try {
+          result = await window.AuthController.verifyOtp(identifier, otpValue, "login", configId);
+        } catch (verifyErr) {
+          console.log("[OTP] Validation failed");
+          throw verifyErr;
+        }
 
-        console.log("[OTP] Loading current configuration");
+        console.log("[OTP] Validation successful");
+
         const currentCanonicalState = window.state ? window.state.serializeCurrentConfiguration() : config;
-        const targetRedirect = result.redirect || currentCanonicalState.redirect || redirectConfig;
-        console.log("[OTP] Redirect config:", targetRedirect);
+        const targetRedirectUrl = (result && (result.redirect_url || result.redirect?.redirectUrl))
+          || currentCanonicalState.redirect?.redirectUrl
+          || currentCanonicalState.urls?.redirectUrl
+          || "/dashboard";
 
-        console.log("[OTP] Executing redirect");
+        console.log(`[OTP] Redirect target: ${targetRedirectUrl}`);
+        console.log("[OTP] Redirecting");
+
+        const targetRedirectObj = Object.assign({}, currentCanonicalState.redirect || {}, {
+          redirectUrl: targetRedirectUrl
+        });
+
         if (redirectService && typeof redirectService.execute === "function") {
-          await redirectService.execute(targetRedirect, { isPreview: true, context: "otp", authMethod: "otp" });
+          await redirectService.execute(targetRedirectObj, { isPreview: true, context: "otp", authMethod: "otp" });
         } else if (window.Utils && typeof window.Utils.redirectAfterSuccess === "function") {
-          window.Utils.redirectAfterSuccess(targetRedirect.redirectUrl || "/dashboard", targetRedirect.delay || 600, true);
+          window.Utils.redirectAfterSuccess(targetRedirectUrl, targetRedirectObj.delay || 600, true);
         }
       }
     }

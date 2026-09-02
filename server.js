@@ -84,6 +84,11 @@ app.use(express.static(ROOT_DIR, {
   maxAge: 0
 }));
 
+// Static aliases for legacy or relative script paths
+app.get("/js/redirectService.js", (req, res) => {
+  res.sendFile(path.join(ROOT_DIR, "js", "services", "redirectService.js"));
+});
+
 // SPA Fallback: serve index.html for non-API routes
 app.use((req, res, next) => {
   if (req.originalUrl.startsWith("/api/")) {

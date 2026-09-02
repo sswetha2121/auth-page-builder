@@ -96,7 +96,7 @@
    * @param {Object} options - Options such as { isPreview: boolean, force: boolean, context: string }
    */
   function execute(redirectConfig = {}, options = {}) {
-    if (redirectExecuted && options.force !== true) {
+    if (redirectExecuted && options.force !== true && !options.isPreview) {
       console.log("[RedirectService] Redirection guard active. Duplicate execution prevented.");
       return Promise.resolve({ success: false, reason: "duplicate_prevented" });
     }
@@ -140,9 +140,10 @@
 
     // Toast notification
     if (config.showSuccessMessage) {
-      const displayMsg = `${config.successMessage} (Target: ${rawTarget})`;
-      if (typeof window !== "undefined" && window.Utils && typeof window.Utils.showToast === "function") {
-        window.Utils.showToast(displayMsg, "success", 3500);
+      const displayMsg = `${config.successMessage} Redirect destination: ${rawTarget}`;
+      const toastFn = (typeof window !== "undefined") ? (window.Utils?.showToast || window.showToast) : null;
+      if (typeof toastFn === "function") {
+        toastFn(displayMsg, "success", 3500);
       }
     }
 
@@ -174,7 +175,7 @@
     return new Promise((resolve) => {
       setTimeout(() => {
         // If inside Builder Preview Editor, NEVER navigate main window away from builder!
-        if (options.isPreview || (typeof window !== "undefined" && window.location && window.location.pathname.endsWith("index.html") && document.getElementById("authBuilderApp"))) {
+        if (options.isPreview || (typeof window !== "undefined" && (document.getElementById("authBuilderApp") || document.getElementById("previewCanvas") || (window.location && window.location.pathname.endsWith("index.html"))))) {
           console.log("[Redirect] Preview mode");
           console.log(`[Redirect] Target: ${rawTarget}`);
           console.log("[Redirect] Navigation suppressed in builder preview");

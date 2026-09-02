@@ -48,48 +48,71 @@
   ======================================================= */
   function generateLogo(config) {
     const branding = config.branding || {};
-    if (branding.showLogo === false) {
+
+    // Resolve canonical branding mode
+    let mode = branding.mode;
+    if (!mode || !["logo", "text", "logo-text", "none"].includes(mode)) {
+      if (branding.showLogo === false) {
+        mode = (branding.brandName && branding.brandName !== "none") ? "text" : "none";
+      } else {
+        mode = branding.brandName ? "logo-text" : "logo";
+      }
+    }
+
+    if (mode === "none") {
       return "";
     }
 
-    const brandName = escapeHtml(branding.brandName || "Your Brand");
+    const showLogo = (mode === "logo" || mode === "logo-text");
+    const showText = (mode === "text" || mode === "logo-text");
+    const showTagline = Boolean(branding.taglineEnabled && branding.tagline);
+
+    const brandName = showText ? escapeHtml(branding.brandName || "") : "";
+    const tagline = showTagline ? escapeHtml(branding.tagline || "") : "";
     const shape = branding.logoShape || "circle";
     const position = branding.logoPosition || "center";
-    const logoSrc = branding.uploadedLogo || branding.logo || branding.selectedLogo || "assets/logos/auth_logo_1.svg";
-
-    const initials = brandName
-      .split(" ")
-      .map(w => w[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || "YB";
 
     let logoMarkup = "";
-    if (logoSrc) {
-      logoMarkup = `
-        <div class="auth-logo-box auth-logo-shape-${shape}">
-          <img src="${escapeHtml(logoSrc)}" alt="${brandName}" class="auth-logo-img"
-               onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
-          <div class="auth-logo-fallback" style="display: none;">
-            <span>${initials}</span>
+    if (showLogo) {
+      const logoSrc = branding.uploadedLogo || branding.logo || branding.selectedLogo || "assets/logos/brand-shield.svg";
+      const initials = (brandName || "YB")
+        .split(" ")
+        .map(w => w[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase() || "YB";
+
+      if (logoSrc && logoSrc !== "none") {
+        logoMarkup = `
+          <div class="auth-logo-box auth-logo-shape-${shape}">
+            <img src="${escapeHtml(logoSrc)}" alt="${brandName || 'Brand Logo'}" class="auth-logo-img"
+                 onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+            <div class="auth-logo-fallback" style="display: none;">
+              <span>${initials}</span>
+            </div>
           </div>
-        </div>
-      `;
-    } else {
-      logoMarkup = `
-        <div class="auth-logo-box auth-logo-shape-${shape}">
-          <div class="auth-logo-fallback">
-            <span>${initials}</span>
+        `;
+      } else {
+        logoMarkup = `
+          <div class="auth-logo-box auth-logo-shape-${shape}">
+            <div class="auth-logo-fallback">
+              <span>${initials}</span>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
+    }
+
+    if (!showLogo && !brandName && !tagline) {
+      return "";
     }
 
     return `
       <div class="auth-branding-header auth-logo-pos-${position}">
-        ${logoMarkup}
-        ${brandName ? `<span class="auth-brand-title">${brandName}</span>` : ""}
+        ${showLogo ? logoMarkup : ""}
+        ${showText && brandName ? `<span class="auth-brand-title">${brandName}</span>` : ""}
+        ${showTagline && tagline ? `<span class="auth-brand-tagline">${tagline}</span>` : ""}
       </div>
     `;
   }
@@ -241,8 +264,13 @@
 
     const minLen = policy.minLength || 8;
     const minNum = Number(policy.minNumbers) || 1;
-    const minSpec = Number(policy.minSpecialChars) || 1;
+    const minSpec = Number(policy.minSpecialChars || policy.minSpecialCharacter || policy.specialCharacters) || 1;
     const reqs = [];
+
+    const numberToWord = (n) => {
+      const words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+      return words[n] || String(n);
+    };
 
     reqs.push(`<li class="signup-req-item" id="reqCheckMinLength" data-rule="min-length"><span class="signup-req-icon">○</span> At least ${minLen} characters</li>`);
     if (policy.requireUppercase !== false) {
@@ -252,12 +280,12 @@
       reqs.push(`<li class="signup-req-item" id="reqCheckLower" data-rule="lowercase"><span class="signup-req-icon">○</span> One lowercase letter (a-z)</li>`);
     }
     if (policy.requireNumber !== false) {
-      const numLabel = minNum > 1 ? `At least ${minNum} numeric digits (0-9)` : `One numeric digit (0-9)`;
+      const numLabel = minNum > 1 ? `${numberToWord(minNum)} numeric digits (0-9)` : `One numeric digit (0-9)`;
       reqs.push(`<li class="signup-req-item" id="reqCheckNumber" data-rule="number"><span class="signup-req-icon">○</span> ${numLabel}</li>`);
     }
     if (policy.requireSpecialChar !== false) {
-      const specLabel = minSpec > 1 ? `At least ${minSpec} special characters` : `One special character`;
-      reqs.push(`<li class="signup-req-item" id="reqCheckSpecial" data-rule="special"><span class="signup-req-icon">○</span> ${specLabel} (${escapeHtml((policy.allowedSpecialChars || "!@#$%").slice(0, 6))}...)</li>`);
+      const specLabel = minSpec > 1 ? `${numberToWord(minSpec)} special characters` : `One special character`;
+      reqs.push(`<li class="signup-req-item" id="reqCheckSpecial" data-rule="special"><span class="signup-req-icon">○</span> ${specLabel}</li>`);
     }
 
     return `
@@ -276,8 +304,8 @@
 
   function generateLoginPage(config) {
     const pageConfig = config.pages?.login || {};
-    const title = escapeHtml(pageConfig.title || "Welcome back");
-    const subtitle = escapeHtml(pageConfig.subtitle || "Sign in to continue to your account");
+    const title = escapeHtml((pageConfig.title && pageConfig.title !== "Welcome back") ? pageConfig.title : (config.typography?.headingText || pageConfig.title || "Welcome back"));
+    const subtitle = escapeHtml((pageConfig.subtitle && pageConfig.subtitle !== "Sign in to continue to your account") ? pageConfig.subtitle : (config.typography?.subtitleText || pageConfig.subtitle || "Sign in to continue to your account"));
     const buttonText = escapeHtml(pageConfig.buttonText || "Sign In");
 
     const emailEnabled = pageConfig.emailEnabled !== false;
@@ -702,6 +730,7 @@
     const bgHeading = escapeHtml(imageSection.text || "Experience the next generation of authentication.");
     const bgSubtext = escapeHtml(imageSection.subtext || "Fast, secure, and beautifully customized for your brand.");
     const bgPosClass = `position-${imageSection.textPosition || 'center'}`;
+    const bgTextColor = imageSection.textColor || "#ffffff";
 
     const landingUrl = config.urls?.landingPageUrl || "";
     const showBackToWeb = config.urls?.showBackToWebsite !== false && Boolean(landingUrl);
@@ -713,6 +742,14 @@
         <div class="auth-preview-shell layout-full-background">
           <div class="auth-full-background"></div>
           <div class="auth-full-background-overlay"></div>
+          ${showBackgroundText ? `
+            <div class="auth-background-text ${bgPosClass}">
+              <div class="auth-image-text-block">
+                <h2 class="auth-image-text" style="color: ${escapeHtml(bgTextColor)};">${bgHeading}</h2>
+                ${bgSubtext ? `<p class="auth-image-subtext" style="color: ${escapeHtml(bgTextColor)};">${bgSubtext}</p>` : ""}
+              </div>
+            </div>
+          ` : ""}
           <div class="auth-form-section">
             <div class="auth-card">
               ${showBackToWeb ? `

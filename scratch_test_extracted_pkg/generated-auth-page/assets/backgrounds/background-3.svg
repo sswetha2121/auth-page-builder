@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <linearGradient id="bgLightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="50%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#cbd5e1" />
+    </linearGradient>
+    <radialGradient id="lightGlow" cx="25%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#e0e7ff" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#cbd5e1" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="lightRibbon1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.04" />
+    </linearGradient>
+    <linearGradient id="lightRibbon2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#f1f5f9" stop-opacity="0.0" />
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#bgLightGrad)" />
+  <rect width="100%" height="100%" fill="url(#lightGlow)" />
+
+  <!-- Flowing Architectural Curves -->
+  <path d="M-100,200 Q400,50 900,300 T1900,150 L2000,1200 L-100,1200 Z" fill="url(#lightRibbon1)" />
+  <path d="M-100,450 Q500,250 1100,550 T2100,350 L2100,1200 L-100,1200 Z" fill="url(#lightRibbon2)" />
+  
+  <circle cx="1500" cy="200" r="300" fill="#6366f1" opacity="0.06" filter="blur(60px)" />
+  <circle cx="300" cy="800" r="250" fill="#3b82f6" opacity="0.05" filter="blur(50px)" />
+</svg>

@@ -71,6 +71,7 @@ const defaultConfig = {
      BRANDING & LOGO SETTINGS
   ======================================================= */
   branding: {
+    mode: "logo-text", // "logo", "text", "logo-text", "none"
     showLogo: true,
     selectedLogo: "assets/logos/brand-shield.svg",
     logo: "assets/logos/brand-shield.svg",
@@ -80,7 +81,10 @@ const defaultConfig = {
     logoPosition: "center",
     logoBackgroundEnabled: false,
     logoBackgroundColor: "#ffffff",
-    brandName: "Your Brand"
+    brandName: "Your Brand",
+    brandNameEnabled: true,
+    tagline: "Authentication & Identity Management",
+    taglineEnabled: false
   },
 
   /* =======================================================
@@ -91,6 +95,8 @@ const defaultConfig = {
     backgroundColor: "#ffffff",
     opacity: 100,
     width: 460,
+    minHeight: 400,
+    shape: "rounded", // "rounded", "soft", "square", "pill"
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#e2e8f0",

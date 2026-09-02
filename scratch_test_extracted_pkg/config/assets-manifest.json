@@ -1,0 +1,121 @@
+{
+  "version": "1.0",
+  "backgrounds": [
+    {
+      "id": "background-1",
+      "type": "default",
+      "path": "assets/backgrounds/default/background-1.svg",
+      "active": false
+    },
+    {
+      "id": "background-2",
+      "type": "default",
+      "path": "assets/backgrounds/default/background-2.svg",
+      "active": false
+    },
+    {
+      "id": "background-3",
+      "type": "default",
+      "path": "assets/backgrounds/default/background-3.svg",
+      "active": false
+    },
+    {
+      "id": "background-4",
+      "type": "default",
+      "path": "assets/backgrounds/default/background-4.svg",
+      "active": false
+    },
+    {
+      "id": "background-5",
+      "type": "default",
+      "path": "assets/backgrounds/default/background-5.svg",
+      "active": false
+    },
+    {
+      "id": "background-6",
+      "type": "default",
+      "path": "assets/backgrounds/default/background-6.svg",
+      "active": false
+    },
+    {
+      "id": "b1",
+      "type": "default",
+      "path": "assets/backgrounds/default/b1.webp",
+      "active": false
+    },
+    {
+      "id": "b2",
+      "type": "default",
+      "path": "assets/backgrounds/default/b2.webp",
+      "active": false
+    },
+    {
+      "id": "b3",
+      "type": "default",
+      "path": "assets/backgrounds/default/b3.webp",
+      "active": false
+    },
+    {
+      "id": "b4",
+      "type": "default",
+      "path": "assets/backgrounds/default/b4.webp",
+      "active": false
+    },
+    {
+      "id": "b5",
+      "type": "default",
+      "path": "assets/backgrounds/default/b5.jpg",
+      "active": false
+    },
+    {
+      "id": "idea-6900632_1280",
+      "type": "default",
+      "path": "assets/backgrounds/default/idea-6900632_1280.png",
+      "active": false
+    }
+  ],
+  "customBackgrounds": [
+    {
+      "name": "custom-background.png",
+      "path": "assets/backgrounds/custom/custom-background.png",
+      "active": true
+    }
+  ],
+  "logos": [
+    {
+      "id": "brand-shield",
+      "type": "default",
+      "path": "assets/logos/default/brand-shield.svg",
+      "active": false
+    },
+    {
+      "id": "brand-prism",
+      "type": "default",
+      "path": "assets/logos/default/brand-prism.svg",
+      "active": false
+    },
+    {
+      "id": "brand-nexus",
+      "type": "default",
+      "path": "assets/logos/default/brand-nexus.svg",
+      "active": false
+    },
+    {
+      "id": "brand-aurora",
+      "type": "default",
+      "path": "assets/logos/default/brand-aurora.svg",
+      "active": false
+    },
+    {
+      "id": "brand-apex",
+      "type": "default",
+      "path": "assets/logos/default/brand-apex.svg",
+      "active": false
+    },
+    {
+      "type": "uploaded",
+      "path": "assets/logos/custom/custom-logo.svg",
+      "active": true
+    }
+  ]
+}

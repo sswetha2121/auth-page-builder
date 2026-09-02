@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <linearGradient id="minimalDusk" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="40%" stop-color="#1e1b4b" />
+      <stop offset="80%" stop-color="#311042" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+    <radialGradient id="auroraGlow1" cx="30%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.28" />
+      <stop offset="60%" stop-color="#06b6d4" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="auroraGlow2" cx="75%" cy="60%" r="55%">
+      <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.25" />
+      <stop offset="60%" stop-color="#8b5cf6" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#minimalDusk)" />
+  <rect width="100%" height="100%" fill="url(#auroraGlow1)" />
+  <rect width="100%" height="100%" fill="url(#auroraGlow2)" />
+
+  <path d="M-100,400 Q400,100 1000,450 T2100,300 L2100,1200 L-100,1200 Z" fill="#047857" fill-opacity="0.08" />
+</svg>

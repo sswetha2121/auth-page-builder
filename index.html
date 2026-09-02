@@ -416,22 +416,49 @@
                                         </div>
                                     </div>
 
-                                    <div class="control-row-2col">
-                                        <div class="control-group">
-                                            <div class="range-label-row">
-                                                <label>Max Width</label>
-                                                <span id="cardWidthValue">460px</span>
-                                            </div>
-                                            <input type="range" min="280" max="680" value="460" data-config-path="card.width" data-value-target="#cardWidthValue" data-value-suffix="px">
-                                        </div>
-                                        <div class="control-group">
-                                            <div class="range-label-row">
-                                                <label>Border Radius</label>
-                                                <span id="cardRadiusValue">20px</span>
-                                            </div>
-                                            <input type="range" min="0" max="50" value="20" data-config-path="card.borderRadius" data-value-target="#cardRadiusValue" data-value-suffix="px">
-                                        </div>
-                                    </div>
+                                     <div class="control-row-2col">
+                                         <div class="control-group">
+                                             <div class="range-label-row">
+                                                 <label>Card Width</label>
+                                                 <span id="cardWidthValue">460px</span>
+                                             </div>
+                                             <input type="range" min="320" max="900" value="460" data-config-path="card.width" data-value-target="#cardWidthValue" data-value-suffix="px">
+                                         </div>
+                                         <div class="control-group">
+                                             <div class="range-label-row">
+                                                 <label>Min Height</label>
+                                                 <span id="cardMinHeightValue">400px</span>
+                                             </div>
+                                             <input type="range" min="400" max="1200" value="400" data-config-path="card.minHeight" data-value-target="#cardMinHeightValue" data-value-suffix="px">
+                                         </div>
+                                     </div>
+
+                                     <div class="control-row-2col">
+                                         <div class="control-group">
+                                             <div class="range-label-row">
+                                                 <label>Card Padding</label>
+                                                 <span id="cardPaddingValue">40px</span>
+                                             </div>
+                                             <input type="range" min="20" max="64" value="40" data-config-path="card.padding" data-value-target="#cardPaddingValue" data-value-suffix="px">
+                                         </div>
+                                         <div class="control-group">
+                                             <label>Card Shape</label>
+                                             <select data-config-path="card.shape">
+                                                 <option value="rounded" selected>Rounded (20px)</option>
+                                                 <option value="soft">Soft Rounded (28px)</option>
+                                                 <option value="square">Square (4px)</option>
+                                                 <option value="pill">Pill (40px)</option>
+                                             </select>
+                                         </div>
+                                     </div>
+
+                                     <div class="control-group">
+                                         <div class="range-label-row">
+                                             <label>Border Radius</label>
+                                             <span id="cardRadiusValue">20px</span>
+                                         </div>
+                                         <input type="range" min="0" max="48" value="20" data-config-path="card.borderRadius" data-value-target="#cardRadiusValue" data-value-suffix="px">
+                                     </div>
 
                                     <div class="control-row-2col">
                                         <div class="control-group">
@@ -614,15 +641,35 @@
                                     <span class="accordion-arrow">▾</span>
                                 </button>
                                 <div class="accordion-content">
-                                    <div class="switch-control">
-                                        <label>Show Logo</label>
-                                        <input type="checkbox" data-config-path="branding.showLogo" checked>
-                                    </div>
+                                     <div class="control-group">
+                                         <label>Branding Mode</label>
+                                         <select data-config-path="branding.mode">
+                                             <option value="logo-text" selected>Logo + Brand Name</option>
+                                             <option value="text">Brand Name Only</option>
+                                             <option value="logo">Logo Only</option>
+                                             <option value="none">No Branding</option>
+                                         </select>
+                                     </div>
 
-                                    <div class="control-group">
-                                        <label>Brand Name</label>
-                                        <input type="text" placeholder="Your Brand" data-config-path="branding.brandName" value="Your Brand">
-                                    </div>
+                                     <div class="switch-control">
+                                         <label>Show Logo</label>
+                                         <input type="checkbox" data-config-path="branding.showLogo" checked>
+                                     </div>
+
+                                     <div class="control-group">
+                                         <label>Brand Name</label>
+                                         <input type="text" placeholder="Your Brand" data-config-path="branding.brandName" value="Your Brand">
+                                     </div>
+
+                                     <div class="switch-control">
+                                         <label>Enable Tagline</label>
+                                         <input type="checkbox" data-config-path="branding.taglineEnabled">
+                                     </div>
+
+                                     <div class="control-group">
+                                         <label>Tagline</label>
+                                         <input type="text" placeholder="Authentication & Identity Management" data-config-path="branding.tagline" value="Authentication & Identity Management">
+                                     </div>
 
                                     <div class="control-group">
                                         <label>Select Default Logo</label>

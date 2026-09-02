@@ -97,7 +97,7 @@
   /* =======================================================
      COMPUTE DYNAMIC CSS VARIABLES
   ======================================================= */
-  function computeStyleVariables(config) {
+  function computeStyleVariables(config, options = {}) {
     const layout = config.layout || {};
     const background = config.background || {};
     const branding = config.branding || {};
@@ -108,13 +108,17 @@
     const otpPage = config.pages?.otp || {};
 
     const imageWidth = Number(layout.imageWidth) || 50;
+    const fromFile = options.fromFile || "index.html";
 
     // Canonical Background Calculation via resolveBackground
     const resolvedBg = resolveBackground(config);
 
     let bgImg = "none";
     if (resolvedBg.type === "image" && resolvedBg.source && resolvedBg.source !== "none") {
-      bgImg = `url("${resolvedBg.source}")`;
+      const relPath = Utils && typeof Utils.getRelativeAssetPath === "function" 
+        ? Utils.getRelativeAssetPath(fromFile, resolvedBg.source)
+        : (fromFile.startsWith("css/") ? `../${resolvedBg.source.replace(/^\.\//, "").replace(/^\//, "")}` : resolvedBg.source);
+      bgImg = `url("${relPath}")`;
     }
 
     let bgColor = resolvedBg.color || background.color || "#0f172a";
@@ -192,12 +196,16 @@
         --auth-card-background: ${cardEnabled ? cardBgColor : "transparent"};
         --auth-card-opacity: ${cardEnabled ? cardOpacity : 1};
         --auth-card-width: ${Number(card.width) || 460}px;
+        --auth-card-min-height: ${Number(card.minHeight) || 400}px;
         --auth-card-radius: ${cardEnabled ? (Number(card.borderRadius) || 20) : 0}px;
         --auth-card-border-width: ${cardEnabled ? (Number(card.borderWidth) || 1) : 0}px;
         --auth-card-border-color: ${card.borderColor || "#e2e8f0"};
         --auth-card-shadow: ${cardEnabled && card.shadowEnabled ? "0 20px 45px rgba(15, 23, 42, 0.10)" : "none"};
         --auth-card-blur: ${cardEnabled && card.blurEnabled ? "18px" : "0px"};
         --auth-card-padding: ${cardEnabled ? (Number(card.padding) || 40) : 0}px;
+
+        /* Image Section Text */
+        --auth-image-text-color: ${imageSection.textColor || "#ffffff"};
 
         /* Typography */
         --auth-font-family: ${typography.fontFamily || "Inter, sans-serif"};
@@ -514,6 +522,28 @@
       signupPasswordInput.addEventListener("input", updateLivePasswordEvaluation);
       updateLivePasswordEvaluation();
     }
+
+    // 8. Form submit handler for Live Preview Canvas (Suppresses navigation in Builder context)
+    const forms = container.querySelectorAll(".auth-main-form");
+    forms.forEach(form => {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const baseRedirect = config.redirect || {};
+        const redirectConfig = Object.assign({}, baseRedirect, {
+          redirectUrl: baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || "/dashboard"
+        });
+        const service = window.RedirectService || window.redirectService;
+        if (service && typeof service.execute === "function") {
+          service.execute(redirectConfig, { isPreview: true, force: true });
+        } else {
+          const targetUrl = redirectConfig.redirectUrl || "/dashboard";
+          const toast = (typeof window !== "undefined") ? (window.Utils?.showToast || window.showToast) : null;
+          if (typeof toast === "function") {
+            toast(`[Preview] Authentication successful! Destination: ${targetUrl}`, "success", 4000);
+          }
+        }
+      });
+    });
   }
 
 
@@ -622,7 +652,14 @@
       }
     }
 
-    console.log("Resolved background:", resolvedBg);
+    const showBackgroundText = (config.imageSection?.showText !== false);
+    const branding = config.branding || {};
+    const logoSrc = branding.uploadedLogo || branding.logo || branding.selectedLogo || "assets/logos/brand-shield.svg";
+
+    console.log(`[Renderer] Layout: ${layoutType}`);
+    console.log(`[Renderer] Background resolved: type=${resolvedBg.type}, source=${resolvedBg.source || "none"}, color=${resolvedBg.color || "none"}`);
+    console.log(`[Renderer] Background text enabled: ${showBackgroundText}`);
+    console.log(`[Renderer] Logo resolved: ${logoSrc.startsWith("data:") ? "[data URL]" : logoSrc}`);
 
     // Trigger completion event
     if (typeof document !== "undefined" && document.dispatchEvent) {

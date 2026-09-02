@@ -87,6 +87,36 @@
       normalized.background.selected = "";
     }
 
+    // Branding normalization & backward compatibility
+    if (!normalized.branding) normalized.branding = deepClone(defaults.branding || {});
+    let bMode = normalized.branding.mode;
+    if (!bMode || !["logo", "text", "logo-text", "none"].includes(bMode)) {
+      if (normalized.branding.showLogo === false) {
+        bMode = (normalized.branding.brandName && normalized.branding.brandName !== "none") ? "text" : "none";
+      } else {
+        bMode = normalized.branding.brandName ? "logo-text" : "logo";
+      }
+    }
+    normalized.branding.mode = bMode;
+    normalized.branding.showLogo = (bMode === "logo" || bMode === "logo-text");
+    normalized.branding.brandNameEnabled = (bMode === "text" || bMode === "logo-text");
+
+    // Card & layout.authCard normalization
+    if (!normalized.card) normalized.card = deepClone(defaults.card || {});
+    if (!normalized.card.shape) normalized.card.shape = "rounded";
+    if (normalized.card.minHeight === undefined) normalized.card.minHeight = 400;
+    if (normalized.card.padding === undefined) normalized.card.padding = 40;
+
+    if (state.card && state.card.shape) {
+      if (state.card.shape === "rounded" && (!state.card.borderRadius || state.card.borderRadius === 20)) normalized.card.borderRadius = 20;
+      else if (state.card.shape === "soft" && (!state.card.borderRadius || state.card.borderRadius === 20)) normalized.card.borderRadius = 28;
+      else if (state.card.shape === "square" && (!state.card.borderRadius || state.card.borderRadius === 20)) normalized.card.borderRadius = 4;
+      else if (state.card.shape === "pill" && (!state.card.borderRadius || state.card.borderRadius === 20)) normalized.card.borderRadius = 40;
+    }
+
+    if (!normalized.layout) normalized.layout = deepClone(defaults.layout || {});
+    normalized.layout.authCard = deepClone(normalized.card);
+
     // Ensure OTP length is valid (4, 6, 8)
     if (normalized.pages?.otp) {
       const len = Number(normalized.pages.otp.length);
@@ -243,6 +273,12 @@
           setByPath(this.state, "urls.openInNewTab", value);
         } else if (path === "urls.openInNewTab") {
           setByPath(this.state, "redirect.openInNewTab", value);
+        } else if (path === "background.uploadedImage" && value) {
+          setByPath(this.state, "background.type", "uploaded");
+          setByPath(this.state, "background.image", value);
+          setByPath(this.state, "background.selected", "");
+        } else if (path === "branding.uploadedLogo" && value) {
+          setByPath(this.state, "branding.logo", value);
         }
         if (options.notify !== false) {
           this.notify(path, value);

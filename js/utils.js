@@ -17,6 +17,7 @@
     root.deepSet = utils.deepSet;
     root.dataURLToBlob = utils.dataURLToBlob;
     root.fileToDataURL = utils.fileToDataURL;
+    root.getRelativeAssetPath = utils.getRelativeAssetPath;
   }
 })(typeof window !== "undefined" ? window : globalThis, function () {
 
@@ -208,6 +209,25 @@
     };
   }
 
+  function getRelativeAssetPath(fromFile, assetPath) {
+    if (!assetPath || typeof assetPath !== "string") return "";
+    const str = assetPath.trim();
+    if (str.startsWith("data:") || str.startsWith("http://") || str.startsWith("https://")) {
+      return str;
+    }
+    const clean = str.replace(/^\.\//, "").replace(/^\//, "");
+    if (!fromFile || typeof fromFile !== "string" || fromFile === "index.html" || fromFile.startsWith("root")) {
+      return clean;
+    }
+    if (fromFile.startsWith("css/")) {
+      return `../${clean}`;
+    }
+    if (fromFile.startsWith("js/")) {
+      return `../${clean}`;
+    }
+    return clean;
+  }
+
   return {
     $,
     $$,
@@ -217,6 +237,7 @@
     deepSet,
     dataURLToBlob,
     fileToDataURL,
+    getRelativeAssetPath,
     showToast,
     redirectAfterSuccess,
     debounce
