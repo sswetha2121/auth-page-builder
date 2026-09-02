@@ -529,8 +529,10 @@
       form.onsubmit = function (e) {
         e.preventDefault();
         const baseRedirect = config.redirect || {};
+        const customerLanding = config.urls?.landingPageUrl || config.landingPageUrl || "";
+        const targetRedirect = baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || customerLanding || "/dashboard";
         const redirectConfig = Object.assign({}, baseRedirect, {
-          redirectUrl: baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || "/dashboard"
+          redirectUrl: targetRedirect
         });
 
         const service = window.RedirectService || window.redirectService;

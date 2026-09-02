@@ -997,8 +997,10 @@ ${config.customCSS || ""}
         }
 
         const baseRedirect = config.redirect || {};
+        const customerLanding = config.urls?.landingPageUrl || config.landingPageUrl || "";
+        const targetRedirect = baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || customerLanding || "/dashboard";
         const redirectConfig = Object.assign({}, baseRedirect, {
-          redirectUrl: baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || "/dashboard"
+          redirectUrl: targetRedirect
         });
         
         const submitBtn = form.querySelector('button[type="submit"]');
