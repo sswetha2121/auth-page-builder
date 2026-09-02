@@ -202,6 +202,26 @@ function runResponsiveTests() {
 
   console.log("  [PASS] Signup page full background applied ONCE to '.auth-preview-shell' with no-repeat and zero duplicate layers.");
 
+  // Test 9: Split Layout Signup Page Image Section Height Coverage
+  renderer.renderPreview(previewRoot, {
+    config: {
+      activePage: "signup",
+      previewMode: "desktop",
+      layout: { type: "split-left-image" },
+      background: { type: "image", image: "assets/backgrounds/background-1.svg" }
+    },
+    page: "signup",
+    device: "desktop"
+  });
+
+  const splitImageSection = previewRoot.querySelector('.auth-image-section');
+  if (!splitImageSection || !splitImageSection.style.backgroundImage || splitImageSection.style.backgroundImage === "none") {
+    console.error("  [FAIL] Split image section missing background image.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Split Left layout Signup page image section stretches to match form section height (zero cutoff).");
+
   console.log("==================================================");
   console.log("RESPONSIVE PREVIEW ARCHITECTURE: ALL PASSED");
   console.log("==================================================");

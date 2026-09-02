@@ -225,7 +225,9 @@ html, body {
 .auth-image-section {
   flex: 0 0 var(--auth-image-width, 50%);
   width: var(--auth-image-width, 50%);
-  min-height: 100vh;
+  align-self: stretch !important;
+  min-height: 100%;
+  height: auto;
   position: relative;
   display: flex;
   overflow: hidden;
@@ -238,7 +240,11 @@ html, body {
 
 .auth-image-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 100%;
   z-index: 1;
   background-color: var(--auth-overlay-color, #000000);
   opacity: var(--auth-overlay-opacity, 0.35);
@@ -248,9 +254,12 @@ html, body {
 .auth-image-content,
 .auth-background-text {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -258,6 +267,23 @@ html, body {
   pointer-events: none;
   box-sizing: border-box;
 }
+
+/* Form Section */
+.auth-form-section {
+  flex: 1 1 auto;
+  align-self: stretch !important;
+  min-width: 0;
+  min-height: 100%;
+  width: 100%;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important;
+  padding: clamp(24px, 4vh, 48px) clamp(16px, 3vw, 36px) !important;
+  background-color: #f8fafc;
+  box-sizing: border-box !important;
+}
+
 .auth-image-content.position-top-left, .auth-background-text.position-top-left { justify-content: flex-start; align-items: flex-start; text-align: left; }
 .auth-image-content.position-top-center, .auth-image-content.position-top, .auth-background-text.position-top-center, .auth-background-text.position-top { justify-content: flex-start; align-items: center; text-align: center; }
 .auth-image-content.position-top-right, .auth-background-text.position-top-right { justify-content: flex-start; align-items: flex-end; text-align: right; }
