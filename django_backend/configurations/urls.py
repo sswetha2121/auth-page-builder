@@ -7,6 +7,7 @@ from configurations.views import (
     FileUploadView,
     ConfigurationHistoryListView,
     ConfigurationHistoryRestoreView,
+    ExportConfigurationView,
 )
 
 urlpatterns = [
@@ -15,6 +16,8 @@ urlpatterns = [
     path("save/", ConfigurationSaveView.as_view(), name="configuration-save-slash"),
     path("current", ConfigurationCurrentView.as_view(), name="configuration-current"),
     path("current/", ConfigurationCurrentView.as_view(), name="configuration-current-slash"),
+    path("export", ExportConfigurationView.as_view(), name="configuration-export"),
+    path("export/", ExportConfigurationView.as_view(), name="configuration-export-slash"),
     path("upload", FileUploadView.as_view(), name="configuration-upload"),
     path("upload/", FileUploadView.as_view(), name="configuration-upload-slash"),
     path("<int:pk>", ConfigurationDetailView.as_view(), name="configuration-detail"),

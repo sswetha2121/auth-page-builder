@@ -503,3 +503,43 @@ class ConfigurationHistoryRestoreView(APIView):
             )
         except Exception as e:
             return Response({"success": False, "message": f"Failed to restore version: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ExportConfigurationView(APIView):
+    """
+    Export current configuration as a downloadable ZIP package.
+    POST /api/configurations/export, /api/configurations/export/
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        import io
+        import json
+        import zipfile
+        from django.http import HttpResponse
+
+        config_data = request.data.get("configuration") if isinstance(request.data, dict) and "configuration" in request.data else request.data
+        if not config_data or not isinstance(config_data, dict):
+            return Response({"success": False, "message": "Invalid configuration data provided for export."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            buffer = io.BytesIO()
+            with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                config_json_str = json.dumps(config_data, indent=2)
+                zip_file.writestr("config/auth-config.json", config_json_str)
+                zip_file.writestr("config.json", config_json_str)
+                
+                # Basic index.html placeholder
+                index_html = f"<!DOCTYPE html><html><head><title>{config_data.get('branding', {}).get('brandName', 'Authentication')}</title></head><body><div id=\"root\"></div></body></html>"
+                zip_file.writestr("index.html", index_html)
+
+            buffer.seek(0)
+            timestamp_str = timezone.now().strftime("%Y%m%d-%H%M%S")
+            filename = f"auth-page-package-{timestamp_str}.zip"
+
+            response = HttpResponse(buffer.getvalue(), content_type="application/zip")
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+        except Exception as e:
+            logger.error(f"[ExportConfigurationView] Export failed: {str(e)}")
+            return Response({"success": False, "message": f"Export failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
