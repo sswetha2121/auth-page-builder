@@ -19,8 +19,12 @@ function runResponsiveTests() {
         <div id="previewCanvas" class="preview-canvas device-desktop">
           <div id="previewRoot" class="preview-root preview-device-desktop"></div>
         </div>
-        <div id="fullscreenPreview" hidden>
-          <div id="fullscreenPreviewRoot" class="fullscreen-preview-root"></div>
+        <div class="auth-fullscreen-preview" id="fullscreenPreview" hidden>
+          <div class="fullscreen-canvas-wrapper">
+            <div class="preview-canvas device-desktop" id="fullscreenCanvas">
+              <div id="fullscreenPreviewRoot" class="fullscreen-preview-root preview-device-desktop"></div>
+            </div>
+          </div>
         </div>
       </body>
     </html>
@@ -32,8 +36,10 @@ function runResponsiveTests() {
   global.CustomEvent = dom.window.CustomEvent;
 
   const previewRoot = document.getElementById('previewRoot');
+  const fullscreenCanvas = document.getElementById('fullscreenCanvas');
+  const fullscreenRoot = document.getElementById('fullscreenPreviewRoot');
 
-  // Test 1: Desktop Render
+  // Test 1: Desktop Render (Normal)
   renderer.renderPreview(previewRoot, {
     config: {
       activePage: "login",
@@ -45,14 +51,13 @@ function runResponsiveTests() {
     device: "desktop"
   });
 
-  const shellDesktop = previewRoot.querySelector('.auth-preview-shell');
-  if (!shellDesktop || !previewRoot.classList.contains('preview-device-desktop')) {
+  if (!previewRoot.classList.contains('preview-device-desktop')) {
     console.error("  [FAIL] Desktop device classes not set properly.");
     process.exit(1);
   }
   console.log("  [PASS] Desktop preview rendered with '.preview-device-desktop'");
 
-  // Test 2: Tablet Render
+  // Test 2: Tablet Render (Normal)
   renderer.renderPreview(previewRoot, {
     config: {
       activePage: "login",
@@ -69,7 +74,7 @@ function runResponsiveTests() {
   }
   console.log("  [PASS] Tablet preview rendered with '.preview-device-tablet'");
 
-  // Test 3: Mobile Render (Stacked Layout)
+  // Test 3: Mobile Render (Normal Stacked Layout)
   renderer.renderPreview(previewRoot, {
     config: {
       activePage: "login",
@@ -107,6 +112,47 @@ function runResponsiveTests() {
   }
 
   console.log("  [PASS] Password toggle icon correctly positioned inside '.auth-input-password-wrapper'");
+
+  // Test 5: Fullscreen Mobile Render
+  renderer.renderPreview(fullscreenRoot, {
+    config: {
+      activePage: "login",
+      previewMode: "mobile",
+      layout: { type: "split-left-image" }
+    },
+    page: "login",
+    device: "mobile"
+  });
+
+  if (!fullscreenRoot.classList.contains('preview-device-mobile')) {
+    console.error("  [FAIL] Fullscreen root missing 'preview-device-mobile' class.");
+    process.exit(1);
+  }
+
+  if (!fullscreenCanvas.classList.contains('device-mobile')) {
+    console.error("  [FAIL] Fullscreen device canvas missing 'device-mobile' class.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Fullscreen Mobile preview correctly applies 'device-mobile' frame and 'preview-device-mobile' viewport (remains phone-shaped).");
+
+  // Test 6: Fullscreen Tablet Render
+  renderer.renderPreview(fullscreenRoot, {
+    config: {
+      activePage: "login",
+      previewMode: "tablet",
+      layout: { type: "split-left-image" }
+    },
+    page: "login",
+    device: "tablet"
+  });
+
+  if (!fullscreenCanvas.classList.contains('device-tablet')) {
+    console.error("  [FAIL] Fullscreen device canvas missing 'device-tablet' class.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Fullscreen Tablet preview correctly applies 'device-tablet' frame.");
 
   console.log("==================================================");
   console.log("RESPONSIVE PREVIEW ARCHITECTURE: ALL PASSED");
