@@ -181,6 +181,28 @@
     return true;
   }
 
+  function computeConfigHash(config) {
+    try {
+      const normalized = validateAndNormalize(config, initialDefaultConfig);
+      const hashableObj = deepClone(normalized);
+      delete hashableObj.hash;
+      delete hashableObj.configHash;
+      delete hashableObj.timestamp;
+      delete hashableObj.lastSaved;
+      
+      const str = JSON.stringify(hashableObj);
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0;
+      }
+      return "CFG-" + Math.abs(hash).toString(16).toUpperCase().padStart(8, "0");
+    } catch (e) {
+      return "CFG-DEFAULT";
+    }
+  }
+
   class StateManager {
     constructor(baseConfig) {
       this.defaultConfig = deepClone(baseConfig);
@@ -493,7 +515,14 @@
     }
 
     exportJSON() {
-      return JSON.stringify(this.state, null, 2);
+      return JSON.stringify(this.serializeCurrentConfiguration(), null, 2);
+    }
+
+    serializeCurrentConfiguration() {
+      const normalized = validateAndNormalize(deepClone(this.state), this.defaultConfig);
+      const hash = computeConfigHash(normalized);
+      normalized.configHash = hash;
+      return normalized;
     }
 
     importJSON(jsonString) {
@@ -507,6 +536,10 @@
       }
     }
   }
+
+  StateManager.prototype.computeConfigHash = function (cfg) {
+    return computeConfigHash(cfg || this.state);
+  };
 
   return new StateManager(initialDefaultConfig);
 });

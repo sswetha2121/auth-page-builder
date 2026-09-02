@@ -1009,23 +1009,19 @@ ${config.customCSS || ""}
 
         // 2. Trigger Centralized Redirect Service ONLY ON SUCCESS
         const service = window.RedirectService || window.redirectService;
+        if (service && typeof service.resetGuard === "function") {
+          service.resetGuard();
+        }
         if (service && typeof service.execute === "function") {
-          service.execute(redirectConfig, { isPreview: Boolean(document.getElementById("authBuilderApp") || document.getElementById("previewCanvas")) });
+          service.execute(redirectConfig, { force: true });
         } else {
           setTimeout(() => {
-            if (document.getElementById("authBuilderApp") || document.getElementById("previewCanvas")) {
-              console.log("[Redirect] Navigation suppressed in builder preview fallback");
-              return;
-            }
-            if (typeof window.onAuthRedirect === "function") {
-              window.onAuthRedirect(redirectConfig.redirectUrl);
-            }
-            try {
+            if (redirectConfig.openInNewTab) {
+              window.open(redirectConfig.redirectUrl, "_blank", "noopener,noreferrer");
+            } else {
               window.location.assign(redirectConfig.redirectUrl);
-            } catch (e) {
-              window.location.href = redirectConfig.redirectUrl;
             }
-          }, redirectConfig.delay || 300);
+          }, redirectConfig.delay || 0);
         }
       });
     });
@@ -1660,6 +1656,30 @@ class DevelopmentOTPProvider(BaseOTPProvider):
     try { return require("jszip"); } catch (e) { return null; }
   };
 
+  function validatePreExport(config) {
+    if (!config || typeof config !== "object") {
+      throw new Error("[Pre-Export Validation] Configuration object is missing or null.");
+    }
+    if (!config.configHash) {
+      throw new Error("[Pre-Export Validation] Configuration hash is missing.");
+    }
+    if (!config.pages || !config.pages.login) {
+      throw new Error("[Pre-Export Validation] Login page configuration is missing.");
+    }
+    if (!config.redirect || !config.redirect.redirectUrl) {
+      throw new Error("[Pre-Export Validation] Redirect configuration is invalid or missing target URL.");
+    }
+    const configStr = JSON.stringify(config);
+    const forbidden = ["blob:", "file://", "C:\\Users", "localhost:3000"];
+    for (const ref of forbidden) {
+      if (configStr.includes(ref)) {
+        throw new Error(`[Pre-Export Validation] Configuration contains forbidden local reference: ${ref}`);
+      }
+    }
+    console.log("[ZIP] Pre-export validation passed cleanly");
+    return true;
+  }
+
   async function downloadPackage() {
     console.log("[ZIP] Export started");
     console.log("[ZIP] Capturing current configuration");
@@ -1698,12 +1718,17 @@ class DevelopmentOTPProvider(BaseOTPProvider):
 
       console.log("[ZIP] Configuration source: serializeCurrentConfiguration()");
       console.log("[ZIP] Configuration snapshot:");
+      console.log(`[ZIP] Configuration hash: ${exportConfig.configHash || "CFG-NONE"}`);
       console.log(`[ZIP] Background: type=${bgType}, source=${typeof bgSource === "string" && bgSource.startsWith("data:") ? "[data URL]" : bgSource}`);
       console.log(`[ZIP] Branding: brandName=${exportConfig.branding?.brandName || ""}, logoMode=${exportConfig.branding?.logoMode || "image"}`);
       console.log(`[ZIP] Layout: type=${layoutType}, cardWidth=${exportConfig.card?.width || 460}`);
       console.log(`[ZIP] Authentication: loginEnabled=${exportConfig.pages?.login?.enabled !== false}, signupEnabled=${exportConfig.pages?.signup?.enabled !== false}`);
       console.log(`[ZIP] Password Policy: minLength=${exportConfig.passwordPolicy?.minLength || 8}, minSpecialChars=${exportConfig.passwordPolicy?.minSpecialChars || 0}`);
       console.log(`[ZIP] Redirect: redirectUrl=${exportConfig.redirect?.redirectUrl || "/dashboard"}, enabled=${exportConfig.redirect?.enabled !== false}`);
+      
+      // Phase 1.22: Pre-Export Validation Guard
+      validatePreExport(exportConfig);
+
       console.log("[ZIP] Resolving assets");
 
       const zip = new ZipLib();

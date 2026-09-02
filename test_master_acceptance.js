@@ -82,7 +82,7 @@ async function runMasterAcceptanceTests() {
   RedirectService.resetGuard();
   const prevExec = await RedirectService.execute(
     { enabled: true, redirectUrl: "/dashboard" },
-    { isPreview: true }
+    { isPreview: true, simulateInPreview: true }
   );
   assert(prevExec.success === true, "Preview authentication returns success object");
   assert(prevExec.simulated === true, "Preview navigation is SUPPRESSED (simulated)");

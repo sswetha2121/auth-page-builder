@@ -249,6 +249,7 @@ window.AUTH_CONFIG = {
       "fontSize": 24
     }
   },
+  "configHash": "CFG-43B90405",
   "general": {
     "brandName": "Acme Security"
   },

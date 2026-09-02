@@ -523,26 +523,36 @@
       updateLivePasswordEvaluation();
     }
 
-    // 8. Form submit handler for Live Preview Canvas (Suppresses navigation in Builder context)
+    // 8. Form submit handler for Live Preview Canvas (Executes single redirect)
     const forms = container.querySelectorAll(".auth-main-form");
     forms.forEach(form => {
-      form.addEventListener("submit", (e) => {
+      form.onsubmit = function (e) {
         e.preventDefault();
         const baseRedirect = config.redirect || {};
         const redirectConfig = Object.assign({}, baseRedirect, {
           redirectUrl: baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || "/dashboard"
         });
+
         const service = window.RedirectService || window.redirectService;
+        if (service && typeof service.resetGuard === "function") {
+          service.resetGuard();
+        }
+
         if (service && typeof service.execute === "function") {
-          service.execute(redirectConfig, { isPreview: true, force: true });
+          service.execute(redirectConfig, { isPreview: false, force: true });
         } else {
           const targetUrl = redirectConfig.redirectUrl || "/dashboard";
-          const toast = (typeof window !== "undefined") ? (window.Utils?.showToast || window.showToast) : null;
-          if (typeof toast === "function") {
-            toast(`[Preview] Authentication successful! Destination: ${targetUrl}`, "success", 4000);
+          if (redirectConfig.openInNewTab) {
+            if (typeof window !== "undefined" && typeof window.open === "function") {
+              window.open(targetUrl, "_blank", "noopener,noreferrer");
+            }
+          } else {
+            if (typeof window !== "undefined" && window.location && typeof window.location.assign === "function") {
+              window.location.assign(targetUrl);
+            }
           }
         }
-      });
+      };
     });
   }
 

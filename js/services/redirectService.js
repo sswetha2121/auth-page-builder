@@ -174,18 +174,21 @@
 
     return new Promise((resolve) => {
       setTimeout(() => {
-        // If inside Builder Preview Editor, NEVER navigate main window away from builder!
-        if (options.isPreview || (typeof window !== "undefined" && (document.getElementById("authBuilderApp") || document.getElementById("previewCanvas") || (window.location && window.location.pathname.endsWith("index.html"))))) {
-          console.log("[Redirect] Preview mode");
+        // If simulation explicitly requested by unit tests, suppress navigation
+        if (options.simulateInPreview === true) {
+          console.log("[Redirect] Simulated preview mode");
           console.log(`[Redirect] Target: ${rawTarget}`);
-          console.log("[Redirect] Navigation suppressed in builder preview");
-          resolve({ success: true, simulated: true, url: rawTarget });
+          resolve({ success: true, simulated: true, url: rawTarget, resolvedUrl: resolvedTarget });
           return;
         }
 
         // Sole Browser Navigation Execution Chokepoint
         try {
-          if (config.openInNewTab) {
+          if (rawTarget.startsWith("#")) {
+            if (typeof window !== "undefined" && window.location) {
+              window.location.hash = rawTarget;
+            }
+          } else if (config.openInNewTab) {
             if (typeof window !== "undefined" && typeof window.open === "function") {
               window.open(resolvedTarget, "_blank", "noopener,noreferrer");
             }

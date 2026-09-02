@@ -371,23 +371,19 @@
 
         // 2. Trigger Centralized Redirect Service ONLY ON SUCCESS
         const service = window.RedirectService || window.redirectService;
+        if (service && typeof service.resetGuard === "function") {
+          service.resetGuard();
+        }
         if (service && typeof service.execute === "function") {
-          service.execute(redirectConfig, { isPreview: Boolean(document.getElementById("authBuilderApp") || document.getElementById("previewCanvas")) });
+          service.execute(redirectConfig, { force: true });
         } else {
           setTimeout(() => {
-            if (document.getElementById("authBuilderApp") || document.getElementById("previewCanvas")) {
-              console.log("[Redirect] Navigation suppressed in builder preview fallback");
-              return;
-            }
-            if (typeof window.onAuthRedirect === "function") {
-              window.onAuthRedirect(redirectConfig.redirectUrl);
-            }
-            try {
+            if (redirectConfig.openInNewTab) {
+              window.open(redirectConfig.redirectUrl, "_blank", "noopener,noreferrer");
+            } else {
               window.location.assign(redirectConfig.redirectUrl);
-            } catch (e) {
-              window.location.href = redirectConfig.redirectUrl;
             }
-          }, redirectConfig.delay || 300);
+          }, redirectConfig.delay || 0);
         }
       });
     });
