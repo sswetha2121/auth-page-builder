@@ -46,7 +46,10 @@
     min-height: 0;
     display: flex;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
 }
 
 /* =========================================================
@@ -382,13 +385,12 @@
 .auth-form-section {
     flex: 1 1 auto;
     min-width: 0;
-    min-height: 0;
+    min-height: 100%;
     width: 100%;
-    height: 100%;
+    height: auto !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: visible !important;
     padding: clamp(24px, 4vh, 48px) clamp(16px, 3vw, 36px) !important;
     background-color: #f8fafc;
     box-sizing: border-box !important;
@@ -502,7 +504,7 @@
     backdrop-filter: blur(var(--auth-card-blur, 0px));
     -webkit-backdrop-filter: blur(var(--auth-card-blur, 0px));
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     transition: all 0.2s ease;
 }
 
@@ -1353,28 +1355,50 @@
     display: flex !important;
     width: 100% !important;
     flex: 0 0 auto !important;
-    min-height: 180px !important;
-    max-height: 220px !important;
+    min-height: 140px !important;
+    height: clamp(140px, 26vw, 180px) !important;
+    max-height: 180px !important;
     position: relative;
 }
 
 .preview-device-mobile .auth-image-content,
 .preview-device-mobile .auth-background-text {
-    padding: 16px 20px !important;
+    padding: 14px 16px !important;
     justify-content: center !important;
     align-items: center !important;
     text-align: center !important;
 }
 
-/* Mobile Form Section */
+.preview-device-mobile .auth-image-text {
+    font-size: clamp(1.1rem, 3.8vw, 1.45rem) !important;
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important;
+}
+
+.preview-device-mobile .auth-image-subtext {
+    font-size: clamp(0.75rem, 2.8vw, 0.88rem) !important;
+    line-height: 1.35 !important;
+}
+
+/* Mobile Form Section & Zero-Spacer Alignment */
 .preview-device-mobile .auth-form-section,
 .device-mobile .auth-form-section {
     width: 100% !important;
     min-width: 0 !important;
-    padding: 18px 14px 28px !important;
-    flex: 1 1 auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 18px 14px 40px !important;
+    flex: 1 0 auto !important;
     align-items: center !important;
     justify-content: flex-start !important;
+}
+
+.preview-device-mobile .auth-form-section::before,
+.preview-device-mobile .auth-form-section::after,
+.device-mobile .auth-form-section::before,
+.device-mobile .auth-form-section::after {
+    display: none !important;
+    flex: none !important;
 }
 
 /* Mobile Authentication Card */
@@ -1383,7 +1407,9 @@
     width: min(100%, 460px) !important;
     max-width: 460px !important;
     min-width: 0 !important;
-    margin: 4px auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
     padding: 22px 16px !important;
     border-radius: var(--auth-card-radius, 14px) !important;
 }

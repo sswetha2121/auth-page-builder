@@ -626,36 +626,55 @@ html, body {
   .layout-split-left-image .auth-preview-shell,
   .layout-split-right-image .auth-preview-shell {
     flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
   .auth-image-section {
     display: flex !important;
     width: 100% !important;
     flex: 0 0 auto !important;
-    min-height: 180px !important;
-    max-height: 240px !important;
+    min-height: 140px !important;
+    height: clamp(140px, 26vw, 180px) !important;
+    max-height: 180px !important;
     position: relative !important;
   }
   .auth-image-content,
   .auth-background-text {
-    padding: 16px 20px !important;
+    padding: 14px 16px !important;
     justify-content: center !important;
     align-items: center !important;
     text-align: center !important;
   }
   .auth-image-text {
-    font-size: clamp(1.2rem, 4vw, 1.8rem) !important;
-    line-height: 1.25 !important;
+    font-size: clamp(1.1rem, 3.8vw, 1.45rem) !important;
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important;
+  }
+  .auth-image-subtext {
+    font-size: clamp(0.75rem, 2.8vw, 0.88rem) !important;
+    line-height: 1.35 !important;
   }
   .auth-form-section {
     width: 100% !important;
-    flex: 1 1 auto !important;
-    padding: 18px 14px 28px !important;
+    flex: 1 0 auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 18px 14px 40px !important;
     align-items: center !important;
+    justify-content: flex-start !important;
+  }
+  .auth-form-section::before,
+  .auth-form-section::after {
+    display: none !important;
+    flex: none !important;
   }
   .auth-card {
     padding: 22px 16px !important;
     width: min(100%, 460px) !important;
     max-width: 460px !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
   }
   .auth-social-buttons.auth-social-layout-horizontal {
     flex-direction: column !important;
