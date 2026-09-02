@@ -58,14 +58,18 @@
 .preview-root.layout-split-left-image .auth-preview-shell,
 .fullscreen-preview-root.layout-split-left-image .auth-preview-shell,
 .auth-preview-root.layout-split-left-image .auth-preview-shell {
-    flex-direction: row;
+    display: grid !important;
+    grid-template-columns: var(--auth-image-width, 50%) 1fr !important;
+    align-items: stretch !important;
 }
 
 /* 2. Split Image Right */
 .preview-root.layout-split-right-image .auth-preview-shell,
 .fullscreen-preview-root.layout-split-right-image .auth-preview-shell,
 .auth-preview-root.layout-split-right-image .auth-preview-shell {
-    flex-direction: row-reverse;
+    display: grid !important;
+    grid-template-columns: 1fr var(--auth-image-width, 50%) !important;
+    align-items: stretch !important;
 }
 
 /* 3. Centered */
@@ -257,8 +261,8 @@
    BACKGROUND / VISUAL SECTION
 ========================================================= */
 .auth-image-section {
-    flex: 0 0 var(--auth-image-width, 50%);
-    width: var(--auth-image-width, 50%);
+    flex: 1 1 auto;
+    width: 100%;
     align-self: stretch !important;
     min-height: 100%;
     height: auto;

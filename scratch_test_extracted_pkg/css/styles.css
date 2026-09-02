@@ -101,8 +101,11 @@ html, body {
 }
 
 /* Layouts */
-.auth-preview-root.layout-split-left-image .auth-preview-shell { flex-direction: row; }
-.auth-preview-root.layout-split-right-image .auth-preview-shell { flex-direction: row-reverse; }
+.auth-preview-root.layout-split-left-image .auth-preview-shell,
+.layout-split-left-image { display: grid !important; grid-template-columns: var(--auth-image-width, 50%) 1fr !important; align-items: stretch !important; }
+
+.auth-preview-root.layout-split-right-image .auth-preview-shell,
+.layout-split-right-image { display: grid !important; grid-template-columns: 1fr var(--auth-image-width, 50%) !important; align-items: stretch !important; }
 
 .auth-preview-root.layout-centered { background-color: var(--auth-background-color, #f8fafc); }
 .auth-preview-root.layout-centered .auth-image-section { display: none !important; }
@@ -208,9 +211,11 @@ html, body {
 
 /* Background Section */
 .auth-image-section {
-  flex: 0 0 var(--auth-image-width, 50%);
-  width: var(--auth-image-width, 50%);
-  min-height: 100vh;
+  flex: 1 1 auto;
+  width: 100%;
+  align-self: stretch !important;
+  min-height: 100%;
+  height: auto;
   position: relative;
   display: flex;
   overflow: hidden;
@@ -223,7 +228,11 @@ html, body {
 
 .auth-image-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 100%;
   z-index: 1;
   background-color: var(--auth-overlay-color, #000000);
   opacity: var(--auth-overlay-opacity, 0.35);
@@ -233,9 +242,12 @@ html, body {
 .auth-image-content,
 .auth-background-text {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -243,6 +255,23 @@ html, body {
   pointer-events: none;
   box-sizing: border-box;
 }
+
+/* Form Section */
+.auth-form-section {
+  flex: 1 1 auto;
+  align-self: stretch !important;
+  min-width: 0;
+  min-height: 100%;
+  width: 100%;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important;
+  padding: clamp(24px, 4vh, 48px) clamp(16px, 3vw, 36px) !important;
+  background-color: #f8fafc;
+  box-sizing: border-box !important;
+}
+
 .auth-image-content.position-top-left, .auth-background-text.position-top-left { justify-content: flex-start; align-items: flex-start; text-align: left; }
 .auth-image-content.position-top-center, .auth-image-content.position-top, .auth-background-text.position-top-center, .auth-background-text.position-top { justify-content: flex-start; align-items: center; text-align: center; }
 .auth-image-content.position-top-right, .auth-background-text.position-top-right { justify-content: flex-start; align-items: flex-end; text-align: right; }
@@ -611,36 +640,55 @@ html, body {
   .layout-split-left-image .auth-preview-shell,
   .layout-split-right-image .auth-preview-shell {
     flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
   .auth-image-section {
     display: flex !important;
     width: 100% !important;
     flex: 0 0 auto !important;
-    min-height: 180px !important;
-    max-height: 240px !important;
+    min-height: 140px !important;
+    height: clamp(140px, 26vw, 180px) !important;
+    max-height: 180px !important;
     position: relative !important;
   }
   .auth-image-content,
   .auth-background-text {
-    padding: 16px 20px !important;
+    padding: 14px 16px !important;
     justify-content: center !important;
     align-items: center !important;
     text-align: center !important;
   }
   .auth-image-text {
-    font-size: clamp(1.2rem, 4vw, 1.8rem) !important;
-    line-height: 1.25 !important;
+    font-size: clamp(1.1rem, 3.8vw, 1.45rem) !important;
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important;
+  }
+  .auth-image-subtext {
+    font-size: clamp(0.75rem, 2.8vw, 0.88rem) !important;
+    line-height: 1.35 !important;
   }
   .auth-form-section {
     width: 100% !important;
-    flex: 1 1 auto !important;
-    padding: 18px 14px 28px !important;
+    flex: 1 0 auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 18px 14px 40px !important;
     align-items: center !important;
+    justify-content: flex-start !important;
+  }
+  .auth-form-section::before,
+  .auth-form-section::after {
+    display: none !important;
+    flex: none !important;
   }
   .auth-card {
     padding: 22px 16px !important;
     width: min(100%, 460px) !important;
     max-width: 460px !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
   }
   .auth-social-buttons.auth-social-layout-horizontal {
     flex-direction: column !important;
