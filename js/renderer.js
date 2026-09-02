@@ -632,24 +632,37 @@
     const imageSectionEl = root.querySelector(".auth-image-section");
     const shellEl = root.querySelector(".auth-preview-shell");
 
-    if (layoutType === "full-background") {
-      const bgTargets = [fullBgEl, root, shellEl].filter(Boolean);
-      bgTargets.forEach(targetBgEl => {
-        if (resolvedBg.type === "image" && resolvedBg.source) {
-          targetBgEl.style.backgroundImage = `url("${resolvedBg.source}")`;
-          targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
-        } else if (resolvedBg.type === "color" || resolvedBg.type === "gradient") {
-          targetBgEl.style.backgroundImage = resolvedBg.type === "gradient" ? resolvedBg.color : "none";
-          targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
-        } else {
-          targetBgEl.style.backgroundImage = "none";
-          targetBgEl.style.backgroundColor = "transparent";
-        }
-        targetBgEl.style.backgroundSize = resolvedBg.size;
-        targetBgEl.style.backgroundPosition = resolvedBg.position;
-        targetBgEl.style.backgroundRepeat = resolvedBg.repeat;
-      });
+    // Reset background image on root, fullBgEl, and imageSectionEl first to avoid duplicates
+    root.style.backgroundImage = "none";
+    if (fullBgEl) fullBgEl.style.backgroundImage = "none";
+    if (imageSectionEl) imageSectionEl.style.backgroundImage = "none";
+    if (shellEl) shellEl.style.backgroundImage = "none";
+
+    const isFullBackground = (
+      layoutType === "full-background" ||
+      layoutType === "centered" ||
+      layoutType === "card-left" ||
+      layoutType === "card-right"
+    );
+
+    if (isFullBackground) {
+      // Single background layer on shellEl (the scroll container)
+      const targetBgEl = shellEl || root;
+      if (resolvedBg.type === "image" && resolvedBg.source) {
+        targetBgEl.style.backgroundImage = `url("${resolvedBg.source}")`;
+        targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+      } else if (resolvedBg.type === "color" || resolvedBg.type === "gradient") {
+        targetBgEl.style.backgroundImage = resolvedBg.type === "gradient" ? resolvedBg.color : "none";
+        targetBgEl.style.backgroundColor = resolvedBg.color || "#0f172a";
+      } else {
+        targetBgEl.style.backgroundImage = "none";
+        targetBgEl.style.backgroundColor = "transparent";
+      }
+      targetBgEl.style.backgroundSize = resolvedBg.size || "cover";
+      targetBgEl.style.backgroundPosition = resolvedBg.position || "center";
+      targetBgEl.style.backgroundRepeat = "no-repeat";
     } else {
+      // Split layout: single background layer on imageSectionEl ONLY
       if (imageSectionEl) {
         if (resolvedBg.type === "image" && resolvedBg.source) {
           imageSectionEl.style.backgroundImage = `url("${resolvedBg.source}")`;
@@ -661,9 +674,9 @@
           imageSectionEl.style.backgroundImage = "none";
           imageSectionEl.style.backgroundColor = "transparent";
         }
-        imageSectionEl.style.backgroundSize = resolvedBg.size;
-        imageSectionEl.style.backgroundPosition = resolvedBg.position;
-        imageSectionEl.style.backgroundRepeat = resolvedBg.repeat;
+        imageSectionEl.style.backgroundSize = resolvedBg.size || "cover";
+        imageSectionEl.style.backgroundPosition = resolvedBg.position || "center";
+        imageSectionEl.style.backgroundRepeat = "no-repeat";
       }
     }
 

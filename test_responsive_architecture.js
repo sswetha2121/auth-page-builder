@@ -172,7 +172,7 @@ function runResponsiveTests() {
 
   console.log("  [PASS] Fullscreen Desktop preview correctly applies 'device-desktop' wide unconstrained layout.");
 
-  // Test 8: Signup Page Full Background Scroll Height Coverage
+  // Test 8: Signup Page Full Background Scroll Height & Single Rendering Layer Coverage
   renderer.renderPreview(previewRoot, {
     config: {
       activePage: "signup",
@@ -190,7 +190,17 @@ function runResponsiveTests() {
     process.exit(1);
   }
 
-  console.log("  [PASS] Signup page full background applied directly to '.auth-preview-shell' (spans 100% of scroll height).");
+  if (previewRoot.style.backgroundImage && previewRoot.style.backgroundImage !== "none") {
+    console.error("  [FAIL] Duplicate background image detected on previewRoot container.");
+    process.exit(1);
+  }
+
+  if (signupShell.style.backgroundRepeat !== "no-repeat") {
+    console.error("  [FAIL] Background repeat not set to 'no-repeat'.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Signup page full background applied ONCE to '.auth-preview-shell' with no-repeat and zero duplicate layers.");
 
   console.log("==================================================");
   console.log("RESPONSIVE PREVIEW ARCHITECTURE: ALL PASSED");

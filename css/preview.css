@@ -20,10 +20,7 @@
     color: var(--auth-title-color, #0f172a);
     font-family: var(--auth-font-family, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
     background-color: var(--auth-background-color, #0f172a);
-    background-image: var(--auth-background-image, none);
-    background-size: var(--auth-background-size, cover);
-    background-position: var(--auth-background-position, center);
-    background-repeat: var(--auth-background-repeat, no-repeat);
+    background-image: none;
     box-sizing: border-box;
 }
 
@@ -74,11 +71,8 @@
 .preview-root.layout-centered,
 .fullscreen-preview-root.layout-centered,
 .auth-preview-root.layout-centered {
-    background: var(--auth-background-color, #0f172a);
-    background-image: var(--auth-background-image, none);
-    background-size: var(--auth-background-size, cover);
-    background-position: var(--auth-background-position, center);
-    background-repeat: var(--auth-background-repeat, no-repeat);
+    background-color: var(--auth-background-color, #0f172a);
+    background-image: none;
 }
 .preview-root.layout-centered .auth-preview-shell,
 .fullscreen-preview-root.layout-centered .auth-preview-shell,
@@ -107,11 +101,7 @@
     width: 100%;
     min-height: 100%;
     height: 100%;
-    background: var(--auth-background-color, #0f172a);
-    background-image: var(--auth-background-image, none);
-    background-size: var(--auth-background-size, cover);
-    background-position: var(--auth-background-position, center);
-    background-repeat: var(--auth-background-repeat, no-repeat);
+    background-color: var(--auth-background-color, #0f172a);
 }
 
 .layout-full-background .auth-full-background {
@@ -122,17 +112,11 @@
     bottom: 0;
     min-height: 100%;
     z-index: 0;
-    background-color: var(--auth-background-color, #0f172a);
-    background-image: var(--auth-background-image, none);
-    background-size: var(--auth-background-size, cover);
-    background-position: var(--auth-background-position, center);
-    background-repeat: var(--auth-background-repeat, no-repeat);
+    background: transparent;
+    pointer-events: none;
 }
 
-.layout-full-background .auth-full-background-overlay,
-.preview-root.layout-full-background::before,
-.fullscreen-preview-root.layout-full-background::before,
-.auth-preview-root.layout-full-background::before {
+.layout-full-background .auth-full-background-overlay {
     content: "";
     position: absolute;
     top: 0;
@@ -213,22 +197,8 @@
 .preview-root.layout-card-left,
 .fullscreen-preview-root.layout-card-left,
 .auth-preview-root.layout-card-left {
-    background: var(--auth-background-color, #0f172a);
-    background-image: var(--auth-background-image, none);
-    background-size: var(--auth-background-size, cover);
-    background-position: var(--auth-background-position, center);
-    background-repeat: var(--auth-background-repeat, no-repeat);
-}
-.preview-root.layout-card-left::before,
-.fullscreen-preview-root.layout-card-left::before,
-.auth-preview-root.layout-card-left::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background-color: var(--auth-overlay-color, #000000);
-    opacity: var(--auth-overlay-opacity, 0.35);
-    pointer-events: none;
+    background-color: var(--auth-background-color, #0f172a);
+    background-image: none;
 }
 .preview-root.layout-card-left .auth-image-section,
 .fullscreen-preview-root.layout-card-left .auth-image-section,
@@ -251,11 +221,8 @@
 .preview-root.layout-card-right,
 .fullscreen-preview-root.layout-card-right,
 .auth-preview-root.layout-card-right {
-    background: var(--auth-background-color, #0f172a);
-    background-image: var(--auth-background-image, none);
-    background-size: var(--auth-background-size, cover);
-    background-position: var(--auth-background-position, center);
-    background-repeat: var(--auth-background-repeat, no-repeat);
+    background-color: var(--auth-background-color, #0f172a);
+    background-image: none;
 }
 .preview-root.layout-card-right::before,
 .fullscreen-preview-root.layout-card-right::before,
