@@ -310,6 +310,7 @@ function initializeBackendAuth() {
           loginFeedback.textContent = "Signed in successfully!";
         }
         updateUserAuthUI(result.user);
+        await loadSavedConfigurationOnStartup();
         setTimeout(() => {
           closeModal("userAuthModal");
           if (loginFeedback) loginFeedback.textContent = "";
@@ -348,6 +349,7 @@ function initializeBackendAuth() {
           regFeedback.textContent = "Account created successfully!";
         }
         updateUserAuthUI(result.user);
+        await loadSavedConfigurationOnStartup();
         setTimeout(() => {
           closeModal("userAuthModal");
           if (regFeedback) regFeedback.textContent = "";
@@ -388,7 +390,7 @@ function updateUserAuthUI(user) {
 
   if (user) {
     if (loggedOutView) loggedOutView.style.display = "none";
-    if (loggedInView) loggedLoggedInView();
+    if (loggedInView) loggedInView.style.display = "block";
     if (authBtnText) authBtnText.textContent = user.full_name?.split(" ")[0] || user.username || "Account";
     if (profileName) profileName.textContent = user.full_name || "User";
     if (profileEmail) profileEmail.textContent = user.email || "";
@@ -398,10 +400,6 @@ function updateUserAuthUI(user) {
     if (loggedOutView) loggedOutView.style.display = "block";
     if (loggedInView) loggedInView.style.display = "none";
     if (authBtnText) authBtnText.textContent = "Account";
-  }
-
-  function loggedLoggedInView() {
-    if (loggedInView) loggedInView.style.display = "block";
   }
 }
 
