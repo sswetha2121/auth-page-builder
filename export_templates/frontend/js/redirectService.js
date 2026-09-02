@@ -73,7 +73,10 @@
     };
 
     if (!config.enabled) {
-      return Promise.resolve({ success: false, reason: "disabled" });
+      if (config.showSuccessMessage && typeof window !== "undefined" && typeof window.showToast === "function") {
+        window.showToast(config.successMessage || "Authentication completed successfully.", "success");
+      }
+      return Promise.resolve({ success: true, reason: "disabled", redirected: false });
     }
 
     const valRes = validateUrl(config.redirectUrl);
@@ -104,7 +107,11 @@
     return new Promise((resolve) => {
       setTimeout(() => {
         try {
-          if (config.openInNewTab) {
+          if (rawTarget.startsWith("#")) {
+            if (typeof window !== "undefined" && window.location) {
+              window.location.hash = rawTarget;
+            }
+          } else if (config.openInNewTab) {
             if (typeof window !== "undefined" && typeof window.open === "function") {
               window.open(resolvedTarget, "_blank", "noopener,noreferrer");
             }

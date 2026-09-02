@@ -1008,33 +1008,71 @@ ${config.customCSS || ""}
         const baseRedirect = config.redirect || {};
         const customerLanding = config.urls?.landingPageUrl || config.landingPageUrl || "";
         const targetRedirect = baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || customerLanding || "/dashboard";
+        const redirectEnabled = baseRedirect.enabled !== false;
         const redirectConfig = Object.assign({}, baseRedirect, {
+          enabled: redirectEnabled,
           redirectUrl: targetRedirect,
           successMessage: formId === "authOtpForm" ? "OTP verified successfully." : (baseRedirect.successMessage || "Authentication completed successfully.")
         });
         
         const submitBtn = form.querySelector('button[type="submit"]');
+        const origBtnContent = submitBtn ? submitBtn.innerHTML : "";
+
+        if (!redirectEnabled) {
+          if (submitBtn) {
+            submitBtn.innerHTML = "<span>Authenticated!</span>";
+          }
+          if (typeof window.showToast === "function") {
+            window.showToast(redirectConfig.successMessage, "success", 4000);
+          }
+          setTimeout(() => {
+            if (submitBtn) {
+              submitBtn.innerHTML = origBtnContent;
+              submitBtn.disabled = false;
+            }
+          }, 2000);
+          return;
+        }
+
         if (submitBtn) {
           submitBtn.innerHTML = "<span>Authenticated! Redirecting...</span>";
           submitBtn.disabled = true;
         }
 
-        // 2. Trigger Centralized Redirect Service ONLY ON SUCCESS
+        // 2. Trigger Centralized Redirect Service & Hardened Navigation Guarantee
         const service = window.RedirectService || window.redirectService;
         if (service && typeof service.resetGuard === "function") {
           service.resetGuard();
         }
         if (service && typeof service.execute === "function") {
           service.execute(redirectConfig, { force: true });
-        } else {
-          setTimeout(() => {
-            if (redirectConfig.openInNewTab) {
-              window.open(redirectConfig.redirectUrl, "_blank", "noopener,noreferrer");
-            } else {
-              window.location.assign(redirectConfig.redirectUrl);
-            }
-          }, redirectConfig.delay || 0);
         }
+
+        const navDelay = Math.max(80, (Number(redirectConfig.delay) || 0) + 120);
+        setTimeout(() => {
+          try {
+            if (redirectConfig.openInNewTab) {
+              if (typeof window !== "undefined" && typeof window.open === "function") {
+                window.open(targetRedirect, "_blank", "noopener,noreferrer");
+              }
+            } else {
+              if (typeof window !== "undefined" && window.location) {
+                if (targetRedirect.startsWith("#")) {
+                  window.location.hash = targetRedirect;
+                } else if (typeof window.location.assign === "function") {
+                  window.location.assign(targetRedirect);
+                } else {
+                  window.location.href = targetRedirect;
+                }
+              }
+            }
+          } catch (err) {
+            console.error("[Runtime] Fallback navigation error:", err);
+            if (typeof window !== "undefined" && window.location) {
+              window.location.href = targetRedirect;
+            }
+          }
+        }, navDelay);
       });
     });
   }
@@ -1923,15 +1961,46 @@ server.listen(PORT, () => console.log("Running at http://localhost:" + PORT));
       const snippetHTML = generateIntegrationSnippetHTML(exportConfig);
       const redirectServiceJS = await loadExportTemplate("frontend/js/redirectService.js") || `
 (function(root) {
+  var redirectExecuted = false;
   root.RedirectService = {
-    execute: function(config) {
-      var url = (config && config.redirectUrl) || "/dashboard";
-      if (typeof root.onAuthRedirect === "function") {
-        root.onAuthRedirect(url);
+    resetGuard: function() { redirectExecuted = false; },
+    execute: function(redirectConfig) {
+      if (!redirectConfig) redirectConfig = {};
+      if (redirectConfig.enabled === false) {
+        if (redirectConfig.showSuccessMessage !== false && typeof root.showToast === "function") {
+          root.showToast(redirectConfig.successMessage || "Authentication completed successfully.", "success");
+        }
+        return Promise.resolve({ success: true, reason: "disabled", redirected: false });
       }
-      setTimeout(function() {
-        try { root.location.assign(url); } catch(e) { root.location.href = url; }
-      }, config && config.delay ? config.delay : 100);
+      redirectExecuted = true;
+      var url = (redirectConfig && (redirectConfig.redirectUrl || redirectConfig.url)) || "/dashboard";
+      if (redirectConfig.showSuccessMessage !== false && typeof root.showToast === "function") {
+        root.showToast(redirectConfig.successMessage || ("Authentication successful. Redirecting to " + url), "success");
+      }
+      if (typeof root.onAuthRedirect === "function") {
+        try { root.onAuthRedirect(url); } catch(e) {}
+      }
+      var delay = Number(redirectConfig.delay) || 0;
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          try {
+            if (url.startsWith("#")) {
+              if (root.location) root.location.hash = url;
+            } else if (redirectConfig.openInNewTab) {
+              if (typeof root.open === "function") root.open(url, "_blank", "noopener,noreferrer");
+            } else {
+              if (root.location && typeof root.location.assign === "function") {
+                root.location.assign(url);
+              } else if (root.location) {
+                root.location.href = url;
+              }
+            }
+          } catch(e) {
+            if (root.location) root.location.href = url;
+          }
+          resolve({ success: true, url: url });
+        }, delay);
+      });
     }
   };
   root.redirectService = root.RedirectService;
