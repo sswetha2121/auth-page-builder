@@ -119,7 +119,13 @@
 
     if (!config.enabled) {
       console.log("[Redirect] Redirect disabled");
-      return Promise.resolve({ success: false, reason: "disabled" });
+      if (config.showSuccessMessage) {
+        const toastFn = (typeof window !== "undefined") ? (window.Utils?.showToast || window.showToast) : null;
+        if (typeof toastFn === "function") {
+          toastFn(config.successMessage || "Authentication completed successfully.", "success", 3500);
+        }
+      }
+      return Promise.resolve({ success: true, reason: "disabled", redirected: false });
     }
 
     // Validate URL scheme

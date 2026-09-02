@@ -986,6 +986,15 @@ ${config.customCSS || ""}
         const formId = form.id || "";
         const otpEnabled = config.pages?.login?.otpEnabled !== false;
 
+        // Forgot Password form handling - Show success toast and remain on page without redirecting
+        if (formId === "authForgotPasswordForm") {
+          console.log("[Auth] Forgot password request submitted successfully.");
+          if (typeof window.showToast === "function") {
+            window.showToast("Password reset email sent successfully.", "success", 4000);
+          }
+          return;
+        }
+
         // If Signup succeeds and OTP is enabled, route to OTP verification screen before redirect!
         if (formId === "authSignupForm" && otpEnabled) {
           console.log("[Auth] Signup validation successful. Routing to OTP verification screen.");
@@ -1000,7 +1009,8 @@ ${config.customCSS || ""}
         const customerLanding = config.urls?.landingPageUrl || config.landingPageUrl || "";
         const targetRedirect = baseRedirect.redirectUrl || config.redirectUrl || config.urls?.redirectUrl || customerLanding || "/dashboard";
         const redirectConfig = Object.assign({}, baseRedirect, {
-          redirectUrl: targetRedirect
+          redirectUrl: targetRedirect,
+          successMessage: formId === "authOtpForm" ? "OTP verified successfully." : (baseRedirect.successMessage || "Authentication completed successfully.")
         });
         
         const submitBtn = form.querySelector('button[type="submit"]');
