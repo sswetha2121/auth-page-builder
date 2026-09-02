@@ -154,6 +154,24 @@ function runResponsiveTests() {
 
   console.log("  [PASS] Fullscreen Tablet preview correctly applies 'device-tablet' frame.");
 
+  // Test 7: Fullscreen Desktop Render (Wide Unconstrained Layout)
+  renderer.renderPreview(fullscreenRoot, {
+    config: {
+      activePage: "login",
+      previewMode: "desktop",
+      layout: { type: "split-left-image" }
+    },
+    page: "login",
+    device: "desktop"
+  });
+
+  if (!fullscreenCanvas.classList.contains('device-desktop')) {
+    console.error("  [FAIL] Fullscreen device canvas missing 'device-desktop' class.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Fullscreen Desktop preview correctly applies 'device-desktop' wide unconstrained layout.");
+
   console.log("==================================================");
   console.log("RESPONSIVE PREVIEW ARCHITECTURE: ALL PASSED");
   console.log("==================================================");
