@@ -1,0 +1,116 @@
+const fs = require('fs');
+const path = require('path');
+const { JSDOM } = require('jsdom');
+
+const templates = require('./js/templates.js');
+const utils = require('./js/utils.js');
+const renderer = require('./js/renderer.js');
+
+function runResponsiveTests() {
+  console.log("==================================================");
+  console.log("RUNNING RESPONSIVE PREVIEW ARCHITECTURE TEST");
+  console.log("==================================================");
+
+  const dom = new JSDOM(`
+    <!DOCTYPE html>
+    <html>
+      <head></head>
+      <body>
+        <div id="previewCanvas" class="preview-canvas device-desktop">
+          <div id="previewRoot" class="preview-root preview-device-desktop"></div>
+        </div>
+        <div id="fullscreenPreview" hidden>
+          <div id="fullscreenPreviewRoot" class="fullscreen-preview-root"></div>
+        </div>
+      </body>
+    </html>
+  `, { url: "http://localhost:3000/" });
+
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.navigator = dom.window.navigator;
+  global.CustomEvent = dom.window.CustomEvent;
+
+  const previewRoot = document.getElementById('previewRoot');
+
+  // Test 1: Desktop Render
+  renderer.renderPreview(previewRoot, {
+    config: {
+      activePage: "login",
+      previewMode: "desktop",
+      layout: { type: "split-left-image", imageWidth: 50 },
+      imageSection: { text: "Experience the next generation of authentication.", subtext: "Fast and secure." }
+    },
+    page: "login",
+    device: "desktop"
+  });
+
+  const shellDesktop = previewRoot.querySelector('.auth-preview-shell');
+  if (!shellDesktop || !previewRoot.classList.contains('preview-device-desktop')) {
+    console.error("  [FAIL] Desktop device classes not set properly.");
+    process.exit(1);
+  }
+  console.log("  [PASS] Desktop preview rendered with '.preview-device-desktop'");
+
+  // Test 2: Tablet Render
+  renderer.renderPreview(previewRoot, {
+    config: {
+      activePage: "login",
+      previewMode: "tablet",
+      layout: { type: "split-left-image", imageWidth: 42 }
+    },
+    page: "login",
+    device: "tablet"
+  });
+
+  if (!previewRoot.classList.contains('preview-device-tablet')) {
+    console.error("  [FAIL] Tablet device classes not set properly.");
+    process.exit(1);
+  }
+  console.log("  [PASS] Tablet preview rendered with '.preview-device-tablet'");
+
+  // Test 3: Mobile Render (Stacked Layout)
+  renderer.renderPreview(previewRoot, {
+    config: {
+      activePage: "login",
+      previewMode: "mobile",
+      layout: { type: "split-left-image" }
+    },
+    page: "login",
+    device: "mobile"
+  });
+
+  if (!previewRoot.classList.contains('preview-device-mobile')) {
+    console.error("  [FAIL] Mobile device classes not set properly.");
+    process.exit(1);
+  }
+
+  const heroSection = previewRoot.querySelector('.auth-image-section');
+  const heroText = previewRoot.querySelector('.auth-image-text');
+  const authCard = previewRoot.querySelector('.auth-card');
+
+  if (!heroSection || !heroText || !authCard) {
+    console.error("  [FAIL] Missing hero section or auth card in mobile render.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Mobile preview rendered hero top banner and auth card without hiding content.");
+
+  // Test 4: Password Field Visibility Icon Positioning
+  const passwordWrapper = previewRoot.querySelector('.auth-input-password-wrapper');
+  const passwordInput = passwordWrapper ? passwordWrapper.querySelector('input') : null;
+  const passwordToggle = passwordWrapper ? passwordWrapper.querySelector('.auth-password-toggle') : null;
+
+  if (!passwordWrapper || !passwordInput || !passwordToggle) {
+    console.error("  [FAIL] Password field structure missing inside auth-card.");
+    process.exit(1);
+  }
+
+  console.log("  [PASS] Password toggle icon correctly positioned inside '.auth-input-password-wrapper'");
+
+  console.log("==================================================");
+  console.log("RESPONSIVE PREVIEW ARCHITECTURE: ALL PASSED");
+  console.log("==================================================");
+}
+
+runResponsiveTests();

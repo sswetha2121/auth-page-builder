@@ -605,12 +605,63 @@ html, body {
 .otp-resend-btn { background: none; border: none; color: #2563eb; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .otp-resend-btn:disabled { color: #94a3b8; cursor: not-allowed; }
 
-/* Custom User CSS */
+/* Responsive Mobile & Tablet Layout Engine for Standalone Export */
+@media (max-width: 767px) {
+  .auth-preview-shell,
+  .layout-split-left-image .auth-preview-shell,
+  .layout-split-right-image .auth-preview-shell {
+    flex-direction: column !important;
+  }
+  .auth-image-section {
+    display: flex !important;
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    min-height: 180px !important;
+    max-height: 240px !important;
+    position: relative !important;
+  }
+  .auth-image-content,
+  .auth-background-text {
+    padding: 16px 20px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .auth-image-text {
+    font-size: clamp(1.2rem, 4vw, 1.8rem) !important;
+    line-height: 1.25 !important;
+  }
+  .auth-form-section {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    padding: 18px 14px 28px !important;
+    align-items: center !important;
+  }
+  .auth-card {
+    padding: 22px 16px !important;
+    width: min(100%, 460px) !important;
+    max-width: 460px !important;
+  }
+  .auth-social-buttons.auth-social-layout-horizontal {
+    flex-direction: column !important;
+  }
+  .auth-social-btn {
+    width: 100% !important;
+  }
+}
 
-
-@media (max-width: 768px) {
-  .auth-preview-shell { flex-direction: column !important; }
-  .auth-image-section { display: none !important; }
-  .auth-form-section { width: 100% !important; padding: 24px 16px !important; }
-  .auth-card { padding: 28px 20px !important; max-width: 100% !important; }
+@media (min-width: 768px) and (max-width: 1023px) {
+  .auth-image-section {
+    flex: 0 0 42% !important;
+    width: 42% !important;
+  }
+  .auth-form-section {
+    flex: 0 0 58% !important;
+    width: 58% !important;
+    padding: 24px 20px !important;
+  }
+  .auth-card {
+    max-width: 440px !important;
+    width: min(100%, 440px) !important;
+  }
 }

@@ -1238,21 +1238,89 @@
     cursor: not-allowed;
 }
 
-/* =========================================================
+/* ---------------------------------------------------------
    RESPONSIVE PREVIEW DEVICE BREAKPOINTS & REFLOW ENGINE
    Controlled strictly by simulated device classes:
    .preview-device-mobile, .preview-device-tablet, .preview-device-desktop
-========================================================= */
+--------------------------------------------------------- */
+
+/* --- HERO TEXT & TYPOGRAPHY SAFETY --- */
+.auth-image-text-block {
+    width: min(100%, 760px);
+    max-width: 760px;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.auth-image-text {
+    margin: 0 0 12px;
+    color: var(--auth-image-text-color, #ffffff);
+    font-size: clamp(1.3rem, 2.8vw, 2.4rem) !important;
+    font-weight: 800;
+    line-height: 1.25 !important;
+    letter-spacing: -0.02em;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    text-wrap: balance;
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.auth-image-subtext {
+    margin: 0;
+    color: var(--auth-image-text-color, #ffffff);
+    opacity: 0.9;
+    font-size: clamp(0.85rem, 1.4vw, 1.05rem) !important;
+    line-height: 1.5 !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* --- PASSWORD INPUT WRAPPER & VISIBILITY TOGGLE --- */
+.auth-input-password-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.auth-input-password-wrapper input {
+    width: 100%;
+    padding-right: 44px !important;
+    box-sizing: border-box !important;
+}
+
+.auth-password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 4px;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+    z-index: 5;
+    pointer-events: auto;
+    transition: color 0.15s ease;
+}
+
+.auth-password-toggle:hover {
+    color: #0f172a;
+}
 
 /* ---------------------------------------------------------
    1. MOBILE SIMULATED PREVIEW (.preview-device-mobile)
 --------------------------------------------------------- */
 .preview-root.preview-device-mobile,
-.preview-root.preview-device-mobile .auth-preview-shell,
 .preview-canvas-area.device-mobile .preview-root,
-.preview-canvas-area.device-mobile .auth-preview-shell,
-.fullscreen-preview-root.preview-device-mobile,
-.fullscreen-preview-root.preview-device-mobile .auth-preview-shell {
+.fullscreen-preview-root.preview-device-mobile {
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -1261,16 +1329,23 @@
     overflow-x: hidden;
 }
 
-/* Split Layouts Reflow Vertically on Mobile */
+.preview-device-mobile .auth-preview-shell,
+.device-mobile .auth-preview-shell,
 .preview-device-mobile.layout-split-left-image .auth-preview-shell,
 .preview-device-mobile.layout-split-right-image .auth-preview-shell,
 .device-mobile .layout-split-left-image .auth-preview-shell,
 .device-mobile .layout-split-right-image .auth-preview-shell {
     display: flex !important;
     flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 
 /* Mobile Image Section */
+.preview-device-mobile .auth-image-section,
+.device-mobile .auth-image-section,
 .preview-device-mobile.layout-split-left-image .auth-image-section,
 .preview-device-mobile.layout-split-right-image .auth-image-section,
 .device-mobile .layout-split-left-image .auth-image-section,
@@ -1278,19 +1353,17 @@
     display: flex !important;
     width: 100% !important;
     flex: 0 0 auto !important;
-    min-height: 180px;
-    max-height: 220px;
+    min-height: 180px !important;
+    max-height: 220px !important;
+    position: relative;
 }
 
-.preview-device-mobile .auth-image-text-block {
-    padding: 16px !important;
-}
-.preview-device-mobile .auth-image-text {
-    font-size: 20px !important;
-    line-height: 1.25 !important;
-}
-.preview-device-mobile .auth-image-subtext {
-    font-size: 13px !important;
+.preview-device-mobile .auth-image-content,
+.preview-device-mobile .auth-background-text {
+    padding: 16px 20px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
 }
 
 /* Mobile Form Section */
@@ -1298,24 +1371,28 @@
 .device-mobile .auth-form-section {
     width: 100% !important;
     min-width: 0 !important;
-    padding: 14px 10px !important;
-    flex: 1 1 auto;
+    padding: 18px 14px 28px !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
 }
 
 /* Mobile Authentication Card */
 .preview-device-mobile .auth-card,
 .device-mobile .auth-card {
-    width: calc(100% - 16px) !important;
-    max-width: 100% !important;
+    width: min(100%, 460px) !important;
+    max-width: 460px !important;
     min-width: 0 !important;
-    margin: 8px auto !important;
-    padding: 18px 14px !important;
+    margin: 4px auto !important;
+    padding: 22px 16px !important;
     border-radius: var(--auth-card-radius, 14px) !important;
 }
 
 /* Mobile Controls & Social Login Stacking */
-.preview-device-mobile .auth-social-login,
-.device-mobile .auth-social-login {
+.preview-device-mobile .auth-social-buttons,
+.device-mobile .auth-social-buttons,
+.preview-device-mobile .auth-social-buttons.auth-social-layout-horizontal,
+.device-mobile .auth-social-buttons.auth-social-layout-horizontal {
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
@@ -1328,7 +1405,7 @@
 
 .preview-device-mobile .otp-digit-box,
 .device-mobile .otp-digit-box {
-    max-width: 36px;
+    max-width: 40px;
     height: 44px;
     font-size: 18px;
 }
@@ -1358,51 +1435,89 @@
 /* ---------------------------------------------------------
    2. TABLET SIMULATED PREVIEW (.preview-device-tablet)
 --------------------------------------------------------- */
-.preview-root.preview-device-tablet .auth-preview-shell,
-.preview-canvas-area.device-tablet .auth-preview-shell,
-.fullscreen-preview-root.preview-device-tablet .auth-preview-shell {
+.preview-root.preview-device-tablet,
+.preview-canvas-area.device-tablet .preview-root,
+.fullscreen-preview-root.preview-device-tablet {
     width: 100%;
     min-width: 0;
     max-width: 100%;
 }
 
+.preview-device-tablet .auth-preview-shell,
+.device-tablet .auth-preview-shell,
 .preview-device-tablet.layout-split-left-image .auth-preview-shell,
 .preview-device-tablet.layout-split-right-image .auth-preview-shell,
 .device-tablet .layout-split-left-image .auth-preview-shell,
 .device-tablet .layout-split-right-image .auth-preview-shell {
-    display: grid !important;
-    grid-template-columns: 42% 58% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    height: 100% !important;
 }
 
-.preview-device-tablet.is-narrow .auth-preview-shell,
-.device-tablet.is-narrow .auth-preview-shell {
-    display: flex !important;
-    flex-direction: column !important;
+.preview-device-tablet .auth-image-section,
+.device-tablet .auth-image-section {
+    flex: 0 0 42% !important;
+    width: 42% !important;
+    min-width: 0 !important;
+}
+
+.preview-device-tablet .auth-form-section,
+.device-tablet .auth-form-section {
+    flex: 0 0 58% !important;
+    width: 58% !important;
+    min-width: 0 !important;
+    padding: 24px 20px !important;
 }
 
 .preview-device-tablet .auth-card,
 .device-tablet .auth-card {
     padding: 28px 22px !important;
-    max-width: 440px;
-    width: calc(100% - 24px) !important;
+    max-width: 440px !important;
+    width: min(100%, 440px) !important;
     margin: 0 auto !important;
 }
 
-.preview-device-tablet .auth-image-text-block,
-.device-tablet .auth-image-text-block {
-    max-width: 90% !important;
-}
+/* ---------------------------------------------------------
+   3. MEDIA QUERIES FOR STANDALONE RUNTIME & SMALL SCREENS
+--------------------------------------------------------- */
+@media (max-width: 767px) {
+    .auth-preview-shell,
+    .layout-split-left-image .auth-preview-shell,
+    .layout-split-right-image .auth-preview-shell {
+        flex-direction: column !important;
+    }
 
-.preview-device-tablet .auth-image-text,
-.device-tablet .auth-image-text {
-    font-size: clamp(20px, 3.2vw, 28px) !important;
-    line-height: 1.25 !important;
-    word-break: normal !important;
-    overflow-wrap: break-word !important;
+    .auth-image-section {
+        width: 100% !important;
+        flex: 0 0 auto !important;
+        min-height: 180px !important;
+        max-height: 240px !important;
+    }
+
+    .auth-form-section {
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        padding: 20px 16px 32px !important;
+        align-items: center !important;
+    }
+
+    .auth-card {
+        width: min(100%, 460px) !important;
+        max-width: 460px !important;
+    }
+
+    .auth-social-buttons.auth-social-layout-horizontal {
+        flex-direction: column !important;
+    }
+
+    .auth-social-btn {
+        width: 100% !important;
+    }
 }
 
 /* ---------------------------------------------------------
-   3. LOGO FITTING ENGINE (ALL DEVICE MODES)
+   4. LOGO FITTING ENGINE (ALL DEVICE MODES)
 --------------------------------------------------------- */
 .auth-logo {
     display: flex;
