@@ -40,13 +40,12 @@
     width: 100%;
     height: 100% !important;
     min-height: 100% !important;
+    max-height: 100% !important;
     min-width: 0;
     display: flex;
     align-items: stretch !important;
     position: relative;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    scroll-behavior: smooth;
+    overflow: hidden !important;
     box-sizing: border-box;
 }
 
@@ -58,8 +57,8 @@
 .preview-root.layout-split-left-image .auth-preview-shell,
 .fullscreen-preview-root.layout-split-left-image .auth-preview-shell,
 .auth-preview-root.layout-split-left-image .auth-preview-shell {
-    display: grid !important;
-    grid-template-columns: var(--auth-image-width, 50%) 1fr !important;
+    display: flex !important;
+    flex-direction: row !important;
     align-items: stretch !important;
 }
 
@@ -67,8 +66,8 @@
 .preview-root.layout-split-right-image .auth-preview-shell,
 .fullscreen-preview-root.layout-split-right-image .auth-preview-shell,
 .auth-preview-root.layout-split-right-image .auth-preview-shell {
-    display: grid !important;
-    grid-template-columns: 1fr var(--auth-image-width, 50%) !important;
+    display: flex !important;
+    flex-direction: row-reverse !important;
     align-items: stretch !important;
 }
 
@@ -261,11 +260,13 @@
    BACKGROUND / VISUAL SECTION
 ========================================================= */
 .auth-image-section {
-    flex: 1 1 auto;
-    width: 100%;
+    flex: 0 0 var(--auth-image-width, 50%);
+    width: var(--auth-image-width, 50%);
+    min-width: 0;
     align-self: stretch !important;
-    min-height: 100%;
-    height: auto;
+    min-height: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
     position: relative;
     display: flex;
     overflow: hidden;
@@ -371,18 +372,21 @@
    FORM SECTION & ALIGNMENT
 ========================================================= */
 .auth-form-section {
-    flex: 1 1 auto;
+    flex: 1 1 0%;
     min-width: 0;
-    min-height: 100%;
-    width: 100%;
-    height: auto !important;
+    min-height: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    align-self: stretch !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: visible !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding: clamp(24px, 4vh, 48px) clamp(16px, 3vw, 36px) !important;
     background-color: #f8fafc;
     box-sizing: border-box !important;
     transition: all 0.2s ease;
+    scroll-behavior: smooth;
 }
 
 .auth-form-section::before {
